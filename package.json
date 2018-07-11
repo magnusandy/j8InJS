@@ -1,0 +1,24 @@
+{
+  "name": "j8-in-js",
+  "version": "1.0.0",
+  "description": "Implementing Java 8 features like optionals and streams in javascript (typescript)",
+  "main": "dist/index.js",
+  "types" : "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./node_modules/.bin/tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magnusandy/j8InJS.git"
+  },
+  "author": "magnusandy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/magnusandy/j8InJS/issues"
+  },
+  "homepage": "https://github.com/magnusandy/j8InJS#readme",
+  "devDependencies": {
+    "typescript": "^2.9.2"
+  }
+}
