@@ -1,7 +1,4 @@
-declare type Predicate<T> = (value: T) => boolean;
-declare type Consumer<T> = (value: T) => void;
-declare type Transformer<T, U> = (value: T) => U;
-declare type Supplier<T> = () => T;
+import { Predicate, Consumer, Transformer, Supplier } from "./functions";
 /**
  * A container object which may or may not contain a non-null value. If a value is present, isPresent() will return true and get() will return the value.
  */
@@ -38,6 +35,7 @@ export declare class Optional<T> {
     orElse: (other: T) => T;
     /**
      * Return the value if present, otherwise invoke other and return the result of that invocation.
+     * if result of supplier is null, throw "NullPointerException"
      */
     orElseGet: (supplier: Supplier<T>) => T;
     /**
@@ -58,4 +56,3 @@ export declare class Optional<T> {
      */
     static empty: <U>() => Optional<U>;
 }
-export {};

@@ -1,10 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var Errors;
-(function (Errors) {
-    Errors["NoSuchElementException"] = "NoSuchElementException";
-    Errors["NullPointerException"] = "NullPointerException";
-})(Errors || (Errors = {}));
+var errors_1 = require("./errors");
+var isNull = function (x) { return (x === null || x === undefined); };
 /**
  * A container object which may or may not contain a non-null value. If a value is present, isPresent() will return true and get() will return the value.
  */
@@ -14,16 +11,16 @@ var Optional = /** @class */ (function () {
         /**
          * Return true if there is a value present, otherwise false.
          */
-        this.isPresent = function () { return (_this.value ? true : false); };
+        this.isPresent = function () { return (isNull(_this.value) ? false : true); };
         /**
          * If a value is present in this Optional, returns the value, otherwise throws "NoSuchElementException".
          */
         this.get = function () {
-            if (_this.value) {
-                return _this.value;
+            if (_this.value === null || _this.value === undefined) {
+                throw errors_1.Errors.NoSuchElementException;
             }
             else {
-                throw Errors.NoSuchElementException;
+                return _this.value;
             }
         };
         /**
@@ -50,7 +47,7 @@ var Optional = /** @class */ (function () {
          */
         this.map = function (transformer) {
             if (_this.isPresent()) {
-                return Optional.of(transformer(_this.get()));
+                return Optional.ofNullable(transformer(_this.get()));
             }
             else {
                 return Optional.empty();
@@ -69,8 +66,16 @@ var Optional = /** @class */ (function () {
         this.orElse = function (other) { return (_this.isPresent() ? _this.get() : other); };
         /**
          * Return the value if present, otherwise invoke other and return the result of that invocation.
+         * if result of supplier is null, throw "NullPointerException"
          */
-        this.orElseGet = function (supplier) { return _this.isPresent() ? _this.get() : supplier(); };
+        this.orElseGet = function (supplier) {
+            if (_this.isPresent()) {
+                return _this.get();
+            }
+            else {
+                return supplier();
+            }
+        };
         /**
          * Return the contained value, if present, otherwise throw an error to be created by the provided supplier.
          */
@@ -89,11 +94,11 @@ var Optional = /** @class */ (function () {
      * Use ofNullable when the value might not be present;
      */
     Optional.of = function (value) {
-        if (value) {
+        if (!isNull(value)) {
             return new Optional(value);
         }
         else {
-            throw Errors.NullPointerException;
+            throw errors_1.Errors.NullPointerException;
         }
     };
     /**

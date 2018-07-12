@@ -1,12 +1,14 @@
 {
   "name": "j8-in-js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Implementing Java 8 features like optionals and streams in javascript (typescript)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register test/*.ts",
-    "build": "./node_modules/.bin/tsc"
+    "test:js": "mocha dist/test/*.js",
+    "build": "./node_modules/.bin/tsc",
+    "build:full": "npm run build & npm run test & npm run test:js"
   },
   "repository": {
     "type": "git",
