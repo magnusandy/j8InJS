@@ -1,13 +1,7 @@
-enum Errors {
-	NoSuchElementException = 'NoSuchElementException',
-	NullPointerException = 'NullPointerException',
-}
+import { Predicate, Consumer, Transformer, Supplier } from "./functions";
+import { Errors } from './errors';
 
-type Predicate<T> = (value: T) => boolean;
-type Consumer<T> = (value: T) => void;
-type Transformer<T, U> = (value: T) => U;
-type Supplier<T> = () => T; 
-
+const isNull = (x: any): boolean => (x === null || x === undefined)
 /**
  * A container object which may or may not contain a non-null value. If a value is present, isPresent() will return true and get() will return the value.
  */
@@ -18,19 +12,20 @@ export class Optional<T> {
 		this.value = value;
 	}
 
+
 	/**
 	 * Return true if there is a value present, otherwise false.
 	 */
-	public isPresent = (): boolean => (this.value ? true : false);
+	public isPresent = (): boolean => (isNull(this.value) ? false : true);
 
 	/**
 	 * If a value is present in this Optional, returns the value, otherwise throws "NoSuchElementException".
 	 */
 	public get = (): T => {
-		if (this.value) {
-			return this.value;
-		} else {
+		if (this.value === null || this.value === undefined) {
 			throw Errors.NoSuchElementException;
+		} else {
+			return this.value;
 		}
 	};
 
@@ -39,7 +34,7 @@ export class Optional<T> {
 	 */
 	public filter = (predicate: Predicate<T>): Optional<T> => {
 		if (this.isPresent()) {
-			return predicate(this.get()) ? this: Optional.empty();
+			return predicate(this.get()) ? this : Optional.empty();
 		} else {
 			return Optional.empty();
 		}
@@ -59,47 +54,54 @@ export class Optional<T> {
 	 */
 	public map = <V>(transformer: Transformer<T, V>): Optional<V> => {
 		if (this.isPresent()) {
-			return Optional.of(transformer(this.get()));
+			return Optional.ofNullable(transformer(this.get()));
 		} else {
 			return Optional.empty();
 		}
-    };
-	
+	};
+
 	/**
 	 * If a value is present, apply the provided Optional-bearing mapping function to it, return that result, otherwise return an empty Optional.
 	 */
-    public flatMap = <V>(transformer: Transformer<T, Optional<V>>): Optional<V> => {
-        const optionalOptional: Optional<Optional<V>> = this.map(transformer);
-        return optionalOptional.isPresent() ? optionalOptional.get() : Optional.empty();
-    }
+	public flatMap = <V>(transformer: Transformer<T, Optional<V>>): Optional<V> => {
+		const optionalOptional: Optional<Optional<V>> = this.map(transformer);
+		return optionalOptional.isPresent() ? optionalOptional.get() : Optional.empty();
+	}
 
 	/**
 	 * Return the value if present, otherwise return other.
 	 */
-    public orElse = (other: T): T => (this.isPresent() ? this.get() : other);
-	
+	public orElse = (other: T): T => (this.isPresent() ? this.get() : other);
+
 	/**
 	 * Return the value if present, otherwise invoke other and return the result of that invocation.
+	 * if result of supplier is null, throw "NullPointerException"
 	 */
-    public orElseGet = (supplier: Supplier<T>): T => this.isPresent() ? this.get() : supplier();
+	public orElseGet = (supplier: Supplier<T>): T => {
+		if (this.isPresent()) {
+			return this.get();
+		} else {
+			return supplier();
+		}
+	}
 
 	/**
 	 * Return the contained value, if present, otherwise throw an error to be created by the provided supplier.
 	 */
-    public orElseThrow = (exceptionSupplier: Supplier<any>): T => {
-        if (this.isPresent()) {
-            return this.get();
-        } else {
-            throw exceptionSupplier();
-        }
-    } 
+	public orElseThrow = (exceptionSupplier: Supplier<any>): T => {
+		if (this.isPresent()) {
+			return this.get();
+		} else {
+			throw exceptionSupplier();
+		}
+	}
 
 	/**
 	 * Returns an Optional with the specified present non-null value. Throws 'NullPointerException' if the value does not exist
 	 * Use ofNullable when the value might not be present;
 	 */
 	public static of = <U>(value: U): Optional<U> => {
-		if(value) {
+		if (!isNull(value)) {
 			return new Optional(value);
 		} else {
 			throw Errors.NullPointerException;
