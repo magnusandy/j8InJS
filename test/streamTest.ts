@@ -66,21 +66,46 @@ describe('Stream tests', () => {
     });
 
     it('allMatch should return true all items in the stream return true predicate', () => {
-        const source: Stream<number> = stream([1,2,3]);
+        const source: Stream<number> = stream([1, 2, 3]);
         const allMatched: boolean = source.allMatch((i) => i < 10);
         expect(allMatched).to.equal(true);
     });
 
     it('allMatch should return false not all items in the stream return true predicate', () => {
-        const source: Stream<number> = stream([1,2,12]);
+        const source: Stream<number> = stream([1, 2, 12]);
         const allMatched: boolean = source.allMatch((i) => i < 10);
         expect(allMatched).to.equal(false);
     });
 
-    it('should lazily apply predicates, applying only until false is found', () => {
+    it('allMatch should lazily apply predicates, applying only until false is found', () => {
         let count = 0;
-        const source: Stream<number> = stream([1,12,2]);
-        const allMatched: boolean = source.allMatch((i) => {count++; return i < 10;});
+        const source: Stream<number> = stream([1, 12, 2]);
+        source.allMatch((i) => { count++; return i < 10; });
+        expect(count).to.equal(2);
+    });
+
+    it('anyMatch should return false if stream is empty', () => {
+        const source: Stream<number> = stream([]);
+        const anyMatched: boolean = source.anyMatch((i) => false);
+        expect(anyMatched).to.equal(false);
+    });
+
+    it('anyMatch should return true any 1 item in the stream return true predicate', () => {
+        const source: Stream<number> = stream([12, 13, 3]);
+        const anyMatch: boolean = source.anyMatch((i) => i < 10);
+        expect(anyMatch).to.equal(true);
+    });
+
+    it('anyMatch should return false if no items return true predicate', () => {
+        const source: Stream<number> = stream([1, 2, 3]);
+        const anyMatched: boolean = source.anyMatch((i) => i > 10);
+        expect(anyMatched).to.equal(false);
+    });
+
+    it('anyMatch should lazily apply predicates, applying only until true is found', () => {
+        let count = 0;
+        const source: Stream<number> = stream([1, 12, 2]);
+        source.anyMatch((i) => { count++; return i > 10; });
         expect(count).to.equal(2);
     });
 

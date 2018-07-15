@@ -64,10 +64,31 @@ describe('Stream tests', function () {
         var allMatched = source.allMatch(function (i) { return i < 10; });
         chai_1.expect(allMatched).to.equal(false);
     });
-    it('should lazily apply predicates, applying only until false is found', function () {
+    it('allMatch should lazily apply predicates, applying only until false is found', function () {
         var count = 0;
         var source = stream_1.stream([1, 12, 2]);
-        var allMatched = source.allMatch(function (i) { count++; return i < 10; });
+        source.allMatch(function (i) { count++; return i < 10; });
+        chai_1.expect(count).to.equal(2);
+    });
+    it('anyMatch should return false if stream is empty', function () {
+        var source = stream_1.stream([]);
+        var anyMatched = source.anyMatch(function (i) { return false; });
+        chai_1.expect(anyMatched).to.equal(false);
+    });
+    it('anyMatch should return true any 1 item in the stream return true predicate', function () {
+        var source = stream_1.stream([12, 13, 3]);
+        var anyMatch = source.anyMatch(function (i) { return i < 10; });
+        chai_1.expect(anyMatch).to.equal(true);
+    });
+    it('anyMatch should return false if no items return true predicate', function () {
+        var source = stream_1.stream([1, 2, 3]);
+        var anyMatched = source.anyMatch(function (i) { return i > 10; });
+        chai_1.expect(anyMatched).to.equal(false);
+    });
+    it('anyMatch should lazily apply predicates, applying only until true is found', function () {
+        var count = 0;
+        var source = stream_1.stream([1, 12, 2]);
+        source.anyMatch(function (i) { count++; return i > 10; });
         chai_1.expect(count).to.equal(2);
     });
 });

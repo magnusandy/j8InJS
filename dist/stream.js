@@ -34,9 +34,6 @@ var ArrayStream = /** @class */ (function () {
      * @param predicate
      */
     ArrayStream.prototype.allMatch = function (predicate) {
-        if (this.isEmpty()) {
-            return true;
-        }
         for (var i in this.source) {
             var sourceItem = this.source[i];
             var applied = this.applyAction(sourceItem);

@@ -38,7 +38,6 @@ class ArrayStream<T> implements Stream<T> {
         return this.actions.length > 0 ? this.ultimateAction()(item) : item;
     }
 
-
     private ultimateAction: () => Transformer<any, T> = () => this.actions.reduce(compose);
 
     private isEmpty() {
@@ -56,10 +55,6 @@ class ArrayStream<T> implements Stream<T> {
      * @param predicate 
      */
     public allMatch(predicate: Predicate<T>): boolean {
-        if (this.isEmpty()) {
-            return true;
-        }
-
         for (let i in this.source) {
             const sourceItem = this.source[i];
             const applied = this.applyAction(sourceItem);
