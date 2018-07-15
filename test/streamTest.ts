@@ -109,4 +109,16 @@ describe('Stream tests', () => {
         expect(count).to.equal(2);
     });
 
+    it('count should return number of elements in stream', () => {
+        const source: Stream<number> = stream([1, 12, 2]);
+        const count = source.count();
+        expect(count).to.equal(3);
+    });
+
+    it('count should return number of elements in stream after a map', () => {
+        const source: Stream<string> = stream([1, 12, 2]).map(i => i.toString());
+        const count = source.count();
+        expect(count).to.equal(3);
+    });
+
 });

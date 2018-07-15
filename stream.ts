@@ -4,6 +4,7 @@ import { Collector } from "./collectors";
 export interface Stream<T> {
     allMatch(predicate: Predicate<T>): boolean;
     anyMatch(predicate: Predicate<T>): boolean;
+    count(): number;
     map<U>(transformer: Transformer<T, U>): Stream<U>;
     forEach(consumer: Consumer<T>): void;
     defaultCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
@@ -79,6 +80,12 @@ class ArrayStream<T> implements Stream<T> {
             }
         }
         return false;
+    }
+
+    //todo test more with filter
+    public count(): number {
+        this.fullyApplyActions();
+        return this.source.length;
     }
 
     /**

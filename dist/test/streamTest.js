@@ -91,4 +91,14 @@ describe('Stream tests', function () {
         source.anyMatch(function (i) { count++; return i > 10; });
         chai_1.expect(count).to.equal(2);
     });
+    it('count should return number of elements in stream', function () {
+        var source = stream_1.stream([1, 12, 2]);
+        var count = source.count();
+        chai_1.expect(count).to.equal(3);
+    });
+    it('count should return number of elements in stream after a map', function () {
+        var source = stream_1.stream([1, 12, 2]).map(function (i) { return i.toString(); });
+        var count = source.count();
+        chai_1.expect(count).to.equal(3);
+    });
 });

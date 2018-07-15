@@ -58,6 +58,11 @@ var ArrayStream = /** @class */ (function () {
         }
         return false;
     };
+    //todo test more with filter
+    ArrayStream.prototype.count = function () {
+        this.fullyApplyActions();
+        return this.source.length;
+    };
     /**
      * Intermediate Operation.
      * Returns a stream consisting of the results of applying the given function to the elements of this stream.
