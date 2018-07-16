@@ -1,9 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var compose = function (f, g) { return function (value) { return g(f(value)); }; };
-exports.stream = function (source) {
-    return ArrayStream.of(source);
+var optional_1 = require("./optional");
+//Static methods of the stream interface
+exports.Stream = {
+    /**
+     * Creates a new stream from the given source array
+     * @param source
+     */
+    of: function (source) {
+        return ArrayStream.of(source);
+    },
+    /**
+     * creates an empty Stream
+     */
+    empty: function () {
+        return ArrayStream.of([]);
+    }
 };
+var compose = function (f, g) { return function (value) { return g(f(value)); }; };
 var ArrayStream = /** @class */ (function () {
     function ArrayStream(source, actions) {
         var _this = this;
@@ -26,6 +40,9 @@ var ArrayStream = /** @class */ (function () {
     };
     ArrayStream.of = function (source) {
         return new ArrayStream(source, []);
+    };
+    ArrayStream.empty = function () {
+        return ArrayStream.of([]);
     };
     /**
      * Terminal Operation - Short Circuting
@@ -58,10 +75,54 @@ var ArrayStream = /** @class */ (function () {
         }
         return false;
     };
+    /**
+     * Terminal Operation
+     * returns the count of all the elements of the stream.
+     */
     //todo test more with filter
     ArrayStream.prototype.count = function () {
         this.fullyApplyActions();
         return this.source.length;
+    };
+    /**
+     * Stateful intermediate operation
+     * Returns a stream of distinct objects according to the === operator
+     */
+    /*//todo
+    public distinct(): Stream<T> {
+        return this.distinctPredicate((t1: T, t2:T) => t1 === t2)
+    }
+    */
+    /**
+     * Stateful intermediate operation
+     * Returns a stream of distinct objects according to the given predicate, the predicate takes
+     * two objects and should return true if they are equivelant, false if they are different
+     */
+    /*
+    public distinctPredicate(isEqualFunction: BiPredicate<T, T>): Stream<T> {
+    }
+    */
+    /**
+     * Terminal Operation: Short Circuiting
+     * Returns an optional describing the first element of the stream, of the stream is empty,
+     * return an empty Optional.
+     */
+    ArrayStream.prototype.findFirst = function () {
+        if (this.isEmpty()) {
+            return optional_1.Optional.empty();
+        }
+        else {
+            var item = this.source.shift();
+            return optional_1.Optional.of(this.applyAction(item));
+        }
+    };
+    /**
+     * Terminal Operation: Short Circuiting
+     * Returns an optional describing some element in the stream, explicitly non-deterministic to
+     * allow for potential performance increases if stream is empty, return an empty Optional.
+     */
+    ArrayStream.prototype.findAny = function () {
+        return this.findFirst(); //todo better way?
     };
     /**
      * Intermediate Operation.

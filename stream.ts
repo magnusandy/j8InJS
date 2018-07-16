@@ -1,10 +1,13 @@
 import { Transformer, Supplier, BiConsumer, Consumer, BiFunction, Predicate } from "./functions";
 import { Collector } from "./collectors";
+import { Optional } from "./optional";
 
 export interface Stream<T> {
     allMatch(predicate: Predicate<T>): boolean;
     anyMatch(predicate: Predicate<T>): boolean;
     count(): number;
+    findFirst(): Optional<T>;
+    findAny(): Optional<T>;
     map<U>(transformer: Transformer<T, U>): Stream<U>;
     forEach(consumer: Consumer<T>): void;
     defaultCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
@@ -12,11 +15,25 @@ export interface Stream<T> {
     builder(): StreamBuilder<T>;
 }
 
-const compose = <T, U, Z>(f: Transformer<T, U>, g: Transformer<U, Z>): Transformer<T, Z> => (value: T) => g(f(value));
+//Static methods of the stream interface
+export const Stream = {
+    /**
+     * Creates a new stream from the given source array
+     * @param source 
+     */
+    of<T>(source: T[]): Stream<T> {
+        return ArrayStream.of(source);
+    },
 
-export const stream = <T>(source: T[]): Stream<T> => {
-    return ArrayStream.of(source);
+    /**
+     * creates an empty Stream
+     */
+    empty<T>(): Stream<T> {
+        return ArrayStream.of<T>([]);
+    }
 }
+
+const compose = <T, U, Z>(f: Transformer<T, U>, g: Transformer<U, Z>): Transformer<T, Z> => (value: T) => g(f(value));
 
 class ArrayStream<T> implements Stream<T> {
     source: any[];
@@ -47,6 +64,10 @@ class ArrayStream<T> implements Stream<T> {
 
     public static of<T>(source: T[]): Stream<T> {
         return new ArrayStream<T>(source, []);
+    }
+
+    public static empty<T>(): Stream<T> {
+        return ArrayStream.of<T>([]);
     }
 
     /**
@@ -82,10 +103,58 @@ class ArrayStream<T> implements Stream<T> {
         return false;
     }
 
+    /**
+     * Terminal Operation 
+     * returns the count of all the elements of the stream.
+     */
     //todo test more with filter
     public count(): number {
         this.fullyApplyActions();
         return this.source.length;
+    }
+
+
+    /**
+     * Stateful intermediate operation
+     * Returns a stream of distinct objects according to the === operator
+     */
+    /*//todo
+    public distinct(): Stream<T> {
+        return this.distinctPredicate((t1: T, t2:T) => t1 === t2)
+    }
+    */
+
+    /**
+     * Stateful intermediate operation
+     * Returns a stream of distinct objects according to the given predicate, the predicate takes 
+     * two objects and should return true if they are equivelant, false if they are different
+     */
+    /*
+    public distinctPredicate(isEqualFunction: BiPredicate<T, T>): Stream<T> {
+    }
+    */
+
+    /**
+     * Terminal Operation: Short Circuiting
+     * Returns an optional describing the first element of the stream, of the stream is empty,
+     * return an empty Optional.
+     */
+    public findFirst(): Optional<T> {
+        if(this.isEmpty()) {
+            return Optional.empty();
+        } else {
+            const item = this.source.shift();
+            return Optional.of(this.applyAction(item));
+        }
+    }
+
+    /**
+     * Terminal Operation: Short Circuiting
+     * Returns an optional describing some element in the stream, explicitly non-deterministic to
+     * allow for potential performance increases if stream is empty, return an empty Optional.
+     */
+    public findAny(): Optional<T> {
+        return this.findFirst();//todo better way?
     }
 
     /**

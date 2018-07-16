@@ -6,7 +6,7 @@ var collectors_1 = require("../collectors");
 describe('Stream tests', function () {
     it('collect(collector: Collector<T, R, R) should collect when given Collector.toList()', function () {
         var sourceArr = [1, 2, 3];
-        var source = stream_1.stream(sourceArr);
+        var source = stream_1.Stream.of(sourceArr);
         var collected = source.collect(collectors_1.default.toList());
         chai_1.expect(collected.length).to.equal(sourceArr.length);
         chai_1.expect(collected[0]).to.equal(sourceArr[0]);
@@ -15,7 +15,7 @@ describe('Stream tests', function () {
     });
     it('defaultCollect should collect when given attributes to collect to a list', function () {
         var sourceArr = [1, 2, 3];
-        var source = stream_1.stream(sourceArr);
+        var source = stream_1.Stream.of(sourceArr);
         var combiner = function (l1, l2) {
             l2.forEach(function (i) { return l1.push(i); });
         };
@@ -27,7 +27,7 @@ describe('Stream tests', function () {
     });
     it('map should transform all values if a terminal operaion is called', function () {
         var newValue = 'a';
-        var source = stream_1.stream([1, 2, 3]);
+        var source = stream_1.Stream.of([1, 2, 3]);
         var stringStream = source.map(function (n) { return newValue; });
         var result = stringStream.collect(collectors_1.default.toList());
         chai_1.expect(result.length).to.equal(3);
@@ -37,7 +37,7 @@ describe('Stream tests', function () {
     });
     it('map should lazily apply operations when terminal is called', function () {
         var activated = false;
-        var source = stream_1.stream([1, 2, 3]);
+        var source = stream_1.Stream.of([1, 2, 3]);
         var stringStream = source.map(function (n) { activated = true; return 'a'; });
         chai_1.expect(activated).to.equal(false);
         var result = stringStream.collect(collectors_1.default.toList());
@@ -45,60 +45,66 @@ describe('Stream tests', function () {
     });
     it('forEach should apply a consumer to each element', function () {
         var count = 0;
-        var source = stream_1.stream([1, 1, 1]);
+        var source = stream_1.Stream.of([1, 1, 1]);
         source.forEach(function (i) { return count = count + i; });
         chai_1.expect(count).to.equal(3);
     });
     it('allMatch should return true if stream is empty', function () {
-        var source = stream_1.stream([]);
+        var source = stream_1.Stream.of([]);
         var allMatched = source.allMatch(function (i) { return false; });
         chai_1.expect(allMatched).to.equal(true);
     });
     it('allMatch should return true all items in the stream return true predicate', function () {
-        var source = stream_1.stream([1, 2, 3]);
+        var source = stream_1.Stream.of([1, 2, 3]);
         var allMatched = source.allMatch(function (i) { return i < 10; });
         chai_1.expect(allMatched).to.equal(true);
     });
     it('allMatch should return false not all items in the stream return true predicate', function () {
-        var source = stream_1.stream([1, 2, 12]);
+        var source = stream_1.Stream.of([1, 2, 12]);
         var allMatched = source.allMatch(function (i) { return i < 10; });
         chai_1.expect(allMatched).to.equal(false);
     });
     it('allMatch should lazily apply predicates, applying only until false is found', function () {
         var count = 0;
-        var source = stream_1.stream([1, 12, 2]);
+        var source = stream_1.Stream.of([1, 12, 2]);
         source.allMatch(function (i) { count++; return i < 10; });
         chai_1.expect(count).to.equal(2);
     });
     it('anyMatch should return false if stream is empty', function () {
-        var source = stream_1.stream([]);
+        var source = stream_1.Stream.of([]);
         var anyMatched = source.anyMatch(function (i) { return false; });
         chai_1.expect(anyMatched).to.equal(false);
     });
     it('anyMatch should return true any 1 item in the stream return true predicate', function () {
-        var source = stream_1.stream([12, 13, 3]);
+        var source = stream_1.Stream.of([12, 13, 3]);
         var anyMatch = source.anyMatch(function (i) { return i < 10; });
         chai_1.expect(anyMatch).to.equal(true);
     });
     it('anyMatch should return false if no items return true predicate', function () {
-        var source = stream_1.stream([1, 2, 3]);
+        var source = stream_1.Stream.of([1, 2, 3]);
         var anyMatched = source.anyMatch(function (i) { return i > 10; });
         chai_1.expect(anyMatched).to.equal(false);
     });
     it('anyMatch should lazily apply predicates, applying only until true is found', function () {
         var count = 0;
-        var source = stream_1.stream([1, 12, 2]);
+        var source = stream_1.Stream.of([1, 12, 2]);
         source.anyMatch(function (i) { count++; return i > 10; });
         chai_1.expect(count).to.equal(2);
     });
     it('count should return number of elements in stream', function () {
-        var source = stream_1.stream([1, 12, 2]);
+        var source = stream_1.Stream.of([1, 12, 2]);
         var count = source.count();
         chai_1.expect(count).to.equal(3);
     });
     it('count should return number of elements in stream after a map', function () {
-        var source = stream_1.stream([1, 12, 2]).map(function (i) { return i.toString(); });
+        var source = stream_1.Stream.of([1, 12, 2]).map(function (i) { return i.toString(); });
         var count = source.count();
         chai_1.expect(count).to.equal(3);
+    });
+    it('findFirst should return the first value in the stream if values exist', function () {
+        var source = stream_1.Stream.of([1, 12, 2]).map(function (i) { return i.toString(); });
+        var first = source.findFirst();
+        chai_1.expect(first.isPresent()).to.equal(true);
+        chai_1.expect(first.get()).to.equal('1');
     });
 });

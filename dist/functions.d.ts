@@ -1,4 +1,5 @@
 export declare type Predicate<T> = (value: T) => boolean;
+export declare type BiPredicate<T, U> = (t: T, u: U) => boolean;
 export declare type Consumer<T> = (value: T) => void;
 export declare type Transformer<T, U> = (value: T) => U;
 export declare type Supplier<T> = () => T;
