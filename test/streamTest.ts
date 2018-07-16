@@ -23,7 +23,7 @@ describe('Stream tests', () => {
         const combiner = (l1: number[], l2: number[]) => {
             l2.forEach(i => l1.push(i))
         }
-        const collected = source.defaultCollect((): number[] => [], (list, item) => list.push(item), combiner);
+        const collected = source.customCollect((): number[] => [], (list, item) => list.push(item), combiner);
 
         expect(collected.length).to.equal(sourceArr.length);
         expect(collected[0]).to.equal(sourceArr[0]);
@@ -55,7 +55,7 @@ describe('Stream tests', () => {
     it('forEach should apply a consumer to each element', () => {
         let count = 0;
         const source: Stream<number> = Stream.of([1, 1, 1]);
-        source.forEach(i => count = count + i);
+        source.forEachOrdered(i => count = count + i);
 
         expect(count).to.equal(3);
     });

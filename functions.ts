@@ -5,3 +5,4 @@ export type Transformer<T, U> = (value: T) => U;
 export type Supplier<T> = () => T;
 export type BiConsumer<T, U> = (t: T, u: U) => void;
 export type BiFunction<T> = (t1: T, t2: T) => T;
+export type Comparator<T> = (t1: T, t2: T) => -1 | 0 | 1;

@@ -1,18 +1,36 @@
-import { Transformer, Supplier, BiConsumer, Consumer, BiFunction, Predicate } from "./functions";
+import { Transformer, Supplier, BiConsumer, Consumer, BiFunction, Predicate, BiPredicate, Comparator } from "./functions";
 import { Collector } from "./collectors";
 import { Optional } from "./optional";
+
+
 
 export interface Stream<T> {
     allMatch(predicate: Predicate<T>): boolean;
     anyMatch(predicate: Predicate<T>): boolean;
+    builder(): StreamBuilder<T>;
     count(): number;
+    customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
+    collect<R, A>(collector: Collector<T, A, R>): R;
+    //distinct(): Stream<T>; //stateful intermediate
+    //distinctPredicate(equalsFunction: BiPredicate<T,T>): Stream<T>; //stateful Intermediate
+    //filter(predicate: Predicate<T>): Stream<T>; //intermediate
     findFirst(): Optional<T>;
     findAny(): Optional<T>;
-    map<U>(transformer: Transformer<T, U>): Stream<U>;
+    //flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>; //intermediate
+    //flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>; //intermediate
     forEach(consumer: Consumer<T>): void;
-    defaultCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
-    collect<R, A>(collector: Collector<T, A, R>): R;
-    builder(): StreamBuilder<T>;
+    forEachOrdered(consumer: Consumer<T>): void;
+    //limit(maxSize: number): Stream<T>; //intermediate
+    map<U>(transformer: Transformer<T, U>): Stream<U>; //intermediate
+    //max(comparator: Comparator<T>): T; //todo optional param, default to >
+    //min(comparator: Comparator<T>): T; // todo optional param, default to <
+    //noneMatch(predicate: Predicate<T>): boolean;
+    //peek(consumer: Consumer<T>): Stream<T>; //intermediate
+    //reduce(identity: T, accumulator: BiFunction<T>): T;
+    //skip(numberToSkip: number): Stream<T>; //intermediate
+    //sortedNatural(): Stream<T>; //intermediate stateful
+    //sorted(comparator: Comparator<T>): Stream<T>; //intermediate stateful
+    //toArray(): T[];
 }
 
 //Static methods of the stream interface
@@ -26,21 +44,99 @@ export const Stream = {
     },
 
     /**
+     * Creates a new stream from the given source values
+     * @param source 
+     */
+    ofValues<T>(...values: T[]): Stream<T> {
+        return ArrayStream.of(values);
+    },
+
+    /**
+     * creates a stream of a single element with the given source value;
+     * @param value 
+     */
+    ofValue<T>(value: T): Stream<T> {
+        return ArrayStream.of([value]);
+    },
+
+
+    /**
      * creates an empty Stream
      */
     empty<T>(): Stream<T> {
         return ArrayStream.of<T>([]);
-    }
+    },
+
+    //todo
+    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
+    //generate<T>(supplier: Supplier<T>): Stream<T> {},
+    //iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {},
+
 }
 
 const compose = <T, U, Z>(f: Transformer<T, U>, g: Transformer<U, Z>): Transformer<T, Z> => (value: T) => g(f(value));
 
+enum ActionType {
+    Map,
+    FlatMap,
+    Filter,
+    Peek,
+    
+    Sorted,
+    Distinct,
+    Limit,
+    Skip,
+}
+
+class Action {
+    isStateful: boolean;
+    actionType: ActionType;
+    map?: Transformer<any, any>;
+    filter?: Predicate<any>;
+
+    private constructor(
+        isStateful: boolean,
+        actionType: ActionType,
+        map?: Transformer<any, any>,
+        filter?: Predicate<any>
+    ) {
+        this.isStateful = isStateful;
+        this.actionType = actionType;
+        this.map = map;
+        this.filter = filter;
+    }
+}
+
+class Item<T> {
+    private removed: boolean;
+    private value: T;
+    private constructor(value: T, removed: boolean) {
+        this.removed = removed;
+        this.value = value;
+    }
+    public get(): T {
+        return this.value;
+    }
+
+    public isRemoved(): boolean {
+        return this.removed;
+    }
+
+    public remove(): void {
+        this.removed = true;
+    }
+
+    public static of<T>(value: T) {
+        return new Item<T>(value, false);
+    }
+}
+
 class ArrayStream<T> implements Stream<T> {
-    source: any[];
+    source: Item<any>[];
     actions: Transformer<any, any>[];
 
     private constructor(source: T[], actions: Transformer<any, any>[]) {
-        this.source = source.slice()
+        this.source = source.slice().map(Item.of);
         this.actions = actions;
     }
 
@@ -57,6 +153,10 @@ class ArrayStream<T> implements Stream<T> {
     }
 
     private ultimateAction: () => Transformer<any, T> = () => this.actions.reduce(compose);
+
+    private getNextValue(): T {
+
+    }
 
     private isEmpty() {
         return this.source.length === 0;
@@ -140,7 +240,7 @@ class ArrayStream<T> implements Stream<T> {
      * return an empty Optional.
      */
     public findFirst(): Optional<T> {
-        if(this.isEmpty()) {
+        if (this.isEmpty()) {
             return Optional.empty();
         } else {
             const item = this.source.shift();
@@ -164,17 +264,26 @@ class ArrayStream<T> implements Stream<T> {
      */
     public map<U>(transformer: Transformer<T, U>): Stream<U> {
         this.actions.push(transformer);
-        return new ArrayStream<U>(this.source, this.actions);
+        return new ArrayStream<U>(this.source.map(i => i.get()), this.actions);
     }
 
     /**
      * Terminal Operation
-     * applies a given consumer to each entity in the stream.
+     * applies a given consumer to each entity in the stream. objects are dealt with in order
+     * @param consumer: applies the consuming function to all elements in the stream;
+     */
+    public forEachOrdered(consumer: Consumer<T>): void {
+        this.fullyApplyActions();
+        this.source.forEach(consumer);
+    }
+
+    /**
+     * Terminal Operation
+     * applies a given consumer to each entity in the stream. ordering is not garenteed;
      * @param consumer: applies the consuming function to all elements in the stream;
      */
     public forEach(consumer: Consumer<T>): void {
-        this.fullyApplyActions();
-        this.source.forEach(consumer);
+        this.forEachOrdered(consumer); //todo more efficent?
     }
 
     //todo maybe make parallel
@@ -185,7 +294,7 @@ class ArrayStream<T> implements Stream<T> {
      * @param accumulator: function that adds an item to the given mutable container
      * @param combiner: function combines two mutable containers, adding all the elements of the second one into the first
      */
-    public defaultCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R {
+    public customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R {
         this.fullyApplyActions();
         let container: R = supplier();
         this.source.forEach(item => accumulator(container, item))
