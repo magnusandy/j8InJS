@@ -2,7 +2,7 @@ import { Transformer, Supplier, BiConsumer, Consumer, BiFunction, Predicate, BiP
 import { Collector } from "./collectors";
 import { Optional } from "./optional";
 
-
+type Maybe<T> = T | undefined;
 
 export interface Stream<T> {
     allMatch(predicate: Predicate<T>): boolean;
@@ -31,6 +31,117 @@ export interface Stream<T> {
     //sortedNatural(): Stream<T>; //intermediate stateful
     //sorted(comparator: Comparator<T>): Stream<T>; //intermediate stateful
     //toArray(): T[];
+}
+
+interface Processor<Input, Output> {
+    hasNext(): boolean;
+    getNext(): Optional<Output>;
+    add(input: Input): void;
+    isStateless(): boolean;
+}
+
+abstract class AbstractProcessor<Input, Output> implements Processor<Input, Output> {
+    protected inputs: Input[];
+
+    constructor() {
+        this.inputs = [];
+    }
+
+    public add(input: Input): void {
+        this.inputs.push(input);
+    }
+
+    protected takeNextInput(): Maybe<Input> {
+        return this.inputs.shift();
+    }
+
+    public hasNext(): boolean {
+        return this.inputs ? this.inputs.length > 0 : false;
+    }
+
+    abstract getNext(): Optional<Output>;
+    abstract isStateless(): boolean;
+}
+
+/**
+ * For use in Map processing pipline
+ */
+class MapProcessor<Input, Output> extends AbstractProcessor<Input, Output> {
+
+    private transformer: Transformer<Input, Output>;
+
+    public constructor(transformer: Transformer<Input, Output>) {
+        super();
+        this.transformer = transformer;
+    }
+
+    //pull values off the start
+    public getNext(): Optional<Output> {
+        return Optional.ofNullable<Input>(this.takeNextInput())
+            .map(this.transformer);
+    }
+
+    public isStateless(): boolean {
+        return true;
+    }
+}
+
+class FilterProcessor<Input> extends AbstractProcessor<Input, Input> {
+    private predicate: Predicate<Input>;
+
+    public constructor(predicate: Predicate<Input>) {
+        super();
+        this.predicate = predicate;
+    }
+
+    public getNext(): Optional<Input> {
+        return Optional.ofNullable(this.takeNextInput())
+            .filter(this.predicate);
+    }
+
+    public isStateless(): boolean {
+        return true;
+    }
+}
+
+class ListFlatMapProcessor<Input, Output> implements Processor<Input, Output> {
+    private sourceInputs: Input[];
+    private outputList: Output[];
+    private transformer: Transformer<Input, Output[]>;
+
+    constructor(transformer: Transformer<Input, Output[]>) {
+        this.transformer = transformer;
+        this.sourceInputs = [];
+        this.outputList = [];
+    }
+
+    public add(input: Input): void {
+        this.sourceInputs.push(input);
+    }
+
+    hasNext(): boolean {
+        if (this.outputList.length > 0) {
+            return true;
+        } else if (this.sourceInputs.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //todo test recursive
+    getNext(): Optional<Output> {
+        if (this.outputList.length > 0) {
+            return Optional.ofNullable(this.outputList.shift());
+        } else if (this.sourceInputs.length > 0) {
+            const nextSource: Optional<Input> = Optional.ofNullable(this.sourceInputs.shift());
+            if (nextSource.isPresent()) {
+                this.outputList = this.transformer(nextSource.get());
+                return this.getNext();
+            }
+        }
+        return Optional.empty();
+    }
 }
 
 //Static methods of the stream interface
@@ -81,7 +192,7 @@ enum ActionType {
     FlatMap,
     Filter,
     Peek,
-    
+
     Sorted,
     Distinct,
     Limit,
@@ -107,55 +218,13 @@ class Action {
     }
 }
 
-class Item<T> {
-    private removed: boolean;
-    private value: T;
-    private constructor(value: T, removed: boolean) {
-        this.removed = removed;
-        this.value = value;
-    }
-    public get(): T {
-        return this.value;
-    }
-
-    public isRemoved(): boolean {
-        return this.removed;
-    }
-
-    public remove(): void {
-        this.removed = true;
-    }
-
-    public static of<T>(value: T) {
-        return new Item<T>(value, false);
-    }
-}
-
 class ArrayStream<T> implements Stream<T> {
-    source: Item<any>[];
-    actions: Transformer<any, any>[];
+    source: any[];
+    actions: Processor<any, any>[];
 
-    private constructor(source: T[], actions: Transformer<any, any>[]) {
-        this.source = source.slice().map(Item.of);
+    private constructor(source: T[], actions: Processor<any, any>[]) {
+        this.source = source.slice()
         this.actions = actions;
-    }
-
-    //todo flag if actions are applied "exhaust" the stream;
-    private fullyApplyActions() {
-        if (this.actions.length > 0) {
-            const ultimateAction: Transformer<any, T> = this.ultimateAction();
-            this.source = this.source.map(ultimateAction);
-        }
-    }
-
-    private applyAction = (item: any): T => {
-        return this.actions.length > 0 ? this.ultimateAction()(item) : item;
-    }
-
-    private ultimateAction: () => Transformer<any, T> = () => this.actions.reduce(compose);
-
-    private getNextValue(): T {
-
     }
 
     private isEmpty() {
@@ -257,14 +326,19 @@ class ArrayStream<T> implements Stream<T> {
         return this.findFirst();//todo better way?
     }
 
+    filter(predicate: Predicate<T>): Stream<T> {
+        this.actions.push(new FilterProcessor<T>(predicate));
+        return new ArrayStream<T>(this.source, this.actions);
+    }
+
     /**
      * Intermediate Operation.
      * Returns a stream consisting of the results of applying the given function to the elements of this stream.
      * @param transformer: function that transforms a value in the stream to a new value;
      */
     public map<U>(transformer: Transformer<T, U>): Stream<U> {
-        this.actions.push(transformer);
-        return new ArrayStream<U>(this.source.map(i => i.get()), this.actions);
+        this.actions.push(new MapProcessor<T, U>(transformer));
+        return new ArrayStream<U>(this.source, this.actions);
     }
 
     /**
