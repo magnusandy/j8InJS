@@ -12,7 +12,7 @@ export interface Stream<T> {
     //customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
     collect<R, A>(collector: Collector<T, A, R>): R;
     //distinct(): Stream<T>; //stateful intermediate
-    //distinctPredicate(equalsFunction: BiPredicate<T,T>): Stream<T>; //stateful Intermediate
+    distinctPredicate(equalsFunction: BiPredicate<T,T>): Stream<T>; //stateful Intermediate
     filter(predicate: Predicate<T>): Stream<T>; //intermediate
     //findFirst(): Optional<T>;
     //findAny(): Optional<T>;
@@ -105,13 +105,17 @@ class ArrayStream<S, T> implements Stream<T> {
         return ArrayStream.of<S>([]);
     }
 
-
-
     private getNextProcessedItem(): Optional<any> {
         this.processingStarted = true;
         if (!this.isEmpty()) {
             if (this.pipeline) { // pipeline exists
                 const definedPipe: ProcessorPipeline<S, T> = this.pipeline;
+
+                if (definedPipe.containsStateful() && this.source.length > 0) { //need to shove all the inputs in
+                    this.source.forEach(s => definedPipe.addItem(s));
+                    this.source = []; 
+                }
+
                 if (definedPipe.hasNext()) { //draw from elements already in the pipeline
                     return definedPipe.getNextResult();
                 } else { //pipeline is empty, we need to add more items to it
@@ -160,6 +164,11 @@ class ArrayStream<S, T> implements Stream<T> {
 
     public filter(predicate: Predicate<T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.filterProcessor(predicate));
+        return new ArrayStream<S, T>(this.source, newPipeline);
+    }
+
+    public distinctPredicate(equalsFunction: BiPredicate<T,T>): Stream<T> {
+        const newPipeline = this.newPipeline(Processor.distinctProcessor(equalsFunction));
         return new ArrayStream<S, T>(this.source, newPipeline);
     }
 

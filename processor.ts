@@ -1,4 +1,4 @@
-import { Transformer, Predicate } from "./functions";
+import { Transformer, Predicate, BiPredicate } from "./functions";
 import { Optional } from "./optional";
 import { Maybe } from "./maybe";
 
@@ -13,6 +13,7 @@ export const Processor = {
     mapProcessor: <I, O>(transformer: Transformer<I, O>): Processor<I, O> => new MapProcessor<I, O>(transformer),
     filterProcessor: <I>(predicate: Predicate<I>): Processor<I, I> => new FilterProcessor<I>(predicate),
     listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>): Processor<I, O> => new ListFlatMapProcessor(transformer),
+    distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),
 }
 
 abstract class AbstractProcessor<Input, Output> implements Processor<Input, Output> {
@@ -36,6 +37,51 @@ abstract class AbstractProcessor<Input, Output> implements Processor<Input, Outp
 
     abstract getNext(): Optional<Output>;
     abstract isStateless(): boolean;
+}
+
+class DistinctProcessor<Input> extends AbstractProcessor<Input, Input> {
+
+    private comparator: BiPredicate<Input, Input>;
+    private distinctList: Optional<Input[]>;
+
+    constructor(comparator: BiPredicate<Input, Input>) {
+        super();
+        this.comparator = comparator;
+        this.distinctList = Optional.empty();
+    }
+
+    isStateless(): boolean {
+        return false;
+    }
+
+    hasNext(): boolean {
+        const distinctListExistsAndHasValues = this.distinctList.isPresent() ? this.distinctList.get().length > 0 : false;
+        return this.inputs.length > 0 || distinctListExistsAndHasValues;
+    }
+
+    getNext(): Optional<Input> {
+        if (!this.distinctList.isPresent()) {
+            this.processValues();
+            return this.getNext();
+        } else {
+            return Optional.ofNullable(this.distinctList.get().shift());
+        }
+    }
+
+    private processValues(): void {
+        let distinctList: Input[] = [];
+        this.inputs.forEach(item => {
+            //compare the current Item with the given value
+            const doesMatchItem = (distinct: Input): boolean => this.comparator(item, distinct);
+            const matchingItems = distinctList.filter(doesMatchItem);
+            if (matchingItems.length === 0) {
+                distinctList.push(item)
+            }
+        });
+        this.inputs = [];
+        this.distinctList = Optional.of(distinctList);
+    }
+
 }
 
 /**
