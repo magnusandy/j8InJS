@@ -2,12 +2,29 @@ import { Processor } from "./processor";
 import { Optional } from "./optional";
 
 export class ProcessorPipeline<Source, Final> {
-    headProcessor: ProcessorNode<Source, any>;
-    tailProcessor: ProcessorNode<any, Final>;
+
+    private elementQueue: Source[];
+    private headProcessor: ProcessorNode<Source, any>;
+    private tailProcessor: ProcessorNode<any, Final>;
 
     private constructor(headNode: ProcessorNode<Source, any>, tailNode: ProcessorNode<any, Final>) {
+        this.elementQueue = [];
         this.headProcessor = headNode;
         this.tailProcessor = tailNode;
+    }
+
+    private isProcessorChainEmpty(): boolean {
+        let currentNode = this.headProcessor;
+        if (currentNode.getProcessor().hasNext()) {
+            return false;
+        }
+        while (currentNode.getNext().isPresent()) { //todo test
+            currentNode = currentNode.getNext().get();
+            if (currentNode.getProcessor().hasNext()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static create<S, F>(initalProcessor: Processor<S, F>): ProcessorPipeline<S, F> {
@@ -21,7 +38,31 @@ export class ProcessorPipeline<Source, Final> {
         oldTail.addNext(newNode);
         newNode.addPrevious(oldTail);
 
-        return new ProcessorPipeline<Source, NewFinal>(this.headProcessor, newNode);
+        return new ProcessorPipeline<Source, NewFinal>(this.headProcessor, newNode)
+    }
+
+    public addItem(item: Source) {
+        this.elementQueue.push(item);
+    }
+
+    public hasNext(): boolean {
+        return !this.isProcessorChainEmpty() || this.elementQueue.length > 0;
+    }
+
+    public getNextResult(): Optional<Final> {
+        if (!this.isProcessorChainEmpty()) { //still items in the chain
+            const possibleValue: Optional<Final> = this.tailProcessor.getProcessedValue();
+            if (possibleValue.isPresent()) {
+                return possibleValue;
+            } else {
+                return this.getNextResult();
+            }
+        } else if (this.elementQueue.length > 0) {
+            const nextElement = Optional.ofNullable(this.elementQueue.shift());
+            nextElement.ifPresent(element => this.headProcessor.getProcessor().add(element));
+            return this.getNextResult();
+        }
+        return Optional.empty();
     }
 }
 
@@ -42,5 +83,31 @@ class ProcessorNode<Input, Output> {
 
     addPrevious(previousProcessor: ProcessorNode<any, Input>): void {
         this.previousNode = Optional.of(previousProcessor);
+    }
+
+    getNext(): Optional<ProcessorNode<Output, any>> {
+        return this.nextNode;
+    }
+
+    getProcessor(): Processor<Input, Output> {
+        return this.thisProcessor;
+    }
+
+    getProcessedValue(): Optional<Output> {
+        if (this.thisProcessor.hasNext()) {
+            const next: Optional<Output> = this.thisProcessor.getNext();
+            if (next.isPresent()) {
+                return next;
+            } else {
+                return this.getProcessedValue();
+            }
+        } else if (this.previousNode.isPresent()) { //try filling the processor with output of the previous node
+            const processedValue: Optional<Input> = this.previousNode.get().getProcessedValue();
+            if (processedValue.isPresent()) {
+                this.getProcessor().add(processedValue.get());
+                return this.getProcessedValue();
+            }
+        } 
+        return Optional.empty();
     }
 }

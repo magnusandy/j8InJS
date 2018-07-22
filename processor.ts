@@ -1,5 +1,6 @@
 import { Transformer, Predicate } from "./functions";
 import { Optional } from "./optional";
+import { Maybe } from "./maybe";
 
 export interface Processor<Input, Output> {
     hasNext(): boolean;
@@ -25,7 +26,7 @@ abstract class AbstractProcessor<Input, Output> implements Processor<Input, Outp
         this.inputs.push(input);
     }
 
-    protected takeNextInput(): Maybe<Input> {
+    protected takeNextInput(): Input | undefined {
         return this.inputs.shift();
     }
 
