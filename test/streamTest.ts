@@ -7,17 +7,17 @@ import { Optional } from "../optional";
 
 describe('Stream tests', () => {
     describe('forEach tests', () => {
-        // it('it should consume all values', () => {
-        //     const stream: Stream<string> = Stream.of(['a,b,c', 'e,f,g']).flatMapList(i => i.split(',')).map(s => `1: ${s}`);
-        //     const consumer: Consumer<string> = (s: string) => console.log(s);
-        //     stream.forEach(consumer);
-        // });
+        it('it should consume all values', () => {
+            const stream: Stream<string> = Stream.of(['a,b,c', 'e,f,g']).flatMapList(i => i.split(',')).map(s => `1: ${s}`);
+            const consumer: Consumer<string> = (s: string) => console.log(s);
+            stream.forEach(consumer);
+        });
 
-        // it('it should consume all values', () => {
-        //     const stream: Stream<string> = Stream.of(['a,b,c', 'e,f,g']).flatMapList(i => i.split(','));
-        //     const consumer: Consumer<string> = (s: string) => console.log(s);
-        //     console.log(stream.collect(Collectors.toList()));
-        // });
+        it('it should consume all values', () => {
+            const stream: Stream<string> = Stream.of(['a,b,c', 'e,f,g']).flatMapList(i => i.split(','));
+            const consumer: Consumer<string> = (s: string) => console.log(s);
+            console.log(stream.collect(Collectors.toList()));
+        });
 
         it('it should filterValues', () => {
             const stream: Stream<string> = Stream.of([4,4,5,1,2,3,4,4,5,1])
