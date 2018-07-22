@@ -12,7 +12,6 @@ export class Optional<T> {
 		this.value = value;
 	}
 
-
 	/**
 	 * Return true if there is a value present, otherwise false.
 	 */
