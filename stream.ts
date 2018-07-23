@@ -11,7 +11,7 @@ export interface Stream<T> {
     //count(): number;
     //customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
     collect<R, A>(collector: Collector<T, A, R>): R;
-    //distinct(): Stream<T>; //stateful intermediate
+    distinct(): Stream<T>; //stateful intermediate
     distinctPredicate(equalsFunction: BiPredicate<T,T>): Stream<T>; //stateful Intermediate
     filter(predicate: Predicate<T>): Stream<T>; //intermediate
     //findFirst(): Optional<T>;
@@ -165,6 +165,15 @@ class ArrayStream<S, T> implements Stream<T> {
     public filter(predicate: Predicate<T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.filterProcessor(predicate));
         return new ArrayStream<S, T>(this.source, newPipeline);
+    }
+
+    /**
+     * returns a distinct stream of values based on the === operator, 
+     * for a custom distinction utilize distinctPredicate to pass in a custom 
+     * equalityTest.
+     */
+    public distinct(): Stream<T> {
+        return this.distinctPredicate((i1, i2) => i1 === i2);
     }
 
     public distinctPredicate(equalsFunction: BiPredicate<T,T>): Stream<T> {

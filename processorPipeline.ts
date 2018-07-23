@@ -19,14 +19,18 @@ export class ProcessorPipeline<Source, Final> {
         this.tailProcessor = tailNode;
     }
 
-    private isProcessorChainEmpty(): boolean {
+    /**
+     * return false if any of the processors in the pipeline
+     * still have a value inside it.
+     */
+    protected isProcessorChainEmpty(): boolean {
         let currentNode = this.headProcessor;
-        if (currentNode.getProcessor().hasNext()) {
+        if (currentNode.hasNext()) {
             return false;
         }
-        while (currentNode.getNext().isPresent()) { //todo test
-            currentNode = currentNode.getNext().get();
-            if (currentNode.getProcessor().hasNext()) {
+        while (currentNode.getNextNode().isPresent()) { 
+            currentNode = currentNode.getNextNode().get();
+            if (currentNode.hasNext()) {
                 return false;
             }
         }
@@ -40,12 +44,12 @@ export class ProcessorPipeline<Source, Final> {
      */
     public containsStateful(): boolean {
         let currentNode = this.headProcessor;
-        if (!currentNode.getProcessor().isStateless()) {
+        if (!currentNode.isStateless()) {
             return true;
         }
-        while (currentNode.getNext().isPresent()) {
-            currentNode = currentNode.getNext().get();
-            if (!currentNode.getProcessor().isStateless()) {
+        while (currentNode.getNextNode().isPresent()) {
+            currentNode = currentNode.getNextNode().get();
+            if (!currentNode.isStateless()) {
                 return true;
             }
         }
@@ -68,8 +72,8 @@ export class ProcessorPipeline<Source, Final> {
     public addProcessor<NewFinal>(addedProcessor: Processor<Final, NewFinal>): ProcessorPipeline<Source, NewFinal> {
         const newNode = new ProcessorNode(addedProcessor);
         const oldTail = this.tailProcessor;
-        oldTail.addNext(newNode);
-        newNode.addPrevious(oldTail);
+        oldTail.addNextNode(newNode);
+        newNode.addPreviousNode(oldTail);
 
         return new ProcessorPipeline<Source, NewFinal>(this.headProcessor, newNode)
     }
@@ -106,12 +110,12 @@ export class ProcessorPipeline<Source, Final> {
             }
         } else if (this.elementQueue.length > 0) {
             if (this.containsStateful()) {
-                this.elementQueue.forEach(e => this.headProcessor.getProcessor().add(e))
+                this.elementQueue.forEach(e => this.headProcessor.addInput(e))
                 this.elementQueue = [];
                 return this.getNextResult();
             } else {
                 const nextElement = Optional.ofNullable(this.elementQueue.shift());
-                nextElement.ifPresent(element => this.headProcessor.getProcessor().add(element));
+                nextElement.ifPresent(element => this.headProcessor.addInput(element));
                 return this.getNextResult();
             }
         }
@@ -122,7 +126,7 @@ export class ProcessorPipeline<Source, Final> {
 /**
  * represents a node in the processing pipeline, may or may not have a node before and after.
  */
-class ProcessorNode<Input, Output> {
+export class ProcessorNode<Input, Output> {
     private previousNode: Optional<ProcessorNode<any, Input>>;
     private thisProcessor: Processor<Input, Output>;
     private nextNode: Optional<ProcessorNode<Output, any>>;
@@ -133,20 +137,72 @@ class ProcessorNode<Input, Output> {
         this.nextNode = Optional.empty();
     }
 
-    addNext(next: ProcessorNode<Output, any>): void {
+    private getNextProcessedOutput(): Optional<Output> {
+        return this.thisProcessor.processAndGetNext();
+    }
+
+    addNextNode(next: ProcessorNode<Output, any>): void {
         this.nextNode = Optional.of(next);
     }
 
-    addPrevious(previousProcessor: ProcessorNode<any, Input>): void {
+    addPreviousNode(previousProcessor: ProcessorNode<any, Input>): void {
         this.previousNode = Optional.of(previousProcessor);
     }
 
-    getNext(): Optional<ProcessorNode<Output, any>> {
+    getNextNode(): Optional<ProcessorNode<Output, any>> {
         return this.nextNode;
     }
 
-    getProcessor(): Processor<Input, Output> {
-        return this.thisProcessor;
+    getPreviousNode(): Optional<ProcessorNode<any, Input>> {
+        return this.previousNode;
+    }
+
+    addInput(input: Input): void {
+        this.thisProcessor.add(input);
+    }
+
+    isStateless(): boolean {
+        return this.thisProcessor.isStateless();
+    }
+
+    hasNext(): boolean {
+        return this.thisProcessor.hasNext();
+    }
+
+    // getProcessor(): Processor<Input, Output> {
+    //     return this.thisProcessor;
+    // }
+
+    /**
+     * pulls all the values out of the previous processor, if one exists
+     * and add them into the current processor;
+     */
+    statefulPullAndGet(): Optional<Output> {
+        if (this.previousNode.isPresent()) {
+            let previousVal: Optional<Input> = this.previousNode.get().getProcessedValue();
+            while (previousVal.isPresent()) {
+                this.addInput(previousVal.get());
+                previousVal = this.previousNode.get().getProcessedValue();
+            }
+        }
+        return this.getNextProcessedOutput();
+    }
+
+    /**
+     * goes to the current processor, pulling values out of it first, if there is nothing left in the 
+     * current processor, attempt to add new items to the current processor from the previous upstream processor.
+     */
+    statelessGet(): Optional<Output> {
+        if (this.thisProcessor.hasNext()) {
+            return this.thisProcessor.processAndGetNext();
+        } else if (this.previousNode.isPresent()) { //try filling the processor with output of the previous node
+            const processedValue: Optional<Input> = this.previousNode.get().getProcessedValue();
+            if (processedValue.isPresent()) {
+                this.addInput(processedValue.get());
+                return this.statelessGet();
+            }
+        }
+        return Optional.empty();
     }
 
     /**
@@ -157,35 +213,12 @@ class ProcessorNode<Input, Output> {
      * if the current processor is a stateful processor, this function 
      * will greedily pull all items from the previous node into itself 
      * before processing and returning any values. 
+     * 
+     * 
      */
     getProcessedValue(): Optional<Output> {
-        if (!this.getProcessor().isStateless()) {
-            //need to greedily pull all values from previous node
-            if (this.previousNode.isPresent()) {
-                let previousVal: Optional<Input> = this.previousNode.get().getProcessedValue();
-                while (previousVal.isPresent()) {
-                    this.getProcessor().add(previousVal.get());
-                    previousVal = this.previousNode.get().getProcessedValue();
-                }
-            }
-            //else we assume it has all its inputs
-            return this.getProcessor().processAndGetNext();
-        } else { // stateless
-            if (this.thisProcessor.hasNext()) {
-                const next: Optional<Output> = this.thisProcessor.processAndGetNext();
-                if (next.isPresent()) {
-                    return next;
-                } else {
-                    return this.getProcessedValue();
-                }
-            } else if (this.previousNode.isPresent()) { //try filling the processor with output of the previous node
-                const processedValue: Optional<Input> = this.previousNode.get().getProcessedValue();
-                if (processedValue.isPresent()) {
-                    this.getProcessor().add(processedValue.get());
-                    return this.getProcessedValue();
-                }
-            }
-        }
-        return Optional.empty();
+        return this.isStateless()
+            ? this.statelessGet()
+            : this.statefulPullAndGet();
     }
 }

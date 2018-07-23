@@ -13,14 +13,18 @@ var ProcessorPipeline = /** @class */ (function () {
         this.headProcessor = headNode;
         this.tailProcessor = tailNode;
     }
+    /**
+     * return false if any of the processors in the pipeline
+     * still have a value inside it.
+     */
     ProcessorPipeline.prototype.isProcessorChainEmpty = function () {
         var currentNode = this.headProcessor;
-        if (currentNode.getProcessor().hasNext()) {
+        if (currentNode.hasNext()) {
             return false;
         }
-        while (currentNode.getNext().isPresent()) { //todo test
-            currentNode = currentNode.getNext().get();
-            if (currentNode.getProcessor().hasNext()) {
+        while (currentNode.getNextNode().isPresent()) {
+            currentNode = currentNode.getNextNode().get();
+            if (currentNode.hasNext()) {
                 return false;
             }
         }
@@ -33,12 +37,12 @@ var ProcessorPipeline = /** @class */ (function () {
      */
     ProcessorPipeline.prototype.containsStateful = function () {
         var currentNode = this.headProcessor;
-        if (!currentNode.getProcessor().isStateless()) {
+        if (!currentNode.isStateless()) {
             return true;
         }
-        while (currentNode.getNext().isPresent()) {
-            currentNode = currentNode.getNext().get();
-            if (!currentNode.getProcessor().isStateless()) {
+        while (currentNode.getNextNode().isPresent()) {
+            currentNode = currentNode.getNextNode().get();
+            if (!currentNode.isStateless()) {
                 return true;
             }
         }
@@ -59,8 +63,8 @@ var ProcessorPipeline = /** @class */ (function () {
     ProcessorPipeline.prototype.addProcessor = function (addedProcessor) {
         var newNode = new ProcessorNode(addedProcessor);
         var oldTail = this.tailProcessor;
-        oldTail.addNext(newNode);
-        newNode.addPrevious(oldTail);
+        oldTail.addNextNode(newNode);
+        newNode.addPreviousNode(oldTail);
         return new ProcessorPipeline(this.headProcessor, newNode);
     };
     /**
@@ -96,13 +100,13 @@ var ProcessorPipeline = /** @class */ (function () {
         }
         else if (this.elementQueue.length > 0) {
             if (this.containsStateful()) {
-                this.elementQueue.forEach(function (e) { return _this.headProcessor.getProcessor().add(e); });
+                this.elementQueue.forEach(function (e) { return _this.headProcessor.addInput(e); });
                 this.elementQueue = [];
                 return this.getNextResult();
             }
             else {
                 var nextElement = optional_1.Optional.ofNullable(this.elementQueue.shift());
-                nextElement.ifPresent(function (element) { return _this.headProcessor.getProcessor().add(element); });
+                nextElement.ifPresent(function (element) { return _this.headProcessor.addInput(element); });
                 return this.getNextResult();
             }
         }
@@ -120,17 +124,63 @@ var ProcessorNode = /** @class */ (function () {
         this.thisProcessor = processor;
         this.nextNode = optional_1.Optional.empty();
     }
-    ProcessorNode.prototype.addNext = function (next) {
+    ProcessorNode.prototype.getNextProcessedOutput = function () {
+        return this.thisProcessor.processAndGetNext();
+    };
+    ProcessorNode.prototype.addNextNode = function (next) {
         this.nextNode = optional_1.Optional.of(next);
     };
-    ProcessorNode.prototype.addPrevious = function (previousProcessor) {
+    ProcessorNode.prototype.addPreviousNode = function (previousProcessor) {
         this.previousNode = optional_1.Optional.of(previousProcessor);
     };
-    ProcessorNode.prototype.getNext = function () {
+    ProcessorNode.prototype.getNextNode = function () {
         return this.nextNode;
     };
-    ProcessorNode.prototype.getProcessor = function () {
-        return this.thisProcessor;
+    ProcessorNode.prototype.getPreviousNode = function () {
+        return this.previousNode;
+    };
+    ProcessorNode.prototype.addInput = function (input) {
+        this.thisProcessor.add(input);
+    };
+    ProcessorNode.prototype.isStateless = function () {
+        return this.thisProcessor.isStateless();
+    };
+    ProcessorNode.prototype.hasNext = function () {
+        return this.thisProcessor.hasNext();
+    };
+    // getProcessor(): Processor<Input, Output> {
+    //     return this.thisProcessor;
+    // }
+    /**
+     * pulls all the values out of the previous processor, if one exists
+     * and add them into the current processor;
+     */
+    ProcessorNode.prototype.statefulPullAndGet = function () {
+        if (this.previousNode.isPresent()) {
+            var previousVal = this.previousNode.get().getProcessedValue();
+            while (previousVal.isPresent()) {
+                this.addInput(previousVal.get());
+                previousVal = this.previousNode.get().getProcessedValue();
+            }
+        }
+        return this.getNextProcessedOutput();
+    };
+    /**
+     * goes to the current processor, pulling values out of it first, if there is nothing left in the
+     * current processor, attempt to add new items to the current processor from the previous upstream processor.
+     */
+    ProcessorNode.prototype.statelessGet = function () {
+        if (this.thisProcessor.hasNext()) {
+            return this.thisProcessor.processAndGetNext();
+        }
+        else if (this.previousNode.isPresent()) { //try filling the processor with output of the previous node
+            var processedValue = this.previousNode.get().getProcessedValue();
+            if (processedValue.isPresent()) {
+                this.addInput(processedValue.get());
+                return this.statelessGet();
+            }
+        }
+        return optional_1.Optional.empty();
     };
     /**
      * Returns a value that has been processed by this processor,
@@ -140,39 +190,14 @@ var ProcessorNode = /** @class */ (function () {
      * if the current processor is a stateful processor, this function
      * will greedily pull all items from the previous node into itself
      * before processing and returning any values.
+     *
+     *
      */
     ProcessorNode.prototype.getProcessedValue = function () {
-        if (!this.getProcessor().isStateless()) {
-            //need to greedily pull all values from previous node
-            if (this.previousNode.isPresent()) {
-                var previousVal = this.previousNode.get().getProcessedValue();
-                while (previousVal.isPresent()) {
-                    this.getProcessor().add(previousVal.get());
-                    previousVal = this.previousNode.get().getProcessedValue();
-                }
-            }
-            //else we assume it has all its inputs
-            return this.getProcessor().processAndGetNext();
-        }
-        else { // stateless
-            if (this.thisProcessor.hasNext()) {
-                var next = this.thisProcessor.processAndGetNext();
-                if (next.isPresent()) {
-                    return next;
-                }
-                else {
-                    return this.getProcessedValue();
-                }
-            }
-            else if (this.previousNode.isPresent()) { //try filling the processor with output of the previous node
-                var processedValue = this.previousNode.get().getProcessedValue();
-                if (processedValue.isPresent()) {
-                    this.getProcessor().add(processedValue.get());
-                    return this.getProcessedValue();
-                }
-            }
-        }
-        return optional_1.Optional.empty();
+        return this.isStateless()
+            ? this.statelessGet()
+            : this.statefulPullAndGet();
     };
     return ProcessorNode;
 }());
+exports.ProcessorNode = ProcessorNode;
