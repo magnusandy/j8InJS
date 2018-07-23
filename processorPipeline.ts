@@ -169,10 +169,10 @@ class ProcessorNode<Input, Output> {
                 }
             }
             //else we assume it has all its inputs
-            return this.getProcessor().getNext();
+            return this.getProcessor().processAndGetNext();
         } else { // stateless
             if (this.thisProcessor.hasNext()) {
-                const next: Optional<Output> = this.thisProcessor.getNext();
+                const next: Optional<Output> = this.thisProcessor.processAndGetNext();
                 if (next.isPresent()) {
                     return next;
                 } else {

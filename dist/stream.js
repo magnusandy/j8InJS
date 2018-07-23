@@ -64,6 +64,10 @@ var ArrayStream = /** @class */ (function () {
         if (!this.isEmpty()) {
             if (this.pipeline) { // pipeline exists
                 var definedPipe_1 = this.pipeline;
+                if (definedPipe_1.containsStateful() && this.source.length > 0) { //need to shove all the inputs in
+                    this.source.forEach(function (s) { return definedPipe_1.addItem(s); });
+                    this.source = [];
+                }
                 if (definedPipe_1.hasNext()) { //draw from elements already in the pipeline
                     return definedPipe_1.getNextResult();
                 }
@@ -110,6 +114,10 @@ var ArrayStream = /** @class */ (function () {
     };
     ArrayStream.prototype.filter = function (predicate) {
         var newPipeline = this.newPipeline(processor_1.Processor.filterProcessor(predicate));
+        return new ArrayStream(this.source, newPipeline);
+    };
+    ArrayStream.prototype.distinctPredicate = function (equalsFunction) {
+        var newPipeline = this.newPipeline(processor_1.Processor.distinctProcessor(equalsFunction));
         return new ArrayStream(this.source, newPipeline);
     };
     /**

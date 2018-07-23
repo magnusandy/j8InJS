@@ -1,7 +1,8 @@
-import { Transformer, Consumer, Predicate } from "./functions";
+import { Transformer, Consumer, Predicate, BiPredicate } from "./functions";
 import { Collector } from "./collectors";
 export interface Stream<T> {
     collect<R, A>(collector: Collector<T, A, R>): R;
+    distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T>;
     filter(predicate: Predicate<T>): Stream<T>;
     flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>;
     forEach(consumer: Consumer<T>): void;

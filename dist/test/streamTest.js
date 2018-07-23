@@ -14,5 +14,12 @@ describe('Stream tests', function () {
             var consumer = function (s) { return console.log(s); };
             console.log(stream.collect(collectors_1.default.toList()));
         });
+        it('it should filterValues', function () {
+            var stream = stream_1.Stream.of([4, 4, 5, 1, 2, 3, 4, 4, 5, 1])
+                .distinctPredicate(function (i1, i2) { return i1 === i2; })
+                .map(function (e) { return "1"; })
+                .distinctPredicate(function (s1, s2) { return s1 === s2; });
+            console.log(stream.collect(collectors_1.default.toList()));
+        });
     });
 });
