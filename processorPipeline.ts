@@ -26,17 +26,7 @@ export class ProcessorPipeline<Source, Final> {
      * still have a value inside it.
      */
     protected isProcessorChainEmpty(): boolean {
-        let currentNode = this.headProcessor;
-        if (currentNode.hasNext()) {
-            return false;
-        }
-        while (currentNode.getNextNode().isPresent()) { 
-            currentNode = currentNode.getNextNode().get();
-            if (currentNode.hasNext()) {
-                return false;
-            }
-        }
-        return true;
+        return !this.tailProcessor.hasNext();
     }
 
     /**
@@ -68,7 +58,7 @@ export class ProcessorPipeline<Source, Final> {
      * non-empty value.
      */
     public hasNext(): boolean {
-        return !this.isProcessorChainEmpty() || this.initialFeed.hasNext();
+        return !this.isProcessorChainEmpty();
     }
 
     /**
@@ -132,8 +122,13 @@ export class ProcessorNode<Input, Output> {
     }
 
     hasNext(): boolean {
-        const hasPreviousAndItHasValues = this.getPreviousNode().isPresent() ? this.getPreviousNode().get().hasNext() : false;
-        return this.thisProcessor.hasNext() || hasPreviousAndItHasValues;
+        if(this.thisProcessor.isShortCircuting()) {
+            const hasPreviousAndItHasValues = this.getPreviousNode().isPresent() ? this.getPreviousNode().get().hasNext() : false;
+            return this.thisProcessor.hasNext() && hasPreviousAndItHasValues;
+        } else {
+            const hasPreviousAndItHasValues = this.getPreviousNode().isPresent() ? this.getPreviousNode().get().hasNext() : false;
+            return this.thisProcessor.hasNext() || hasPreviousAndItHasValues;
+        }
     }
 
     // getProcessor(): Processor<Input, Output> {
@@ -162,13 +157,13 @@ export class ProcessorNode<Input, Output> {
      * current processor, attempt to add new items to the current processor from the previous upstream processor.
      */
     statelessGet(): Optional<Output> {
-        if (this.thisProcessor.hasNext()) {
+        if (this.thisProcessor.hasNext() && !this.thisProcessor.isShortCircuting()) { //todo explain more, we need to treat short circuiting nodes differently
             return this.thisProcessor.processAndGetNext();
         } else if (this.previousNode.isPresent()) { //try filling the processor with output of the previous node
             const processedValue: Optional<Input> = this.previousNode.get().getProcessedValue();
             if (processedValue.isPresent()) {
                 this.addInput(processedValue.get());
-                return this.statelessGet();
+                return this.thisProcessor.processAndGetNext();
             }
         }
         return Optional.empty();

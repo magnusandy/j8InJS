@@ -22,7 +22,7 @@ export interface Processor<Input, Output> {
      * currently exhausted.
      */
     hasNext(): boolean;
-    
+
     /**
      * returns a processed value if this function returns
      * Optional.empty() this is NOT an indication that the processor
@@ -42,6 +42,11 @@ export interface Processor<Input, Output> {
      * returns true if the given processor is a stateless operation
      */
     isStateless(): boolean;
+
+    /**
+     * returns true if the given processor is a short circuting operation
+     */
+    isShortCircuting(): boolean;
 }
 
 export const Processor = {
@@ -49,6 +54,7 @@ export const Processor = {
     filterProcessor: <I>(predicate: Predicate<I>): Processor<I, I> => new FilterProcessor<I>(predicate),
     listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>): Processor<I, O> => new ListFlatMapProcessor(transformer),
     distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),
+    limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),
 }
 
 /**
@@ -76,6 +82,39 @@ abstract class AbstractProcessor<Input, Output> implements Processor<Input, Outp
 
     abstract processAndGetNext(): Optional<Output>;
     abstract isStateless(): boolean;
+    abstract isShortCircuting(): boolean;
+}
+
+class LimitProcessor<Input> extends AbstractProcessor<Input, Input> {
+    private readonly limit: number;
+    private count: number;
+
+    public constructor(limit: number) {
+        super();
+        this.limit = limit;
+        this.count = 0;
+    }
+
+    public processAndGetNext(): Optional<Input> {
+        if (this.count < this.limit) {
+            this.count++;
+            return this.takeNextInput();
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public hasNext(): boolean {
+        return (this.count < this.limit); //todo this might be tricky
+    }
+
+    public isStateless(): boolean {
+        return true;
+    }
+
+    public isShortCircuting(): boolean {
+        return true;
+    }
 }
 
 /**
@@ -94,6 +133,10 @@ class DistinctProcessor<Input> extends AbstractProcessor<Input, Input> {
     }
 
     public isStateless(): boolean {
+        return false;
+    }
+
+    public isShortCircuting(): boolean {
         return false;
     }
 
@@ -148,6 +191,10 @@ class MapProcessor<Input, Output> extends AbstractProcessor<Input, Output> {
     public isStateless(): boolean {
         return true;
     }
+
+    public isShortCircuting(): boolean {
+        return false;
+    }
 }
 
 /**
@@ -168,6 +215,10 @@ class FilterProcessor<Input> extends AbstractProcessor<Input, Input> {
 
     public isStateless(): boolean {
         return true;
+    }
+
+    public isShortCircuting(): boolean {
+        return false;
     }
 }
 
@@ -206,5 +257,9 @@ class ListFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Outpu
 
     public isStateless(): boolean {
         return true;
+    }
+
+    public isShortCircuting(): boolean {
+        return false;
     }
 }

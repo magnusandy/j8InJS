@@ -20,7 +20,7 @@ export interface Stream<T> {
     flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>; //intermediate
     forEach(consumer: Consumer<T>): void;
     //forEachOrdered(consumer: Consumer<T>): void;
-    //limit(maxSize: number): Stream<T>; //intermediate
+    limit(maxSize: number): Stream<T>; //intermediate
     map<U>(transformer: Transformer<T, U>): Stream<U>; //intermediate
     //max(comparator: Comparator<T>): T; //todo optional param, default to >
     //min(comparator: Comparator<T>): T; // todo optional param, default to <
@@ -69,12 +69,12 @@ export const Stream = {
 
     //todo
     //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
-    //generate<T>(supplier: Supplier<T>): Stream<T> {},
+    generate<T>(supplier: Supplier<T>): Stream<T> {
+        return ArrayStream.ofSupplier(supplier);
+    },
     //iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {},
 
 }
-
-const compose = <T, U, Z>(f: Transformer<T, U>, g: Transformer<U, Z>): Transformer<T, Z> => (value: T) => g(f(value));
 
 class ArrayStream<S, T> implements Stream<T> {
     pipeline: ProcessorPipeline<S, T>;
@@ -82,10 +82,6 @@ class ArrayStream<S, T> implements Stream<T> {
 
     private constructor(pipeline: ProcessorPipeline<S, T>) {
         this.pipeline = pipeline;
-    }
-
-    private isEmpty() {
-        return this.pipeline ? !this.pipeline.hasNext() : true;;
     }
 
     private newPipeline<U>(processor: Processor<any, U>): ProcessorPipeline<S, U> {
@@ -97,6 +93,14 @@ class ArrayStream<S, T> implements Stream<T> {
         const checkedSource: CheckableSupplier<S> = {
             get: () => copy.shift(),
             isEmpty: () => copy.length === 0,
+        }
+        return new ArrayStream<S, S>(ProcessorPipeline.create(checkedSource));
+    }
+
+    public static ofSupplier<S>(supplier: Supplier<S>): Stream<S> {
+        const checkedSource: CheckableSupplier<S> = {
+            get: () => supplier(),
+            isEmpty: () => false, 
         }
         return new ArrayStream<S, S>(ProcessorPipeline.create(checkedSource));
     }
@@ -157,6 +161,11 @@ class ArrayStream<S, T> implements Stream<T> {
 
     public distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.distinctProcessor(equalsFunction));
+        return new ArrayStream<S, T>(newPipeline);
+    }
+
+    public limit(maxSize: number): Stream<T> {
+        const newPipeline = this.newPipeline(Processor.limitProcessor(maxSize));
         return new ArrayStream<S, T>(newPipeline);
     }
 
