@@ -1,4 +1,4 @@
-import { Transformer, Supplier, BiConsumer, Consumer, BiFunction, Predicate, BiPredicate, Comparator } from "./functions";
+import { Transformer, Supplier, BiConsumer, Consumer, BiFunction, Predicate, BiPredicate, Comparator, CheckableSupplier } from "./functions";
 import { Collector } from "./collectors";
 import { Optional } from "./optional";
 import { ProcessorPipeline } from "./processorPipeline";
@@ -12,7 +12,7 @@ export interface Stream<T> {
     //customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
     collect<R, A>(collector: Collector<T, A, R>): R;
     distinct(): Stream<T>; //stateful intermediate
-    distinctPredicate(equalsFunction: BiPredicate<T,T>): Stream<T>; //stateful Intermediate
+    distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T>; //stateful Intermediate
     filter(predicate: Predicate<T>): Stream<T>; //intermediate
     //findFirst(): Optional<T>;
     //findAny(): Optional<T>;
@@ -77,28 +77,28 @@ export const Stream = {
 const compose = <T, U, Z>(f: Transformer<T, U>, g: Transformer<U, Z>): Transformer<T, Z> => (value: T) => g(f(value));
 
 class ArrayStream<S, T> implements Stream<T> {
-    source: S[];
-    pipeline?: ProcessorPipeline<S, T>;
+    pipeline: ProcessorPipeline<S, T>;
     private processingStarted = false;
 
-    private constructor(source: S[], pipeline?: ProcessorPipeline<S, T>) {
-        this.source = source.slice()
+    private constructor(pipeline: ProcessorPipeline<S, T>) {
         this.pipeline = pipeline;
     }
 
     private isEmpty() {
-        const pipelineIsEmpty = this.pipeline ? !this.pipeline.hasNext() : true;
-        return this.source.length === 0 && pipelineIsEmpty;
+        return this.pipeline ? !this.pipeline.hasNext() : true;;
     }
 
     private newPipeline<U>(processor: Processor<any, U>): ProcessorPipeline<S, U> {
-        return this.pipeline
-            ? this.pipeline.addProcessor(processor)
-            : ProcessorPipeline.create(processor);
+        return this.pipeline.addProcessor(processor);
     }
 
     public static of<S>(source: S[]): Stream<S> {
-        return new ArrayStream<S, S>(source);
+        const copy = source.slice();
+        const checkedSource: CheckableSupplier<S> = {
+            get: () => copy.shift(),
+            isEmpty: () => copy.length === 0,
+        }
+        return new ArrayStream<S, S>(ProcessorPipeline.create(checkedSource));
     }
 
     public static empty<S>(): Stream<S> {
@@ -107,28 +107,7 @@ class ArrayStream<S, T> implements Stream<T> {
 
     private getNextProcessedItem(): Optional<any> {
         this.processingStarted = true;
-        if (!this.isEmpty()) {
-            if (this.pipeline) { // pipeline exists
-                const definedPipe: ProcessorPipeline<S, T> = this.pipeline;
-
-                if (definedPipe.containsStateful() && this.source.length > 0) { //need to shove all the inputs in
-                    this.source.forEach(s => definedPipe.addItem(s));
-                    this.source = []; 
-                }
-
-                if (definedPipe.hasNext()) { //draw from elements already in the pipeline
-                    return definedPipe.getNextResult();
-                } else { //pipeline is empty, we need to add more items to it
-                    const item = Optional.ofNullable(this.source.shift());
-                    item.ifPresent(item => definedPipe.addItem(item));
-                    return this.getNextProcessedItem();
-                }
-            } else { // no pipeline, draw from source
-                return Optional.ofNullable(this.source.shift());
-            }
-        } else {
-            return Optional.empty();
-        }
+        return this.pipeline.getNextResult();
     }
 
     /**
@@ -154,17 +133,17 @@ class ArrayStream<S, T> implements Stream<T> {
      */
     public map<U>(transformer: Transformer<T, U>): Stream<U> {
         const newPipeline = this.newPipeline(Processor.mapProcessor(transformer));
-        return new ArrayStream<S, U>(this.source, newPipeline);
+        return new ArrayStream<S, U>(newPipeline);
     }
 
     public flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U> {
         const newPipeline = this.newPipeline(Processor.listFlatMapProcessor(transformer));
-        return new ArrayStream<S, U>(this.source, newPipeline);
+        return new ArrayStream<S, U>(newPipeline);
     }
 
     public filter(predicate: Predicate<T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.filterProcessor(predicate));
-        return new ArrayStream<S, T>(this.source, newPipeline);
+        return new ArrayStream<S, T>(newPipeline);
     }
 
     /**
@@ -176,9 +155,9 @@ class ArrayStream<S, T> implements Stream<T> {
         return this.distinctPredicate((i1, i2) => i1 === i2);
     }
 
-    public distinctPredicate(equalsFunction: BiPredicate<T,T>): Stream<T> {
+    public distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.distinctProcessor(equalsFunction));
-        return new ArrayStream<S, T>(this.source, newPipeline);
+        return new ArrayStream<S, T>(newPipeline);
     }
 
     /**
