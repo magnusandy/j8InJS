@@ -1,5 +1,6 @@
 import { Transformer, Predicate, BiPredicate } from "./functions";
 import { Optional } from "./optional";
+import { Stream, Spliterator } from "./stream";
 
 /**
  * A Processor describes a operation to be applied to a given input to transform it
@@ -55,6 +56,7 @@ export const Processor = {
     listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>): Processor<I, O> => new ListFlatMapProcessor(transformer),
     distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),
     limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),
+    streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer),
 }
 
 /**
@@ -117,7 +119,7 @@ class LimitProcessor<Input> extends AbstractProcessor<Input, Input> {
     }
 }
 
-/**
+/** //todo test
  * This is a stateful processor, that will return distinct elements provided all 
  * the inputs are given at the start, and no elements are injected mid processing
  */
@@ -241,7 +243,6 @@ class ListFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Outpu
         return (this.outputList.length > 0 || this.inputs.length > 0);
     }
 
-    //todo test recursive
     public processAndGetNext(): Optional<Output> {
         if (this.outputList.length > 0) {
             return Optional.ofNullable(this.outputList.shift());
@@ -249,6 +250,41 @@ class ListFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Outpu
             const nextSource: Optional<Input> = this.takeNextInput();
             if (nextSource.isPresent()) {
                 this.outputList = this.transformer(nextSource.get());
+                return this.processAndGetNext();
+            }
+        }
+        return Optional.empty();
+    }
+
+    public isStateless(): boolean {
+        return true;
+    }
+
+    public isShortCircuting(): boolean {
+        return false;
+    }
+}
+
+class StreamFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Output> {
+    private outputSpliterator?: Spliterator<Output>;
+    private transformer: Transformer<Input, Stream<Output>>;
+
+    constructor(transformer: Transformer<Input, Stream<Output>>) {
+        super();
+        this.transformer = transformer;
+    }
+
+    public hasNext(): boolean {
+        return ((this.outputSpliterator && this.outputSpliterator.hasNext()) || this.inputs.length > 0);
+    }
+
+    public processAndGetNext(): Optional<Output> {
+        if (this.outputSpliterator && this.outputSpliterator.hasNext()) {
+            return this.outputSpliterator.getNext();
+        } else if (this.inputs.length > 0) {
+            const nextSource: Optional<Input> = this.takeNextInput();
+            if (nextSource.isPresent()) {
+                this.outputSpliterator = this.transformer(nextSource.get()).spliterator();
                 return this.processAndGetNext();
             }
         }

@@ -18,7 +18,7 @@ describe('Stream tests', () => {
         });
 
         it('it should handle empty stream', () => {
-            const stream: Stream<number> = Stream.of([]);
+            const stream: Stream<number> = Stream.empty();
             const result: number[] = stream.collect(Collectors.toList())
 
             expect(result.length).to.equal(0);
@@ -38,7 +38,7 @@ describe('Stream tests', () => {
 
         it('it should not run consumer if stream is empty', () => {
             let consumerRan = false;
-            const stream: Stream<number> = Stream.of([]);
+            const stream: Stream<number> = Stream.empty();
             stream.forEach(i => consumerRan = true);
 
             expect(consumerRan).to.equal(false);
@@ -172,7 +172,7 @@ describe('Stream tests', () => {
 
     describe('forEach tests', () => {
         it('it should consume all values', () => {
-            
+
         });
     });
 
@@ -184,7 +184,7 @@ describe('Stream tests', () => {
         });
 
         it('it should consume all values', () => {
-            const stream: Stream<string> = Stream.of(['a,b,c', 'e,f,g']).flatMapList(i => i.split(','));
+            const stream: Stream<string> = Stream.of(['a,b,c', 'e,f,g']).flatMap(i => Stream.of(i.split(',')));
             const consumer: Consumer<string> = (s: string) => console.log(s);
             console.log(stream.collect(Collectors.toList()));
         });

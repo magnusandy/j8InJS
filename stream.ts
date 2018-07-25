@@ -5,7 +5,7 @@ import { ProcessorPipeline } from "./processorPipeline";
 import { Processor } from "./processor";
 
 /**
- * A stream is a (possibly unlimited length) sequence of elements
+ * A stream is a sequence of elements with possibly unlimited length
  * and a sequence of 0 or more operations to be undertaken on the elements.
  * Streams conputations are lazy and only take place when necessary, rather than at the time
  * they are declared.
@@ -62,7 +62,7 @@ export interface Stream<T> {
     filter(predicate: Predicate<T>): Stream<T>; //intermediate //tested
     //findFirst(): Optional<T>;
     //findAny(): Optional<T>;
-    //flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>; //intermediate
+    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>; //intermediate
     flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>; //intermediate
 
     /**
@@ -86,6 +86,7 @@ export interface Stream<T> {
     //peek(consumer: Consumer<T>): Stream<T>; //intermediate
     //reduce(identity: T, accumulator: BiFunction<T>): T;
     //skip(numberToSkip: number): Stream<T>; //intermediate
+    spliterator(): Spliterator<T>;
     //sortedNatural(): Stream<T>; //intermediate stateful
     //sorted(comparator: Comparator<T>): Stream<T>; //intermediate stateful
     //toArray(): T[];
@@ -139,7 +140,12 @@ export const Stream = {
 
 }
 
-class PipelineStream<S, T> implements Stream<T> {
+export interface Spliterator<T> {
+    hasNext(): boolean;
+    getNext(): Optional<T>;
+}
+
+class PipelineStream<S, T> implements Stream<T>, Spliterator<T> {
     pipeline: ProcessorPipeline<S, T>;
     private processingStarted = false;
 
@@ -149,6 +155,19 @@ class PipelineStream<S, T> implements Stream<T> {
 
     private newPipeline<U>(processor: Processor<any, U>): ProcessorPipeline<S, U> {
         return this.pipeline.addProcessor(processor);
+    }
+
+    //spliterator methods
+    public hasNext(): boolean {
+        return this.pipeline.hasNext();
+    }
+
+    public getNext(): Optional<T> {
+        return this.getNextProcessedItem();
+    }
+
+    public spliterator(): Spliterator<T> {
+        return this;
     }
 
     public static of<S>(source: S[]): Stream<S> {
@@ -190,6 +209,11 @@ class PipelineStream<S, T> implements Stream<T> {
 
     public map<U>(transformer: Transformer<T, U>): Stream<U> {
         const newPipeline = this.newPipeline(Processor.mapProcessor(transformer));
+        return new PipelineStream<S, U>(newPipeline);
+    }
+
+    public flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U> {
+        const newPipeline = this.newPipeline(Processor.streamFlatMapProcessor(transformer));
         return new PipelineStream<S, U>(newPipeline);
     }
 
