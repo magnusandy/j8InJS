@@ -16,6 +16,7 @@ exports.Processor = {
     filterProcessor: function (predicate) { return new FilterProcessor(predicate); },
     listFlatMapProcessor: function (transformer) { return new ListFlatMapProcessor(transformer); },
     distinctProcessor: function (comparator) { return new DistinctProcessor(comparator); },
+    limitProcessor: function (limit) { return new LimitProcessor(limit); },
 };
 /**
  * Abstract processor that implements the storage and retrieval of items from
@@ -36,6 +37,34 @@ var AbstractProcessor = /** @class */ (function () {
     };
     return AbstractProcessor;
 }());
+var LimitProcessor = /** @class */ (function (_super) {
+    __extends(LimitProcessor, _super);
+    function LimitProcessor(limit) {
+        var _this = _super.call(this) || this;
+        _this.limit = limit;
+        _this.count = 0;
+        return _this;
+    }
+    LimitProcessor.prototype.processAndGetNext = function () {
+        if (this.count < this.limit) {
+            this.count++;
+            return this.takeNextInput();
+        }
+        else {
+            return optional_1.Optional.empty();
+        }
+    };
+    LimitProcessor.prototype.hasNext = function () {
+        return (this.count < this.limit); //todo this might be tricky
+    };
+    LimitProcessor.prototype.isStateless = function () {
+        return true;
+    };
+    LimitProcessor.prototype.isShortCircuting = function () {
+        return true;
+    };
+    return LimitProcessor;
+}(AbstractProcessor));
 /**
  * This is a stateful processor, that will return distinct elements provided all
  * the inputs are given at the start, and no elements are injected mid processing
@@ -49,6 +78,9 @@ var DistinctProcessor = /** @class */ (function (_super) {
         return _this;
     }
     DistinctProcessor.prototype.isStateless = function () {
+        return false;
+    };
+    DistinctProcessor.prototype.isShortCircuting = function () {
         return false;
     };
     DistinctProcessor.prototype.hasNext = function () {
@@ -98,6 +130,9 @@ var MapProcessor = /** @class */ (function (_super) {
     MapProcessor.prototype.isStateless = function () {
         return true;
     };
+    MapProcessor.prototype.isShortCircuting = function () {
+        return false;
+    };
     return MapProcessor;
 }(AbstractProcessor));
 /**
@@ -116,6 +151,9 @@ var FilterProcessor = /** @class */ (function (_super) {
     };
     FilterProcessor.prototype.isStateless = function () {
         return true;
+    };
+    FilterProcessor.prototype.isShortCircuting = function () {
+        return false;
     };
     return FilterProcessor;
 }(AbstractProcessor));
@@ -151,6 +189,9 @@ var ListFlatMapProcessor = /** @class */ (function (_super) {
     };
     ListFlatMapProcessor.prototype.isStateless = function () {
         return true;
+    };
+    ListFlatMapProcessor.prototype.isShortCircuting = function () {
+        return false;
     };
     return ListFlatMapProcessor;
 }(AbstractProcessor));

@@ -27,17 +27,5 @@ describe('ProcessorPipeline tests', function () {
             chai_1.expect(processorNode.getPreviousNode().isPresent()).is.equal(true);
             chai_1.expect(processorNode.getPreviousNode().get()).is.equal(prev);
         });
-        it('it should consume all values', function () {
-        });
-        it('it should filterValues', function () {
-        });
-    });
-    describe('forEach tests', function () {
-        it('it should consume all values', function () {
-        });
-        it('it should consume all values', function () {
-        });
-        it('it should filterValues', function () {
-        });
     });
 });

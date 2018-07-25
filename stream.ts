@@ -4,23 +4,81 @@ import { Optional } from "./optional";
 import { ProcessorPipeline } from "./processorPipeline";
 import { Processor } from "./processor";
 
+/**
+ * A stream is a (possibly unlimited length) sequence of elements
+ * and a sequence of 0 or more operations to be undertaken on the elements.
+ * Streams conputations are lazy and only take place when necessary, rather than at the time
+ * they are declared.
+ * 
+ * The operations being undertaken on the elements of a stream can be thought of like a pipeline
+ * elements enter the start of the pipeline, and various processors, or nodes along the pipeline take
+ * elements, act on them and possibly pass outputs on to the rest of the pipeline.
+ * 
+ * a Stream pipeline consists of two types of operations:
+ * 
+ * Intermediate Operations: intermediate operations are lazy, they are not envoked until a terminal operation
+ * is created, they generally transform or remove elements in some way. 
+ * intermediate operations come in 3 flavours, stateless, stateful, and short-circuiting
+ * stateless operations do not depend on previous results, and can be completely lazily computed, 
+ * processing one element at a time on an is needed basis. stateful operations on the other hand 
+ * need access to all elements of a pipeline in order to carry out a calculation, and because of this
+ * need to collect and process all elements of a stream before the rest of the pipeline can proceed.
+ * short-circuiting operations act as a guard or door, they stop elements from passing them in the pipeline, 
+ * and have the benifit of turning a infinite stream into a finite one.
+ * 
+ * Terminal Operations: terminal operations are the final operation on a pipeline, they complete
+ * the circuit so to speak, when a terminal node is envoked all the processing of a stream takes place.
+ * example. terminal operations can also be short circuiting, in that they can cut an infinite stream of elements down
+ * to a finite stream. 
+ * 
+ * Caution: short circuiting operations are only effective on a stateless pipeline, or one where each
+ * stateful operations are first proceeded by a short circuiting one, otherwise an infinte loop can still happen.
+ * for example consider an infinite stream S. S.findFirst(); will correctly short circuit and return the first item of the
+ * stream. S.distinct().findFirst(); on the other hand will infinitly loop as distinct() tries to greedily consume elements
+ * before proceeding. this could be remedied by first limiting the streams output. S.limit(10).distinct().findFirst();
+ */
 export interface Stream<T> {
     //allMatch(predicate: Predicate<T>): boolean;
     //anyMatch(predicate: Predicate<T>): boolean;
     //builder(): StreamBuilder<T>;
     //count(): number;
     //customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
-    collect<R, A>(collector: Collector<T, A, R>): R;
-    distinct(): Stream<T>; //stateful intermediate
-    distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T>; //stateful Intermediate
-    filter(predicate: Predicate<T>): Stream<T>; //intermediate
+
+    /**
+     * Terminal Operation
+     * applies a mutable reduction operation to the elements in the collection using the given collector
+     * @param collector a Collector used to apply the mutable reduction.
+     */
+    collect<R, A>(collector: Collector<T, A, R>): R; //tested
+
+    /**
+     * Stateful Intermediate Operation
+     * returns a distinct stream of values based on the === operator, 
+     * for a custom distinction utilize distinctPredicate to pass in a custom 
+     * equalityTest.
+     */
+    distinct(): Stream<T>; //stateful intermediate //tested
+    distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T>; //stateful Intermediate //tested
+    filter(predicate: Predicate<T>): Stream<T>; //intermediate //tested
     //findFirst(): Optional<T>;
     //findAny(): Optional<T>;
     //flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>; //intermediate
     flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>; //intermediate
+
+    /**
+     * Terminal Operation
+     * applies a given consumer to each entity in the stream. ordering is not garenteed;
+     * @param consumer: applies the consuming function to all elements in the stream;
+     */
     forEach(consumer: Consumer<T>): void;
     //forEachOrdered(consumer: Consumer<T>): void;
     limit(maxSize: number): Stream<T>; //intermediate
+
+    /**
+     * Intermediate Operation.
+     * Returns a stream consisting of the results of applying the given function to the elements of this stream.
+     * @param transformer: function that transforms a value in the stream to a new value;
+     */
     map<U>(transformer: Transformer<T, U>): Stream<U>; //intermediate
     //max(comparator: Comparator<T>): T; //todo optional param, default to >
     //min(comparator: Comparator<T>): T; // todo optional param, default to <
@@ -40,7 +98,7 @@ export const Stream = {
      * @param source 
      */
     of<T>(source: T[]): Stream<T> {
-        return ArrayStream.of(source);
+        return PipelineStream.of(source);
     },
 
     /**
@@ -48,7 +106,7 @@ export const Stream = {
      * @param source 
      */
     ofValues<T>(...values: T[]): Stream<T> {
-        return ArrayStream.of(values);
+        return PipelineStream.of(values);
     },
 
     /**
@@ -56,7 +114,7 @@ export const Stream = {
      * @param value 
      */
     ofValue<T>(value: T): Stream<T> {
-        return ArrayStream.of([value]);
+        return PipelineStream.of([value]);
     },
 
 
@@ -64,19 +122,24 @@ export const Stream = {
      * creates an empty Stream
      */
     empty<T>(): Stream<T> {
-        return ArrayStream.of<T>([]);
+        return PipelineStream.of<T>([]);
     },
 
     //todo
     //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
+    /**
+     * generates a infinite stream where elements are generated
+     * by the given supplier.
+     * @param supplier 
+     */
     generate<T>(supplier: Supplier<T>): Stream<T> {
-        return ArrayStream.ofSupplier(supplier);
+        return PipelineStream.ofSupplier(supplier);
     },
     //iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {},
 
 }
 
-class ArrayStream<S, T> implements Stream<T> {
+class PipelineStream<S, T> implements Stream<T> {
     pipeline: ProcessorPipeline<S, T>;
     private processingStarted = false;
 
@@ -94,19 +157,19 @@ class ArrayStream<S, T> implements Stream<T> {
             get: () => copy.shift(),
             isEmpty: () => copy.length === 0,
         }
-        return new ArrayStream<S, S>(ProcessorPipeline.create(checkedSource));
+        return new PipelineStream<S, S>(ProcessorPipeline.create(checkedSource));
     }
 
     public static ofSupplier<S>(supplier: Supplier<S>): Stream<S> {
         const checkedSource: CheckableSupplier<S> = {
             get: () => supplier(),
-            isEmpty: () => false, 
+            isEmpty: () => false,
         }
-        return new ArrayStream<S, S>(ProcessorPipeline.create(checkedSource));
+        return new PipelineStream<S, S>(ProcessorPipeline.create(checkedSource));
     }
 
     public static empty<S>(): Stream<S> {
-        return ArrayStream.of<S>([]);
+        return PipelineStream.of<S>([]);
     }
 
     private getNextProcessedItem(): Optional<any> {
@@ -114,11 +177,6 @@ class ArrayStream<S, T> implements Stream<T> {
         return this.pipeline.getNextResult();
     }
 
-    /**
-     * Terminal Operation
-     * applies a mutable reduction operation to the elements in the collection using the given collector
-     * @param collector : a collector used to apply the mutable reduction.
-     */
     public collect<R, A>(collector: Collector<T, A, R>): R {
         let container = collector.supplier()();
         let nextItem: Optional<T> = this.getNextProcessedItem();
@@ -130,50 +188,35 @@ class ArrayStream<S, T> implements Stream<T> {
         return collector.finisher()(container);
     }
 
-    /**
-     * Intermediate Operation.
-     * Returns a stream consisting of the results of applying the given function to the elements of this stream.
-     * @param transformer: function that transforms a value in the stream to a new value;
-     */
     public map<U>(transformer: Transformer<T, U>): Stream<U> {
         const newPipeline = this.newPipeline(Processor.mapProcessor(transformer));
-        return new ArrayStream<S, U>(newPipeline);
+        return new PipelineStream<S, U>(newPipeline);
     }
 
     public flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U> {
         const newPipeline = this.newPipeline(Processor.listFlatMapProcessor(transformer));
-        return new ArrayStream<S, U>(newPipeline);
+        return new PipelineStream<S, U>(newPipeline);
     }
 
     public filter(predicate: Predicate<T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.filterProcessor(predicate));
-        return new ArrayStream<S, T>(newPipeline);
+        return new PipelineStream<S, T>(newPipeline);
     }
 
-    /**
-     * returns a distinct stream of values based on the === operator, 
-     * for a custom distinction utilize distinctPredicate to pass in a custom 
-     * equalityTest.
-     */
     public distinct(): Stream<T> {
         return this.distinctPredicate((i1, i2) => i1 === i2);
     }
 
     public distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.distinctProcessor(equalsFunction));
-        return new ArrayStream<S, T>(newPipeline);
+        return new PipelineStream<S, T>(newPipeline);
     }
 
     public limit(maxSize: number): Stream<T> {
         const newPipeline = this.newPipeline(Processor.limitProcessor(maxSize));
-        return new ArrayStream<S, T>(newPipeline);
+        return new PipelineStream<S, T>(newPipeline);
     }
 
-    /**
-     * Terminal Operation
-     * applies a given consumer to each entity in the stream. ordering is not garenteed;
-     * @param consumer: applies the consuming function to all elements in the stream;
-     */
     public forEach(consumer: Consumer<T>): void {
         let nextItem: Optional<T> = this.getNextProcessedItem();
         while (nextItem.isPresent()) {
@@ -221,7 +264,7 @@ class ArrayStreamBuilder<T> implements StreamBuilder<T> {
     }
 
     build(): Stream<T> {
-        return ArrayStream.of(this.array);
+        return PipelineStream.of(this.array);
     }
 }
 

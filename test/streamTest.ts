@@ -110,6 +110,70 @@ describe('Stream tests', () => {
             expect(result.length).to.equal(1);
             expectedValues.forEach(item => expect(result).to.contain(item));
         });
+
+        it('it should work if preceeded by short circuiting op', () => {
+            const source = ['abc', '123'];
+            const expected = ['a', 'b'];
+            const stream = Stream.of(source);
+            const result = stream.flatMapList(word => word.split(''))
+                .limit(2)
+                .distinct()
+                .collect(Collectors.toList());
+
+            expect(result.length).to.equal(2)
+            expected.forEach(item => expect(result).to.contain(item));
+        });
+
+        it('it should work if followed by short circuiting op', () => {
+            const source = ['abc', '123'];
+            const expected = ['a', 'b'];
+            const stream = Stream.of(source);
+            const result = stream.flatMapList(word => word.split(''))
+                .distinct()
+                .limit(2)
+                .collect(Collectors.toList());
+
+            expect(result.length).to.equal(2)
+            expected.forEach(item => expect(result).to.contain(item));
+        });
+
+        it('it greedily consume elements even if terminal is short circuiting', () => {
+            //todo 
+        });
+    
+    });
+
+    describe('filter tests', () => {
+        it('it keeps matching values in the stream', () => {
+            const source = [1,2,3,11,12,13];
+            const expectedValues = [1,2,3];
+            const stream = Stream.of(source);
+            const result = stream.filter(i => i < 10)
+            .collect(Collectors.toList());
+
+            expect(result.length).to.equal(3);
+            expectedValues.forEach(item => expect(result).to.contain(item));
+        });
+
+        it('it should lazily filter only when terminal is called', () => {
+            let count = 0;
+            const source = [1,2,3,11,12,13];
+            let stream = Stream.of(source);
+            stream = stream.filter(i =>{count++; return i < 10});
+            expect(count).to.equal(0);
+            stream.collect(Collectors.toList());
+            expect(count).to.equal(6);
+        });
+
+        it('it should lazily filter only as necessary for short circuiting terminal', () => {
+            //todo
+        });
+    });
+
+    describe('forEach tests', () => {
+        it('it should consume all values', () => {
+            
+        });
     });
 
     describe('forEach tests', () => {

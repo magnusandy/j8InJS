@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var optional_1 = require("./optional");
 var processorPipeline_1 = require("./processorPipeline");
 var processor_1 = require("./processor");
 //Static methods of the stream interface
@@ -36,54 +35,41 @@ exports.Stream = {
     empty: function () {
         return ArrayStream.of([]);
     },
+    //todo
+    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
+    generate: function (supplier) {
+        return ArrayStream.ofSupplier(supplier);
+    },
 };
-var compose = function (f, g) { return function (value) { return g(f(value)); }; };
 var ArrayStream = /** @class */ (function () {
-    function ArrayStream(source, pipeline) {
+    function ArrayStream(pipeline) {
         this.processingStarted = false;
-        this.source = source.slice();
         this.pipeline = pipeline;
     }
-    ArrayStream.prototype.isEmpty = function () {
-        var pipelineIsEmpty = this.pipeline ? !this.pipeline.hasNext() : true;
-        return this.source.length === 0 && pipelineIsEmpty;
-    };
     ArrayStream.prototype.newPipeline = function (processor) {
-        return this.pipeline
-            ? this.pipeline.addProcessor(processor)
-            : processorPipeline_1.ProcessorPipeline.create(processor);
+        return this.pipeline.addProcessor(processor);
     };
     ArrayStream.of = function (source) {
-        return new ArrayStream(source);
+        var copy = source.slice();
+        var checkedSource = {
+            get: function () { return copy.shift(); },
+            isEmpty: function () { return copy.length === 0; },
+        };
+        return new ArrayStream(processorPipeline_1.ProcessorPipeline.create(checkedSource));
+    };
+    ArrayStream.ofSupplier = function (supplier) {
+        var checkedSource = {
+            get: function () { return supplier(); },
+            isEmpty: function () { return false; },
+        };
+        return new ArrayStream(processorPipeline_1.ProcessorPipeline.create(checkedSource));
     };
     ArrayStream.empty = function () {
         return ArrayStream.of([]);
     };
     ArrayStream.prototype.getNextProcessedItem = function () {
         this.processingStarted = true;
-        if (!this.isEmpty()) {
-            if (this.pipeline) { // pipeline exists
-                var definedPipe_1 = this.pipeline;
-                if (definedPipe_1.containsStateful() && this.source.length > 0) { //need to shove all the inputs in
-                    this.source.forEach(function (s) { return definedPipe_1.addItem(s); });
-                    this.source = [];
-                }
-                if (definedPipe_1.hasNext()) { //draw from elements already in the pipeline
-                    return definedPipe_1.getNextResult();
-                }
-                else { //pipeline is empty, we need to add more items to it
-                    var item = optional_1.Optional.ofNullable(this.source.shift());
-                    item.ifPresent(function (item) { return definedPipe_1.addItem(item); });
-                    return this.getNextProcessedItem();
-                }
-            }
-            else { // no pipeline, draw from source
-                return optional_1.Optional.ofNullable(this.source.shift());
-            }
-        }
-        else {
-            return optional_1.Optional.empty();
-        }
+        return this.pipeline.getNextResult();
     };
     /**
      * Terminal Operation
@@ -106,19 +92,31 @@ var ArrayStream = /** @class */ (function () {
      */
     ArrayStream.prototype.map = function (transformer) {
         var newPipeline = this.newPipeline(processor_1.Processor.mapProcessor(transformer));
-        return new ArrayStream(this.source, newPipeline);
+        return new ArrayStream(newPipeline);
     };
     ArrayStream.prototype.flatMapList = function (transformer) {
         var newPipeline = this.newPipeline(processor_1.Processor.listFlatMapProcessor(transformer));
-        return new ArrayStream(this.source, newPipeline);
+        return new ArrayStream(newPipeline);
     };
     ArrayStream.prototype.filter = function (predicate) {
         var newPipeline = this.newPipeline(processor_1.Processor.filterProcessor(predicate));
-        return new ArrayStream(this.source, newPipeline);
+        return new ArrayStream(newPipeline);
+    };
+    /**
+     * returns a distinct stream of values based on the === operator,
+     * for a custom distinction utilize distinctPredicate to pass in a custom
+     * equalityTest.
+     */
+    ArrayStream.prototype.distinct = function () {
+        return this.distinctPredicate(function (i1, i2) { return i1 === i2; });
     };
     ArrayStream.prototype.distinctPredicate = function (equalsFunction) {
         var newPipeline = this.newPipeline(processor_1.Processor.distinctProcessor(equalsFunction));
-        return new ArrayStream(this.source, newPipeline);
+        return new ArrayStream(newPipeline);
+    };
+    ArrayStream.prototype.limit = function (maxSize) {
+        var newPipeline = this.newPipeline(processor_1.Processor.limitProcessor(maxSize));
+        return new ArrayStream(newPipeline);
     };
     /**
      * Terminal Operation

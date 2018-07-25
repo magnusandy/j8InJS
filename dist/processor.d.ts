@@ -38,10 +38,15 @@ export interface Processor<Input, Output> {
      * returns true if the given processor is a stateless operation
      */
     isStateless(): boolean;
+    /**
+     * returns true if the given processor is a short circuting operation
+     */
+    isShortCircuting(): boolean;
 }
 export declare const Processor: {
     mapProcessor: <I, O>(transformer: Transformer<I, O>) => Processor<I, O>;
     filterProcessor: <I>(predicate: Predicate<I>) => Processor<I, I>;
     listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>) => Processor<I, O>;
     distinctProcessor: <I>(comparator: BiPredicate<I, I>) => Processor<I, I>;
+    limitProcessor: <I>(limit: number) => Processor<I, I>;
 };

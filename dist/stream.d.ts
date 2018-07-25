@@ -1,11 +1,13 @@
-import { Transformer, Consumer, Predicate, BiPredicate } from "./functions";
+import { Transformer, Supplier, Consumer, Predicate, BiPredicate } from "./functions";
 import { Collector } from "./collectors";
 export interface Stream<T> {
     collect<R, A>(collector: Collector<T, A, R>): R;
+    distinct(): Stream<T>;
     distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T>;
     filter(predicate: Predicate<T>): Stream<T>;
     flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>;
     forEach(consumer: Consumer<T>): void;
+    limit(maxSize: number): Stream<T>;
     map<U>(transformer: Transformer<T, U>): Stream<U>;
 }
 export declare const Stream: {
@@ -28,6 +30,7 @@ export declare const Stream: {
      * creates an empty Stream
      */
     empty<T>(): Stream<T>;
+    generate<T>(supplier: Supplier<T>): Stream<T>;
 };
 export interface StreamBuilder<T> {
     accept(item: T): void;
