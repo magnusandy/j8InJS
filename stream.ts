@@ -1,4 +1,4 @@
-import { Transformer, Supplier, BiConsumer, Consumer, BiFunction, Predicate, BiPredicate, Comparator, CheckableSupplier } from "./functions";
+import { Transformer, Supplier, BiConsumer, Consumer, Predicate, BiPredicate, CheckableSupplier } from "./functions";
 import { Collector } from "./collectors";
 import { Optional } from "./optional";
 import { ProcessorPipeline } from "./processorPipeline";
@@ -38,32 +38,105 @@ import { Processor } from "./processor";
  * before proceeding. this could be remedied by first limiting the streams output. S.limit(10).distinct().findFirst();
  */
 export interface Stream<T> {
-    //allMatch(predicate: Predicate<T>): boolean;
-    //anyMatch(predicate: Predicate<T>): boolean;
-    //builder(): StreamBuilder<T>;
-    //count(): number;
-    //customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
+
+    /**
+     * Terminal Operation - Short Circuting
+     * returns true if all items in the stream match the given predicate, if any item returns false, return false;
+     * if the stream is empty, return true, the predicate is never evaluated;
+     * @param predicate 
+     */
+    allMatch(predicate: Predicate<T>): boolean;
+
+    /**
+     * Terminal Operation - Short Circuting
+     * returns true if any 1 item in the stream match the given predicate, if any item returns true, return true, else false;
+     * @param predicate 
+     */
+    anyMatch(predicate: Predicate<T>): boolean;
+
+    /**
+     * Terminal Operation 
+     * returns the count of all the elements of the stream.
+     */
+    count(): number;
+
+    /**
+     * Terminal Operation
+     * applies a mutable reduction operation to the elements in the collection using the given items,
+     * use of the combiner is not garenteed
+     * @param supplier: supplies a mutable collection of type R
+     * @param accumulator adds an element T to a given collection of type R
+     * @param combiner combines all the values in the second collection into the first
+     */
+    customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
 
     /**
      * Terminal Operation
      * applies a mutable reduction operation to the elements in the collection using the given collector
      * @param collector a Collector used to apply the mutable reduction.
      */
-    collect<R, A>(collector: Collector<T, A, R>): R; //tested
+    collect<R, A>(collector: Collector<T, A, R>): R; 
 
     /**
-     * Stateful Intermediate Operation
+     * Intermediate Operation - Stateful
      * returns a distinct stream of values based on the === operator, 
      * for a custom distinction utilize distinctPredicate to pass in a custom 
      * equalityTest.
      */
-    distinct(): Stream<T>; //stateful intermediate //tested
-    distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T>; //stateful Intermediate //tested
-    filter(predicate: Predicate<T>): Stream<T>; //intermediate //tested
-    //findFirst(): Optional<T>;
-    //findAny(): Optional<T>;
-    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>; //intermediate
-    flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>; //intermediate
+    distinct(): Stream<T>; 
+
+    /**
+     * Intermediate Operation - Stateful
+     * return a distinct stream of elements according to the given equality function
+     * @param equalsFunction function that takes two parameters, returns true if they are equal, false otherwise
+     */
+    distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T>; 
+
+    /**
+     * Intermediate Operation
+     * returns a stream whose elements are those from the current stream that match the given predicate
+     * function. Keep all elements who match the given predicate.
+     * @param predicate
+     */
+    filter(predicate: Predicate<T>): Stream<T>;
+
+    /**
+     * Terminal Operation: Short Circuiting
+     * Returns an optional describing the first element of the stream, if the stream is empty,
+     * return an empty Optional.
+     */
+    findFirst(): Optional<T>;
+    
+    /**
+     * Terminal Operation: Short Circuiting
+     * Returns an optional describing the an element of the stream, if the stream is empty,
+     * return an empty Optional.
+     */
+    findAny(): Optional<T>;
+
+    /**
+     * Intermediate Operation
+     * A one to many mapping transformer, returns a stream whos elements consist of the 
+     * elements of all the output streams of the transformer function.
+     * @param transformer 
+     */
+    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>; 
+
+    /**
+     * Intermediate Operation
+     * A one to many mapping transformer, returns a stream whos elements consist of the 
+     * elements of all the output lists of the transformer function. same idea as flatMap but
+     * with standard arrays
+     * @param transformer 
+     */
+    flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>;
+
+    /**
+     * Terminal Operation
+     * applies a given consumer to each entity in the stream. elements are processed in sequental order;
+     * @param consumer: applies the consuming function to all elements in the stream;
+     */
+    forEachOrdered(consumer: Consumer<T>): void;
 
     /**
      * Terminal Operation
@@ -71,8 +144,14 @@ export interface Stream<T> {
      * @param consumer: applies the consuming function to all elements in the stream;
      */
     forEach(consumer: Consumer<T>): void;
-    //forEachOrdered(consumer: Consumer<T>): void;
-    limit(maxSize: number): Stream<T>; //intermediate
+
+    /**
+     * Intermediate Operation - Short Circuiting
+     * returns a stream that consists of less than or equal to maxSize elements
+     * will create finite stream out of infinite stream. 
+     * @param maxSize 
+     */
+    limit(maxSize: number): Stream<T>; 
 
     /**
      * Intermediate Operation.
@@ -86,7 +165,7 @@ export interface Stream<T> {
     //peek(consumer: Consumer<T>): Stream<T>; //intermediate
     //reduce(identity: T, accumulator: BiFunction<T>): T;
     //skip(numberToSkip: number): Stream<T>; //intermediate
-    spliterator(): Spliterator<T>;
+    spliterator(): StreamIterator<T>;
     //sortedNatural(): Stream<T>; //intermediate stateful
     //sorted(comparator: Comparator<T>): Stream<T>; //intermediate stateful
     //toArray(): T[];
@@ -127,6 +206,7 @@ export const Stream = {
     },
 
     //todo
+    //builder(): StreamBuilder<T>;
     //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
     /**
      * generates a infinite stream where elements are generated
@@ -140,12 +220,12 @@ export const Stream = {
 
 }
 
-export interface Spliterator<T> {
+export interface StreamIterator<T> {
     hasNext(): boolean;
     getNext(): Optional<T>;
 }
 
-class PipelineStream<S, T> implements Stream<T>, Spliterator<T> {
+class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     pipeline: ProcessorPipeline<S, T>;
     private processingStarted = false;
 
@@ -166,7 +246,7 @@ class PipelineStream<S, T> implements Stream<T>, Spliterator<T> {
         return this.getNextProcessedItem();
     }
 
-    public spliterator(): Spliterator<T> {
+    public spliterator(): StreamIterator<T> {
         return this;
     }
 
@@ -194,6 +274,55 @@ class PipelineStream<S, T> implements Stream<T>, Spliterator<T> {
     private getNextProcessedItem(): Optional<any> {
         this.processingStarted = true;
         return this.pipeline.getNextResult();
+    }
+
+    public allMatch(predicate: Predicate<T>): boolean {
+        let allMatched = true;
+        let nextItem: Optional<T> = this.getNextProcessedItem();
+        while (nextItem.isPresent() && allMatched) {
+            allMatched = predicate(nextItem.get());
+            nextItem = this.getNextProcessedItem();
+        }
+        return allMatched;
+    }
+
+    public anyMatch(predicate: Predicate<T>): boolean {
+        let anyMatched = false;
+        let nextItem: Optional<T> = this.getNextProcessedItem();
+        while (nextItem.isPresent() && !anyMatched) {
+            anyMatched = predicate(nextItem.get());
+            nextItem = this.getNextProcessedItem();
+        }
+        return anyMatched;
+    }
+
+    public count(): number {
+        let count = 0;
+        let nextItem: Optional<T> = this.getNextProcessedItem();
+        while (nextItem.isPresent()) {
+            count++;
+            nextItem = this.getNextProcessedItem();
+        }
+        return count;
+    }
+
+    public findFirst(): Optional<T> {
+        return this.getNextProcessedItem();
+    }
+
+    public findAny(): Optional<T> {
+        return this.getNextProcessedItem();
+    }
+
+    public customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R {
+        let container: R = supplier();
+        let nextItem: Optional<T> = this.getNextProcessedItem();
+        while (nextItem.isPresent()) {
+            accumulator(container, nextItem.get());
+            nextItem = this.getNextProcessedItem();
+        }
+
+        return container;
     }
 
     public collect<R, A>(collector: Collector<T, A, R>): R {
@@ -241,12 +370,16 @@ class PipelineStream<S, T> implements Stream<T>, Spliterator<T> {
         return new PipelineStream<S, T>(newPipeline);
     }
 
-    public forEach(consumer: Consumer<T>): void {
+    public forEachOrdered(consumer: Consumer<T>): void {
         let nextItem: Optional<T> = this.getNextProcessedItem();
         while (nextItem.isPresent()) {
             consumer(nextItem.get())
             nextItem = this.getNextProcessedItem();
         }
+    }
+
+    public forEach(consumer: Consumer<T>): void {
+        this.forEachOrdered(consumer);
     }
 
 }
@@ -291,84 +424,6 @@ class ArrayStreamBuilder<T> implements StreamBuilder<T> {
         return PipelineStream.of(this.array);
     }
 }
-
-// /**
-//      * Terminal Operation - Short Circuting
-//      * returns true if all items in the stream match the given predicate, if any item returns false, return false;
-//      * if the stream is empty, return true, the predicate is never evaluated;
-//      * @param predicate 
-//      */
-//     public allMatch(predicate: Predicate<T>): boolean {
-//         for (let i in this.source) {
-//             const sourceItem = this.source[i];
-//             const applied = this.applyAction(sourceItem);
-//             if (!predicate(applied)) {
-//                 return false;
-//             }
-//         }
-//         return true;
-//     }
-
-//     /**
-//      * Terminal Operation - Short Circuting
-//      * returns true if any 1 item in the stream match the given predicate, if any item returns true, return true, else false;
-//      * @param predicate 
-//      */
-//     public anyMatch(predicate: Predicate<T>): boolean {
-//         for (let i in this.source) {
-//             const sourceItem = this.source[i];
-//             const applied = this.applyAction(sourceItem);
-//             if (predicate(applied)) {
-//                 return true;
-//             }
-//         }
-//         return false;
-//     }
-
-//     /**
-//      * Terminal Operation 
-//      * returns the count of all the elements of the stream.
-//      */
-//     //todo test more with filter
-//     public count(): number {
-//         this.fullyApplyActions();
-//         return this.source.length;
-//     }
-
-
-//     /**
-//      * Stateful intermediate operation
-//      * Returns a stream of distinct objects according to the === operator
-//      */
-//     /*//todo
-//     public distinct(): Stream<T> {
-//         return this.distinctPredicate((t1: T, t2:T) => t1 === t2)
-//     }
-//     */
-
-//     /**
-//      * Stateful intermediate operation
-//      * Returns a stream of distinct objects according to the given predicate, the predicate takes 
-//      * two objects and should return true if they are equivelant, false if they are different
-//      */
-//     /*
-//     public distinctPredicate(isEqualFunction: BiPredicate<T, T>): Stream<T> {
-//     }
-//     */
-
-//     /**
-//      * Terminal Operation: Short Circuiting
-//      * Returns an optional describing the first element of the stream, of the stream is empty,
-//      * return an empty Optional.
-//      */
-//     public findFirst(): Optional<T> {
-//         if (this.isEmpty()) {
-//             return Optional.empty();
-//         } else {
-//             const item = this.source.shift();
-//             return Optional.of(this.applyAction(item));
-//         }
-//     }
 
 //     /**
 //      * Terminal Operation: Short Circuiting

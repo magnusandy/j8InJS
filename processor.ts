@@ -1,6 +1,6 @@
 import { Transformer, Predicate, BiPredicate } from "./functions";
 import { Optional } from "./optional";
-import { Stream, Spliterator } from "./stream";
+import { Stream, StreamIterator } from "./stream";
 
 /**
  * A Processor describes a operation to be applied to a given input to transform it
@@ -266,7 +266,7 @@ class ListFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Outpu
 }
 
 class StreamFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Output> {
-    private outputSpliterator?: Spliterator<Output>;
+    private outputSpliterator?: StreamIterator<Output>;
     private transformer: Transformer<Input, Stream<Output>>;
 
     constructor(transformer: Transformer<Input, Stream<Output>>) {

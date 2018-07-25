@@ -31,7 +31,7 @@ describe('Stream tests', () => {
             let sum = 0;
             const source = [1, 1, 1, 1, 1];
             const stream: Stream<number> = Stream.of(source);
-            stream.forEach(i => sum = sum + i);
+            stream.forEachOrdered(i => sum = sum + i);
 
             expect(sum).to.equal(5);
         });
@@ -39,7 +39,7 @@ describe('Stream tests', () => {
         it('it should not run consumer if stream is empty', () => {
             let consumerRan = false;
             const stream: Stream<number> = Stream.empty();
-            stream.forEach(i => consumerRan = true);
+            stream.forEachOrdered(i => consumerRan = true);
 
             expect(consumerRan).to.equal(false);
         });
@@ -178,8 +178,8 @@ describe('Stream tests', () => {
 
     describe('forEach tests', () => {
         it('it should consume all values', () => {
-            const stream: Stream<string> = Stream.generate(() => '1').limit(5);
-            const result = stream.collect(Collectors.toList());
+            const stream: Stream<string> = Stream.generate(() => '1');
+            const result = stream.allMatch(i => i === '2');
             console.log(result)
         });
 
