@@ -204,6 +204,7 @@ export interface Stream<T> {
      */
     streamIterator(): StreamIterator<T>;
 
+    //todo
     //skip(numberToSkip: number): Stream<T>; //intermediate
     //sorted(comparator?: Comparator<T>): Stream<T>; //intermediate stateful
     toArray(): T[];
