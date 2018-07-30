@@ -195,7 +195,7 @@ class InitialFeedProcessorNode<Input> extends ProcessorNode<Input, Input> {
     private checkableSupplier: CheckableSupplier<Input>;
 
     constructor(supplier: CheckableSupplier<Input>) {
-        super(Processor.mapProcessor(i => i)); //todo  not sure if necessary
+        super(Processor.mapProcessor(i => i));
         this.checkableSupplier = supplier;
     }   
 

@@ -297,8 +297,8 @@ export const Stream = {
         return PipelineStream.ofCheckedSupplier(new IterateSource(seed, getNext))
     },
 
-    //builder(): StreamBuilder<T>;
-    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
+    //builder(): StreamBuilder<T>; //todo maybe
+    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {}, //todo 
 
     /**
      * returns a stream of numbers starting at startInclusive, and going to up 
@@ -595,45 +595,4 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return this.collect(Collectors.toList());
     }
 
-}
-
-export interface StreamBuilder<T> {
-    accept(item: T): void;
-    add(item: T): StreamBuilder<T>;
-    addAll(itemList: T[]): StreamBuilder<T>;
-    build(): Stream<T>;
-};
-
-class ArrayStreamBuilder<T> implements StreamBuilder<T> {
-    array: T[];
-
-    private constructor() {
-        this.array = [];
-    }
-
-    public static builder<T>(): StreamBuilder<T> {
-        return new ArrayStreamBuilder<T>();
-    }
-
-    accept(item: T): void {
-        this.acceptAll([item]);
-    }
-
-    acceptAll(items: T[]): void {
-        this.array.push(...items);
-    }
-
-    add(item: T): StreamBuilder<T> {
-        this.accept(item);
-        return this;
-    }
-
-    addAll(items: T[]): StreamBuilder<T> {
-        this.acceptAll(items);
-        return this;
-    }
-
-    build(): Stream<T> {
-        return PipelineStream.of(this.array);
-    }
 }
