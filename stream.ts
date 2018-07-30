@@ -1,5 +1,5 @@
-import { Transformer, Supplier, BiConsumer, Consumer, Predicate, BiPredicate, CheckableSupplier } from "./functions";
-import { Collector } from "./collectors";
+import { Transformer, Supplier, BiConsumer, Consumer, Predicate, BiPredicate, CheckableSupplier, Comparator, BiFunction } from "./functions";
+import Collectors, { Collector } from "./collectors";
 import { Optional } from "./optional";
 import { ProcessorPipeline } from "./processorPipeline";
 import { Processor } from "./processor";
@@ -75,22 +75,15 @@ export interface Stream<T> {
      * applies a mutable reduction operation to the elements in the collection using the given collector
      * @param collector a Collector used to apply the mutable reduction.
      */
-    collect<R, A>(collector: Collector<T, A, R>): R; 
+    collect<R, A>(collector: Collector<T, A, R>): R;
 
     /**
      * Intermediate Operation - Stateful
-     * returns a distinct stream of values based on the === operator, 
-     * for a custom distinction utilize distinctPredicate to pass in a custom 
-     * equalityTest.
-     */
-    distinct(): Stream<T>; 
-
-    /**
-     * Intermediate Operation - Stateful
-     * return a distinct stream of elements according to the given equality function
+     * return a distinct stream of elements according to the given equality function, if an equality function 
+     * is not supplied, the === operator is used to compare elements.
      * @param equalsFunction function that takes two parameters, returns true if they are equal, false otherwise
      */
-    distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T>; 
+    distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>;
 
     /**
      * Intermediate Operation
@@ -106,7 +99,7 @@ export interface Stream<T> {
      * return an empty Optional.
      */
     findFirst(): Optional<T>;
-    
+
     /**
      * Terminal Operation: Short Circuiting
      * Returns an optional describing the an element of the stream, if the stream is empty,
@@ -120,7 +113,7 @@ export interface Stream<T> {
      * elements of all the output streams of the transformer function.
      * @param transformer 
      */
-    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>; 
+    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>;
 
     /**
      * Intermediate Operation
@@ -151,24 +144,69 @@ export interface Stream<T> {
      * will create finite stream out of infinite stream. 
      * @param maxSize 
      */
-    limit(maxSize: number): Stream<T>; 
+    limit(maxSize: number): Stream<T>;
 
     /**
      * Intermediate Operation.
      * Returns a stream consisting of the results of applying the given function to the elements of this stream.
      * @param transformer: function that transforms a value in the stream to a new value;
      */
-    map<U>(transformer: Transformer<T, U>): Stream<U>; //intermediate
-    //max(comparator: Comparator<T>): T; //todo optional param, default to >
-    //min(comparator: Comparator<T>): T; // todo optional param, default to <
-    //noneMatch(predicate: Predicate<T>): boolean;
-    //peek(consumer: Consumer<T>): Stream<T>; //intermediate
-    //reduce(identity: T, accumulator: BiFunction<T>): T;
+    map<U>(transformer: Transformer<T, U>): Stream<U>; 
+
+    /**
+     * Terminal Operation
+     * returns the largest element in the stream if the stream is not empty otherwise return Optional.empty();
+     * If a comparator is supplied to the function, it is used to find the largest value in the stream, if no 
+     * comparator is supplied, a default comparator using the > and < operators is used.
+     * @param comparator function to compare elements in the stream, 
+     */
+    max(comparator?: Comparator<T>): Optional<T>; 
+
+    /**
+     * Terminal Operation
+     * returns the smallest element in the stream if the stream is not empty otherwise return Optional.empty();
+     * If a comparator is supplied to the function, it is used to find the smallest value in the stream, if no 
+     * comparator is supplied, a default comparator using the > and < operators is used.
+     * @param comparator function to compare elements in the stream, 
+     */
+    min(comparator?: Comparator<T>): Optional<T>;
+
+    /**
+     * Terminal Operation - Short Circuting
+     * returns true if no items in the stream match the given predicate, if any item predicate returns true, return false;
+     * if the stream is empty, return true, the predicate is never evaluated;
+     * @param predicate 
+     */
+    noneMatch(predicate: Predicate<T>): boolean;
+
+    /**
+     * Intermediate Operation
+     * applies the given consumer to each item in the pipeline as an intermediate operation
+     * This function is mainly ment for debugging operations of a pipeline. Care should be taken
+     * that the values of the stream are not altered within the consumer, it should be a stateless
+     * and non altering function otherwise problems can be caused down the pipeline
+     * @param consumer 
+     */
+    peek(consumer: Consumer<T>): Stream<T>;
+
+    /**
+     * Terminal Operation
+     * applies a reduction on the elements of the stream using the given accumulator function.
+     * returns an Optional describing the result if the stream have values. Optionally, an initial
+     * value can be specified, if the stream is empty, an optional describing the initial value will
+     * be returned. 
+     */
+    reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T>;
+    
+    /**
+     * returns a StreamIterator of the current stream, allowing easier
+     * step by step data retrieval from the stream
+     */
+    streamIterator(): StreamIterator<T>;
+
     //skip(numberToSkip: number): Stream<T>; //intermediate
-    spliterator(): StreamIterator<T>;
-    //sortedNatural(): Stream<T>; //intermediate stateful
-    //sorted(comparator: Comparator<T>): Stream<T>; //intermediate stateful
-    //toArray(): T[];
+    //sorted(comparator?: Comparator<T>): Stream<T>; //intermediate stateful
+    toArray(): T[];
 }
 
 //Static methods of the stream interface
@@ -223,6 +261,7 @@ export const Stream = {
 export interface StreamIterator<T> {
     hasNext(): boolean;
     getNext(): Optional<T>;
+    tryAdvance(consumer: Consumer<T>): boolean;
 }
 
 class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
@@ -246,7 +285,17 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return this.getNextProcessedItem();
     }
 
-    public spliterator(): StreamIterator<T> {
+    public tryAdvance(consumer: Consumer<T>): boolean {
+        const next: Optional<T> = this.getNext();
+        if (next.isPresent()) {
+            consumer(next.get());
+            return true;
+        } else {
+            return false
+        }
+    }
+
+    public streamIterator(): StreamIterator<T> {
         return this;
     }
 
@@ -276,24 +325,38 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return this.pipeline.getNextResult();
     }
 
+    //todo test case should NOT pull another item is short circuit happens
     public allMatch(predicate: Predicate<T>): boolean {
-        let allMatched = true;
         let nextItem: Optional<T> = this.getNextProcessedItem();
-        while (nextItem.isPresent() && allMatched) {
-            allMatched = predicate(nextItem.get());
+        while (nextItem.isPresent()) {
+            if(predicate(nextItem.get()) === false) {
+                return false;
+            }
             nextItem = this.getNextProcessedItem();
         }
-        return allMatched;
+        return true;
+    }
+
+    public noneMatch(predicate: Predicate<T>): boolean {
+        let nextItem: Optional<T> = this.getNextProcessedItem();
+        while (nextItem.isPresent()) {
+            if (predicate(nextItem.get()) === true) {
+                return false;
+            }
+            nextItem = this.getNextProcessedItem();
+        }
+        return true;
     }
 
     public anyMatch(predicate: Predicate<T>): boolean {
-        let anyMatched = false;
         let nextItem: Optional<T> = this.getNextProcessedItem();
-        while (nextItem.isPresent() && !anyMatched) {
-            anyMatched = predicate(nextItem.get());
+        while (nextItem.isPresent()) {
+            if(predicate(nextItem.get()) === true) {
+                return true;
+            }
             nextItem = this.getNextProcessedItem();
         }
-        return anyMatched;
+        return false;
     }
 
     public count(): number {
@@ -341,6 +404,11 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return new PipelineStream<S, U>(newPipeline);
     }
 
+    public peek<U>(consumer: Consumer<T>): Stream<T> {
+        const newPipeline = this.newPipeline(Processor.peekProcessor(consumer));
+        return new PipelineStream<S, T>(newPipeline);
+    }
+
     public flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U> {
         const newPipeline = this.newPipeline(Processor.streamFlatMapProcessor(transformer));
         return new PipelineStream<S, U>(newPipeline);
@@ -356,12 +424,9 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return new PipelineStream<S, T>(newPipeline);
     }
 
-    public distinct(): Stream<T> {
-        return this.distinctPredicate((i1, i2) => i1 === i2);
-    }
-
-    public distinctPredicate(equalsFunction: BiPredicate<T, T>): Stream<T> {
-        const newPipeline = this.newPipeline(Processor.distinctProcessor(equalsFunction));
+    public distinct(equalsFunction?: BiPredicate<T, T>): Stream<T> {
+        const equalsFunctionToUse: BiPredicate<T, T> = equalsFunction ? equalsFunction : BiPredicate.defaultEquality
+        const newPipeline = this.newPipeline(Processor.distinctProcessor(equalsFunctionToUse));
         return new PipelineStream<S, T>(newPipeline);
     }
 
@@ -380,6 +445,54 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
 
     public forEach(consumer: Consumer<T>): void {
         this.forEachOrdered(consumer);
+    }
+
+    public max(comparator?: Comparator<T>): Optional<T> {
+        const comparatorToUse: Comparator<T> = comparator ? comparator : Comparator.default;
+        
+        let maxValue = this.getNextProcessedItem();
+        let nextValue = maxValue;
+        while (nextValue.isPresent()) {
+            const result: number = comparatorToUse(nextValue.get(), maxValue.get());
+            if (result > 0 ) {
+                maxValue = nextValue;
+            }
+            nextValue = this.getNextProcessedItem();
+        }
+        
+        return maxValue;
+    }
+
+    public min(comparator?: Comparator<T>): Optional<T> {
+        const comparatorToUse: Comparator<T> = comparator ? comparator : Comparator.default;
+        
+        let minValue = this.getNextProcessedItem();
+        let nextValue = minValue;
+        while (nextValue.isPresent()) {
+            const result: number = comparatorToUse(nextValue.get(), minValue.get());
+            if (result < 0 ) {
+                minValue = nextValue;
+            }
+            nextValue = this.getNextProcessedItem();
+        }
+        return minValue;
+    }
+    public reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T> {
+        let currentValue: Optional<T> = Optional.ofNullable(initialValue);
+        let nextItem = this.getNextProcessedItem();
+        while(nextItem.isPresent()) {
+            if (currentValue.isPresent()) {
+                currentValue = Optional.of(accumulator(currentValue.get(), nextItem.get()));
+            } else {
+                currentValue = nextItem;
+            }
+            nextItem = this.getNextProcessedItem();
+        }
+        return currentValue;
+    }
+
+    public toArray(): T[] {
+        return this.collect(Collectors.toList());
     }
 
 }

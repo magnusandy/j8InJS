@@ -178,8 +178,8 @@ describe('Stream tests', () => {
 
     describe('forEach tests', () => {
         it('it should consume all values', () => {
-            const stream: Stream<string> = Stream.generate(() => '1');
-            const result = stream.allMatch(i => i === '2');
+            const stream: Stream<number> = Stream.ofValues();
+            const result = stream.reduce((x, y) => x+y, 1);
             console.log(result)
         });
 
@@ -191,9 +191,9 @@ describe('Stream tests', () => {
 
         it('it should filterValues', () => {
             const stream: Stream<string> = Stream.of([4, 4, 5, 1, 2, 3, 4, 4, 5, 1])
-                .distinctPredicate((i1, i2) => i1 === i2)
+                .distinct((i1, i2) => i1 === i2)
                 .map(e => `1`)
-                .distinctPredicate((s1, s2) => s1 === s2);
+                .distinct((s1, s2) => s1 === s2);
 
             console.log(stream.collect(Collectors.toList()));
         });

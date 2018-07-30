@@ -1,4 +1,4 @@
-import { Transformer, Predicate, BiPredicate } from "./functions";
+import { Transformer, Predicate, BiPredicate, Consumer } from "./functions";
 import { Optional } from "./optional";
 import { Stream, StreamIterator } from "./stream";
 
@@ -57,6 +57,7 @@ export const Processor = {
     distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),
     limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),
     streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer),
+    peekProcessor: <I> (consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer),
 }
 
 /**
@@ -107,7 +108,7 @@ class LimitProcessor<Input> extends AbstractProcessor<Input, Input> {
     }
 
     public hasNext(): boolean {
-        return (this.count < this.limit); //todo this might be tricky
+        return (this.count < this.limit);
     }
 
     public isStateless(): boolean {
@@ -188,6 +189,34 @@ class MapProcessor<Input, Output> extends AbstractProcessor<Input, Output> {
     //pull values off the start
     public processAndGetNext(): Optional<Output> {
         return this.takeNextInput().map(this.transformer);
+    }
+
+    public isStateless(): boolean {
+        return true;
+    }
+
+    public isShortCircuting(): boolean {
+        return false;
+    }
+}
+
+/**
+ * Implemention of a Processor for consuming a value,intermediately but not not 
+ * altering the stream.
+ */
+class PeekProcessor<Input> extends AbstractProcessor<Input, Input> {
+
+    private consumer: Consumer<Input>;
+
+    public constructor(consumer: Consumer<Input>) {
+        super();
+        this.consumer = consumer;
+    }
+
+    public processAndGetNext(): Optional<Input> {
+        const item = this.takeNextInput();
+        item.ifPresent(this.consumer);
+        return item;
     }
 
     public isStateless(): boolean {
@@ -284,7 +313,7 @@ class StreamFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Out
         } else if (this.inputs.length > 0) {
             const nextSource: Optional<Input> = this.takeNextInput();
             if (nextSource.isPresent()) {
-                this.outputSpliterator = this.transformer(nextSource.get()).spliterator();
+                this.outputSpliterator = this.transformer(nextSource.get()).streamIterator();
                 return this.processAndGetNext();
             }
         }
