@@ -1,45 +1,45 @@
 
 /**
- * Functional Type
+ * Functional Type: 
  * defines a function that takes a single argument and returns a boolean
  */
 export type Predicate<T> = (value: T) => boolean;
 
 /**
- * Functional Type
+ * Functional Type: 
  * Defines a function takes two arguments of types T and U and returns a boolean, general usages
  * as a equality test (see BiPredicate.defaultEquality as an example)
  */
 export type BiPredicate<T, U> = (t: T, u: U) => boolean;
 
 /**
- * Functional Type
+ * Functional Type: 
  * Defines a function that consumes a given passed in value, but does not return anything
  */
 export type Consumer<T> = (value: T) => void;
 
 /**
- * Functional Type
+ * Functional Type: 
  * Defines a function that takes a single argument of type T, and returns a value of a different type U
  */
 export type Transformer<T, U> = (value: T) => U;
 
 /**
- * Functional Type
+ * Functional Type: 
  * Defines a function that takes no arguments but when called, returns a value of type T
  * See CheckedSupplier for an extension of this type
  */
 export type Supplier<T> = () => T;
 
 /**
- * Functional Type
+ * Functional Type: 
  * Defines a function that takes two arguments of types T and U, that consumes the given values 
  * and returns nothing.
  */
 export type BiConsumer<T, U> = (t: T, u: U) => void;
 
 /**
- * Functional Type
+ * Functional Type: 
  * Defines a function that takes two arguments, both of type T, and returns a value
  * also of type T.
  */

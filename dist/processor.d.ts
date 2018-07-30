@@ -1,5 +1,6 @@
-import { Transformer, Predicate, BiPredicate } from "./functions";
+import { Transformer, Predicate, BiPredicate, Consumer } from "./functions";
 import { Optional } from "./optional";
+import { Stream } from "./stream";
 /**
  * A Processor describes a operation to be applied to a given input to transform it
  * into a given output, the number of outputs can be 0-many for any given input.
@@ -49,4 +50,6 @@ export declare const Processor: {
     listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>) => Processor<I, O>;
     distinctProcessor: <I>(comparator: BiPredicate<I, I>) => Processor<I, I>;
     limitProcessor: <I>(limit: number) => Processor<I, I>;
+    streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>) => Processor<I, O>;
+    peekProcessor: <I>(consumer: Consumer<I>) => Processor<I, I>;
 };

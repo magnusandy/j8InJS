@@ -7,7 +7,7 @@ import { Processor } from "./processor";
 /**
  * A stream is a sequence of elements with possibly unlimited length
  * and a sequence of 0 or more operations to be undertaken on the elements.
- * Streams conputations are lazy and only take place when necessary, rather than at the time
+ * Streams computations are lazy and only take place when necessary, rather than at the time
  * they are declared.
  * 
  * The operations being undertaken on the elements of a stream can be thought of like a pipeline
@@ -20,7 +20,7 @@ import { Processor } from "./processor";
  * is created, they generally transform or remove elements in some way. 
  * intermediate operations come in 3 flavours, stateless, stateful, and short-circuiting
  * stateless operations do not depend on previous results, and can be completely lazily computed, 
- * processing one element at a time on an is needed basis. stateful operations on the other hand 
+ * processing one element at a time on an is-needed basis. stateful operations on the other hand 
  * need access to all elements of a pipeline in order to carry out a calculation, and because of this
  * need to collect and process all elements of a stream before the rest of the pipeline can proceed.
  * short-circuiting operations act as a guard or door, they stop elements from passing them in the pipeline, 
@@ -151,7 +151,7 @@ export interface Stream<T> {
      * Returns a stream consisting of the results of applying the given function to the elements of this stream.
      * @param transformer: function that transforms a value in the stream to a new value;
      */
-    map<U>(transformer: Transformer<T, U>): Stream<U>; 
+    map<U>(transformer: Transformer<T, U>): Stream<U>;
 
     /**
      * Terminal Operation
@@ -160,7 +160,7 @@ export interface Stream<T> {
      * comparator is supplied, a default comparator using the > and < operators is used.
      * @param comparator function to compare elements in the stream, 
      */
-    max(comparator?: Comparator<T>): Optional<T>; 
+    max(comparator?: Comparator<T>): Optional<T>;
 
     /**
      * Terminal Operation
@@ -197,7 +197,7 @@ export interface Stream<T> {
      * be returned. 
      */
     reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T>;
-    
+
     /**
      * returns a StreamIterator of the current stream, allowing easier
      * step by step data retrieval from the stream
@@ -207,6 +207,40 @@ export interface Stream<T> {
     //skip(numberToSkip: number): Stream<T>; //intermediate
     //sorted(comparator?: Comparator<T>): Stream<T>; //intermediate stateful
     toArray(): T[];
+}
+
+export interface StreamIterator<T> {
+    hasNext(): boolean;
+    getNext(): Optional<T>;
+    tryAdvance(consumer: Consumer<T>): boolean;
+}
+
+class IterateSource<S> implements CheckableSupplier<S> {
+    seed: S;
+    currentValue: Optional<S>;
+    transformer: Transformer<S, S>;
+
+    constructor(seed: S, transformer: Transformer<S, S>) {
+        this.seed = seed;
+        this.currentValue = Optional.empty();
+        this.transformer = transformer;
+    }
+
+    get(): S {
+        let nextValue;
+        if (this.currentValue.isPresent()) {
+            nextValue = this.transformer(this.currentValue.get());
+        } else {
+            nextValue = this.seed;
+        }
+        this.currentValue = Optional.of(nextValue);
+        return nextValue;
+    }
+
+    isEmpty(): boolean {
+        return false;
+    }
+
 }
 
 //Static methods of the stream interface
@@ -243,9 +277,6 @@ export const Stream = {
         return PipelineStream.of<T>([]);
     },
 
-    //todo
-    //builder(): StreamBuilder<T>;
-    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
     /**
      * generates a infinite stream where elements are generated
      * by the given supplier.
@@ -254,14 +285,79 @@ export const Stream = {
     generate<T>(supplier: Supplier<T>): Stream<T> {
         return PipelineStream.ofSupplier(supplier);
     },
-    //iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {},
 
-}
+    /**
+     * creates an infinte stream of values by incrementally applying getNext to
+     * the last item in the stream, so you have a stream like:  
+     * seed, getNext(seed), getNext(getNext(seed)), etc
+     * @param seed initial value of the stream
+     * @param getNext transforming function applied at each step
+     */
+    iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {
+        return PipelineStream.ofCheckedSupplier(new IterateSource(seed, getNext))
+    },
 
-export interface StreamIterator<T> {
-    hasNext(): boolean;
-    getNext(): Optional<T>;
-    tryAdvance(consumer: Consumer<T>): boolean;
+    //builder(): StreamBuilder<T>;
+    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
+
+    /**
+     * returns a stream of numbers starting at startInclusive, and going to up 
+     * to but not including endExculsive in increments of 1, if a step is passed in, the 
+     * increments of 1 will be changed to increments of size step, negative steps will be treated
+     * as positive.
+     * 
+     * IF the start is greater than the end, the default step will be -1 and any positive step
+     * values will be treated as negative i.e. 5 => -5, -5 => -5
+     * 
+     * an empty stream will be returned if start and end are the same
+     * 
+     * @param startInclusive starting value of the range, included in the range
+     * @param endExclusive end of the range, not included
+     * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
+     */
+    range(startInclusive: number, endExclusive: number, step?: number): Stream<number> {
+        let stepToUse: number;
+        let comparator: BiPredicate<number, number>;
+
+        if (startInclusive === endExclusive) {
+            return Stream.empty();
+        } else if (startInclusive < endExclusive) {
+            comparator = (next: number, end: number) => next < end;
+            stepToUse = step ? Math.abs(step) : 1;
+        } else {
+            comparator = (next: number, end: number) => next > end;
+            stepToUse = step ? (0 - Math.abs(step)) : -1;
+        }
+
+        let list = [startInclusive];
+        let nextItem = startInclusive + stepToUse;
+        while (comparator(nextItem, endExclusive)) {
+            list.push(nextItem);
+            nextItem = nextItem + stepToUse;
+        }
+        return Stream.of(list);
+    },
+
+    /**
+     * returns a stream of numbers starting at startInclusive, and going to up 
+     * to and including endExculsive in increments of 1, if a step is passed in, the 
+     * increments of 1 will be changed to increments of size step
+     * 
+     * IF the start is greater than the end, the default step will be -1 and any positive step
+     * values will be treated as negative i.e. 5 => -5, -5 => -5
+     * 
+     * an empty stream will be returned if start and end are the same
+     * 
+     * @param startInclusive starting value of the range, included in the range
+     * @param endInclusive end of the range
+     * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
+     */
+    rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number> {
+        return startInclusive < endInclusive
+            ? Stream.range(startInclusive, endInclusive + 1, step)
+            : Stream.range(startInclusive, endInclusive - 1, step);
+    }
+
 }
 
 class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
@@ -305,7 +401,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
             get: () => copy.shift(),
             isEmpty: () => copy.length === 0,
         }
-        return new PipelineStream<S, S>(ProcessorPipeline.create(checkedSource));
+        return PipelineStream.ofCheckedSupplier(checkedSource);
     }
 
     public static ofSupplier<S>(supplier: Supplier<S>): Stream<S> {
@@ -313,7 +409,11 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
             get: () => supplier(),
             isEmpty: () => false,
         }
-        return new PipelineStream<S, S>(ProcessorPipeline.create(checkedSource));
+        return PipelineStream.ofCheckedSupplier(checkedSource);
+    }
+
+    public static ofCheckedSupplier<S>(checkedSupplier: CheckableSupplier<S>): Stream<S> {
+        return new PipelineStream<S, S>(ProcessorPipeline.create(checkedSupplier));
     }
 
     public static empty<S>(): Stream<S> {
@@ -329,7 +429,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     public allMatch(predicate: Predicate<T>): boolean {
         let nextItem: Optional<T> = this.getNextProcessedItem();
         while (nextItem.isPresent()) {
-            if(predicate(nextItem.get()) === false) {
+            if (predicate(nextItem.get()) === false) {
                 return false;
             }
             nextItem = this.getNextProcessedItem();
@@ -351,7 +451,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     public anyMatch(predicate: Predicate<T>): boolean {
         let nextItem: Optional<T> = this.getNextProcessedItem();
         while (nextItem.isPresent()) {
-            if(predicate(nextItem.get()) === true) {
+            if (predicate(nextItem.get()) === true) {
                 return true;
             }
             nextItem = this.getNextProcessedItem();
@@ -449,28 +549,28 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
 
     public max(comparator?: Comparator<T>): Optional<T> {
         const comparatorToUse: Comparator<T> = comparator ? comparator : Comparator.default;
-        
+
         let maxValue = this.getNextProcessedItem();
         let nextValue = maxValue;
         while (nextValue.isPresent()) {
             const result: number = comparatorToUse(nextValue.get(), maxValue.get());
-            if (result > 0 ) {
+            if (result > 0) {
                 maxValue = nextValue;
             }
             nextValue = this.getNextProcessedItem();
         }
-        
+
         return maxValue;
     }
 
     public min(comparator?: Comparator<T>): Optional<T> {
         const comparatorToUse: Comparator<T> = comparator ? comparator : Comparator.default;
-        
+
         let minValue = this.getNextProcessedItem();
         let nextValue = minValue;
         while (nextValue.isPresent()) {
             const result: number = comparatorToUse(nextValue.get(), minValue.get());
-            if (result < 0 ) {
+            if (result < 0) {
                 minValue = nextValue;
             }
             nextValue = this.getNextProcessedItem();
@@ -480,7 +580,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     public reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T> {
         let currentValue: Optional<T> = Optional.ofNullable(initialValue);
         let nextItem = this.getNextProcessedItem();
-        while(nextItem.isPresent()) {
+        while (nextItem.isPresent()) {
             if (currentValue.isPresent()) {
                 currentValue = Optional.of(accumulator(currentValue.get(), nextItem.get()));
             } else {
@@ -537,64 +637,3 @@ class ArrayStreamBuilder<T> implements StreamBuilder<T> {
         return PipelineStream.of(this.array);
     }
 }
-
-//     /**
-//      * Terminal Operation: Short Circuiting
-//      * Returns an optional describing some element in the stream, explicitly non-deterministic to
-//      * allow for potential performance increases if stream is empty, return an empty Optional.
-//      */
-//     public findAny(): Optional<T> {
-//         return this.findFirst();//todo better way?
-//     }
-
-//     filter(predicate: Predicate<T>): Stream<T> {
-//         this.actions.push(new FilterProcessor<T>(predicate));
-//         return new ArrayStream<T>(this.source, this.actions);
-//     }
-
-//     /**
-//      * Terminal Operation
-//      * applies a given consumer to each entity in the stream. objects are dealt with in order
-//      * @param consumer: applies the consuming function to all elements in the stream;
-//      */
-//     public forEachOrdered(consumer: Consumer<T>): void {
-//         this.fullyApplyActions();
-//         this.source.forEach(consumer);
-//     }
-
-//     //todo maybe make parallel
-//     /**
-//      * Terminal Operation
-//      * applies a mutable reduction operation to the elements in the collection
-//      * @param supplier: supplies a new mutable container 
-//      * @param accumulator: function that adds an item to the given mutable container
-//      * @param combiner: function combines two mutable containers, adding all the elements of the second one into the first
-//      */
-//     public customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R {
-//         this.fullyApplyActions();
-//         let container: R = supplier();
-//         this.source.forEach(item => accumulator(container, item))
-//         return container;
-//     }
-
-//     //todo parallelize
-//     /**
-//      * Terminal Operation
-//      * applies a mutable reduction operation to the elements in the collection using the given collector
-//      * @param collector : a collector used to apply the mutable reduction.
-//      */
-//     public collect<R, A>(collector: Collector<T, A, R>): R {
-//         this.fullyApplyActions();
-//         let container = collector.supplier()();
-//         this.source.forEach(item => {
-//             collector.accumulator()(container, item)
-//         })
-//         return collector.finisher()(container);
-//     }
-
-//     /**
-//      * retuns an empty stream builder
-//      */
-//     public builder(): StreamBuilder<T> {
-//         return ArrayStreamBuilder.builder<T>();
-//     }

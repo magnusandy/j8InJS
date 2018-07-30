@@ -17,6 +17,8 @@ exports.Processor = {
     listFlatMapProcessor: function (transformer) { return new ListFlatMapProcessor(transformer); },
     distinctProcessor: function (comparator) { return new DistinctProcessor(comparator); },
     limitProcessor: function (limit) { return new LimitProcessor(limit); },
+    streamFlatMapProcessor: function (transformer) { return new StreamFlatMapProcessor(transformer); },
+    peekProcessor: function (consumer) { return new PeekProcessor(consumer); },
 };
 /**
  * Abstract processor that implements the storage and retrieval of items from
@@ -55,7 +57,7 @@ var LimitProcessor = /** @class */ (function (_super) {
         }
     };
     LimitProcessor.prototype.hasNext = function () {
-        return (this.count < this.limit); //todo this might be tricky
+        return (this.count < this.limit);
     };
     LimitProcessor.prototype.isStateless = function () {
         return true;
@@ -65,7 +67,7 @@ var LimitProcessor = /** @class */ (function (_super) {
     };
     return LimitProcessor;
 }(AbstractProcessor));
-/**
+/** //todo test
  * This is a stateful processor, that will return distinct elements provided all
  * the inputs are given at the start, and no elements are injected mid processing
  */
@@ -136,6 +138,30 @@ var MapProcessor = /** @class */ (function (_super) {
     return MapProcessor;
 }(AbstractProcessor));
 /**
+ * Implemention of a Processor for consuming a value,intermediately but not not
+ * altering the stream.
+ */
+var PeekProcessor = /** @class */ (function (_super) {
+    __extends(PeekProcessor, _super);
+    function PeekProcessor(consumer) {
+        var _this = _super.call(this) || this;
+        _this.consumer = consumer;
+        return _this;
+    }
+    PeekProcessor.prototype.processAndGetNext = function () {
+        var item = this.takeNextInput();
+        item.ifPresent(this.consumer);
+        return item;
+    };
+    PeekProcessor.prototype.isStateless = function () {
+        return true;
+    };
+    PeekProcessor.prototype.isShortCircuting = function () {
+        return false;
+    };
+    return PeekProcessor;
+}(AbstractProcessor));
+/**
  * Stateless process, filters input items against a given predicated, only
  * returning those who match against the given predicate.
  */
@@ -173,7 +199,6 @@ var ListFlatMapProcessor = /** @class */ (function (_super) {
     ListFlatMapProcessor.prototype.hasNext = function () {
         return (this.outputList.length > 0 || this.inputs.length > 0);
     };
-    //todo test recursive
     ListFlatMapProcessor.prototype.processAndGetNext = function () {
         if (this.outputList.length > 0) {
             return optional_1.Optional.ofNullable(this.outputList.shift());
@@ -194,4 +219,35 @@ var ListFlatMapProcessor = /** @class */ (function (_super) {
         return false;
     };
     return ListFlatMapProcessor;
+}(AbstractProcessor));
+var StreamFlatMapProcessor = /** @class */ (function (_super) {
+    __extends(StreamFlatMapProcessor, _super);
+    function StreamFlatMapProcessor(transformer) {
+        var _this = _super.call(this) || this;
+        _this.transformer = transformer;
+        return _this;
+    }
+    StreamFlatMapProcessor.prototype.hasNext = function () {
+        return ((this.outputSpliterator && this.outputSpliterator.hasNext()) || this.inputs.length > 0);
+    };
+    StreamFlatMapProcessor.prototype.processAndGetNext = function () {
+        if (this.outputSpliterator && this.outputSpliterator.hasNext()) {
+            return this.outputSpliterator.getNext();
+        }
+        else if (this.inputs.length > 0) {
+            var nextSource = this.takeNextInput();
+            if (nextSource.isPresent()) {
+                this.outputSpliterator = this.transformer(nextSource.get()).streamIterator();
+                return this.processAndGetNext();
+            }
+        }
+        return optional_1.Optional.empty();
+    };
+    StreamFlatMapProcessor.prototype.isStateless = function () {
+        return true;
+    };
+    StreamFlatMapProcessor.prototype.isShortCircuting = function () {
+        return false;
+    };
+    return StreamFlatMapProcessor;
 }(AbstractProcessor));

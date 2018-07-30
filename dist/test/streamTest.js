@@ -13,7 +13,7 @@ describe('Stream tests', function () {
             source.forEach(function (item) { return chai_1.expect(result).to.contain(item); });
         });
         it('it should handle empty stream', function () {
-            var stream = stream_1.Stream.of([]);
+            var stream = stream_1.Stream.empty();
             var result = stream.collect(collectors_1.default.toList());
             chai_1.expect(result.length).to.equal(0);
         });
@@ -23,13 +23,13 @@ describe('Stream tests', function () {
             var sum = 0;
             var source = [1, 1, 1, 1, 1];
             var stream = stream_1.Stream.of(source);
-            stream.forEach(function (i) { return sum = sum + i; });
+            stream.forEachOrdered(function (i) { return sum = sum + i; });
             chai_1.expect(sum).to.equal(5);
         });
         it('it should not run consumer if stream is empty', function () {
             var consumerRan = false;
-            var stream = stream_1.Stream.of([]);
-            stream.forEach(function (i) { return consumerRan = true; });
+            var stream = stream_1.Stream.empty();
+            stream.forEachOrdered(function (i) { return consumerRan = true; });
             chai_1.expect(consumerRan).to.equal(false);
         });
     });
@@ -88,23 +88,75 @@ describe('Stream tests', function () {
             chai_1.expect(result.length).to.equal(1);
             expectedValues.forEach(function (item) { return chai_1.expect(result).to.contain(item); });
         });
+        it('it should work if preceeded by short circuiting op', function () {
+            var source = ['abc', '123'];
+            var expected = ['a', 'b'];
+            var stream = stream_1.Stream.of(source);
+            var result = stream.flatMapList(function (word) { return word.split(''); })
+                .limit(2)
+                .distinct()
+                .collect(collectors_1.default.toList());
+            chai_1.expect(result.length).to.equal(2);
+            expected.forEach(function (item) { return chai_1.expect(result).to.contain(item); });
+        });
+        it('it should work if followed by short circuiting op', function () {
+            var source = ['abc', '123'];
+            var expected = ['a', 'b'];
+            var stream = stream_1.Stream.of(source);
+            var result = stream.flatMapList(function (word) { return word.split(''); })
+                .distinct()
+                .limit(2)
+                .collect(collectors_1.default.toList());
+            chai_1.expect(result.length).to.equal(2);
+            expected.forEach(function (item) { return chai_1.expect(result).to.contain(item); });
+        });
+        it('it greedily consume elements even if terminal is short circuiting', function () {
+            //todo 
+        });
+    });
+    describe('filter tests', function () {
+        it('it keeps matching values in the stream', function () {
+            var source = [1, 2, 3, 11, 12, 13];
+            var expectedValues = [1, 2, 3];
+            var stream = stream_1.Stream.of(source);
+            var result = stream.filter(function (i) { return i < 10; })
+                .collect(collectors_1.default.toList());
+            chai_1.expect(result.length).to.equal(3);
+            expectedValues.forEach(function (item) { return chai_1.expect(result).to.contain(item); });
+        });
+        it('it should lazily filter only when terminal is called', function () {
+            var count = 0;
+            var source = [1, 2, 3, 11, 12, 13];
+            var stream = stream_1.Stream.of(source);
+            stream = stream.filter(function (i) { count++; return i < 10; });
+            chai_1.expect(count).to.equal(0);
+            stream.collect(collectors_1.default.toList());
+            chai_1.expect(count).to.equal(6);
+        });
+        it('it should lazily filter only as necessary for short circuiting terminal', function () {
+            //todo
+        });
     });
     describe('forEach tests', function () {
         it('it should consume all values', function () {
-            var stream = stream_1.Stream.generate(function () { return '1'; }).limit(5);
-            var result = stream.collect(collectors_1.default.toList());
+        });
+    });
+    describe('forEach tests', function () {
+        it('it should consume all values', function () {
+            var stream = stream_1.Stream.iterate(0, function (i) { return i + 1; }).limit(10);
+            var result = stream.peek(console.log).reduce(function (x, y) { return x + y; }, 1);
             console.log(result);
         });
         it('it should consume all values', function () {
-            var stream = stream_1.Stream.of(['a,b,c', 'e,f,g']).flatMapList(function (i) { return i.split(','); });
+            var stream = stream_1.Stream.of(['a,b,c', 'e,f,g']).flatMap(function (i) { return stream_1.Stream.of(i.split(',')); });
             var consumer = function (s) { return console.log(s); };
             console.log(stream.collect(collectors_1.default.toList()));
         });
         it('it should filterValues', function () {
             var stream = stream_1.Stream.of([4, 4, 5, 1, 2, 3, 4, 4, 5, 1])
-                .distinctPredicate(function (i1, i2) { return i1 === i2; })
+                .distinct(function (i1, i2) { return i1 === i2; })
                 .map(function (e) { return "1"; })
-                .distinctPredicate(function (s1, s2) { return s1 === s2; });
+                .distinct(function (s1, s2) { return s1 === s2; });
             console.log(stream.collect(collectors_1.default.toList()));
         });
     });

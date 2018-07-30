@@ -148,7 +148,7 @@ var ProcessorNode = /** @class */ (function () {
         if (this.thisProcessor.hasNext() && !this.thisProcessor.isShortCircuting()) { //todo explain more, we need to treat short circuiting nodes differently
             return this.thisProcessor.processAndGetNext();
         }
-        else if (this.previousNode.isPresent()) { //try filling the processor with output of the previous node
+        else if (this.previousNode.isPresent()) {
             var processedValue = this.previousNode.get().getProcessedValue();
             if (processedValue.isPresent()) {
                 this.addInput(processedValue.get());

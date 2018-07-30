@@ -178,8 +178,8 @@ describe('Stream tests', () => {
 
     describe('forEach tests', () => {
         it('it should consume all values', () => {
-            const stream: Stream<number> = Stream.ofValues();
-            const result = stream.reduce((x, y) => x+y, 1);
+            const stream: Stream<number> = Stream.iterate(0, (i)=> i+1).limit(10);
+            const result = stream.peek(console.log).reduce((x, y) => x+y, 1);
             console.log(result)
         });
 
