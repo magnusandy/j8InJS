@@ -78,8 +78,8 @@ exports.Stream = {
     iterate: function (seed, getNext) {
         return PipelineStream.ofCheckedSupplier(new IterateSource(seed, getNext));
     },
-    //builder(): StreamBuilder<T>;
-    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {},
+    //builder(): StreamBuilder<T>; //todo maybe
+    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {}, //todo 
     /**
      * returns a stream of numbers starting at startInclusive, and going to up
      * to but not including endExculsive in increments of 1, if a step is passed in, the
@@ -270,12 +270,16 @@ var PipelineStream = /** @class */ (function () {
         var newPipeline = this.newPipeline(processor_1.Processor.listFlatMapProcessor(transformer));
         return new PipelineStream(newPipeline);
     };
+    PipelineStream.prototype.flatMapOptional = function (transformer) {
+        var newPipeline = this.newPipeline(processor_1.Processor.optionalFlatMapProcessor(transformer));
+        return new PipelineStream(newPipeline);
+    };
     PipelineStream.prototype.filter = function (predicate) {
         var newPipeline = this.newPipeline(processor_1.Processor.filterProcessor(predicate));
         return new PipelineStream(newPipeline);
     };
     PipelineStream.prototype.distinct = function (equalsFunction) {
-        var equalsFunctionToUse = equalsFunction ? equalsFunction : functions_1.BiPredicate.defaultEquality;
+        var equalsFunctionToUse = equalsFunction ? equalsFunction : functions_1.BiPredicate.defaultEquality();
         var newPipeline = this.newPipeline(processor_1.Processor.distinctProcessor(equalsFunctionToUse));
         return new PipelineStream(newPipeline);
     };
@@ -294,7 +298,7 @@ var PipelineStream = /** @class */ (function () {
         this.forEachOrdered(consumer);
     };
     PipelineStream.prototype.max = function (comparator) {
-        var comparatorToUse = comparator ? comparator : functions_1.Comparator.default;
+        var comparatorToUse = comparator ? comparator : functions_1.Comparator.default();
         var maxValue = this.getNextProcessedItem();
         var nextValue = maxValue;
         while (nextValue.isPresent()) {
@@ -307,7 +311,7 @@ var PipelineStream = /** @class */ (function () {
         return maxValue;
     };
     PipelineStream.prototype.min = function (comparator) {
-        var comparatorToUse = comparator ? comparator : functions_1.Comparator.default;
+        var comparatorToUse = comparator ? comparator : functions_1.Comparator.default();
         var minValue = this.getNextProcessedItem();
         var nextValue = minValue;
         while (nextValue.isPresent()) {
@@ -337,32 +341,4 @@ var PipelineStream = /** @class */ (function () {
         return this.collect(collectors_1.default.toList());
     };
     return PipelineStream;
-}());
-;
-var ArrayStreamBuilder = /** @class */ (function () {
-    function ArrayStreamBuilder() {
-        this.array = [];
-    }
-    ArrayStreamBuilder.builder = function () {
-        return new ArrayStreamBuilder();
-    };
-    ArrayStreamBuilder.prototype.accept = function (item) {
-        this.acceptAll([item]);
-    };
-    ArrayStreamBuilder.prototype.acceptAll = function (items) {
-        var _a;
-        (_a = this.array).push.apply(_a, items);
-    };
-    ArrayStreamBuilder.prototype.add = function (item) {
-        this.accept(item);
-        return this;
-    };
-    ArrayStreamBuilder.prototype.addAll = function (items) {
-        this.acceptAll(items);
-        return this;
-    };
-    ArrayStreamBuilder.prototype.build = function () {
-        return PipelineStream.of(this.array);
-    };
-    return ArrayStreamBuilder;
 }());

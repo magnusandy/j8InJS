@@ -52,4 +52,5 @@ export declare const Processor: {
     limitProcessor: <I>(limit: number) => Processor<I, I>;
     streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>) => Processor<I, O>;
     peekProcessor: <I>(consumer: Consumer<I>) => Processor<I, I>;
+    optionalFlatMapProcessor: <I, O>(transformer: Transformer<I, Optional<O>>) => Processor<I, O>;
 };

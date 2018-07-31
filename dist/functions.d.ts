@@ -62,12 +62,12 @@ export declare const BiPredicate: {
      * function that takes two values of the same type, and returns true if
      * i1 === i2
      */
-    defaultEquality: <T>(i1: T, i2: T) => boolean;
+    defaultEquality<T>(): BiPredicate<T, T>;
 };
 export declare const Comparator: {
     /**
-     * compares the given values with the < and > operators, returns
+     * Returns a function that compares the given values with the < and > operators, returns
      * -1 if i1 less that i2, +1 if i1 is greater, and 0 if they are equal.
      */
-    default: <T>(i1: T, i2: T) => number;
+    default<T>(): Comparator<T>;
 };

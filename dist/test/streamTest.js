@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var chai_1 = require("chai");
 var stream_1 = require("../stream");
 var collectors_1 = require("../collectors");
+var optional_1 = require("../optional");
 describe('Stream tests', function () {
     describe('collect to list tests', function () {
         it('it should put all elements in the stream into the collector', function () {
@@ -143,8 +144,8 @@ describe('Stream tests', function () {
     });
     describe('forEach tests', function () {
         it('it should consume all values', function () {
-            var stream = stream_1.Stream.iterate(0, function (i) { return i + 1; }).limit(10);
-            var result = stream.peek(console.log).reduce(function (x, y) { return x + y; }, 1);
+            var stream = stream_1.Stream.ofValues(optional_1.Optional.of(1), optional_1.Optional.empty(), optional_1.Optional.of(2));
+            var result = stream.peek(console.log).flatMapOptional(function (i) { return i; }).collect(collectors_1.default.toList());
             console.log(result);
         });
         it('it should consume all values', function () {

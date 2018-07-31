@@ -58,6 +58,7 @@ export const Processor = {
     limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),
     streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer),
     peekProcessor: <I> (consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer),
+    optionalFlatMapProcessor: <I, O> (transformer: Transformer<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(transformer),
 }
 
 /**
@@ -318,6 +319,27 @@ class StreamFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Out
             }
         }
         return Optional.empty();
+    }
+
+    public isStateless(): boolean {
+        return true;
+    }
+
+    public isShortCircuting(): boolean {
+        return false;
+    }
+}
+
+class OptionalFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Output> {
+    private transformer: Transformer<Input, Optional<Output>>;
+
+    constructor(transformer: Transformer<Input, Optional<Output>>) {
+        super();
+        this.transformer = transformer;
+    }
+
+    public processAndGetNext(): Optional<Output> {
+        return this.takeNextInput().flatMap(this.transformer);
     }
 
     public isStateless(): boolean {

@@ -123,6 +123,17 @@ export interface Stream<T> {
      * @param transformer 
      */
     flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>;
+     
+    /**
+     * Intermediate Operation
+     * similar idea to flatMap or flatMapList, takes in a transformer function that
+     * returns a optional, and returns a stream of actual values of the optional 
+     * results that include a value, functionally equivelant to 
+     * stream.map(transformer).filter(o => o.isPresent()).map(o => o.get())
+     * @param transformer 
+     */
+    flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;
+
 
     /**
      * Terminal Operation
@@ -520,13 +531,18 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return new PipelineStream<S, U>(newPipeline);
     }
 
+    public flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U> {
+        const newPipeline = this.newPipeline(Processor.optionalFlatMapProcessor(transformer));
+        return new PipelineStream<S, U>(newPipeline);
+    }
+
     public filter(predicate: Predicate<T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.filterProcessor(predicate));
         return new PipelineStream<S, T>(newPipeline);
     }
 
     public distinct(equalsFunction?: BiPredicate<T, T>): Stream<T> {
-        const equalsFunctionToUse: BiPredicate<T, T> = equalsFunction ? equalsFunction : BiPredicate.defaultEquality
+        const equalsFunctionToUse: BiPredicate<T, T> = equalsFunction ? equalsFunction : BiPredicate.defaultEquality()
         const newPipeline = this.newPipeline(Processor.distinctProcessor(equalsFunctionToUse));
         return new PipelineStream<S, T>(newPipeline);
     }
@@ -549,7 +565,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     }
 
     public max(comparator?: Comparator<T>): Optional<T> {
-        const comparatorToUse: Comparator<T> = comparator ? comparator : Comparator.default;
+        const comparatorToUse: Comparator<T> = comparator ? comparator : Comparator.default();
 
         let maxValue = this.getNextProcessedItem();
         let nextValue = maxValue;
@@ -565,7 +581,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     }
 
     public min(comparator?: Comparator<T>): Optional<T> {
-        const comparatorToUse: Comparator<T> = comparator ? comparator : Comparator.default;
+        const comparatorToUse: Comparator<T> = comparator ? comparator : Comparator.default();
 
         let minValue = this.getNextProcessedItem();
         let nextValue = minValue;

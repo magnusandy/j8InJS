@@ -19,6 +19,7 @@ exports.Processor = {
     limitProcessor: function (limit) { return new LimitProcessor(limit); },
     streamFlatMapProcessor: function (transformer) { return new StreamFlatMapProcessor(transformer); },
     peekProcessor: function (consumer) { return new PeekProcessor(consumer); },
+    optionalFlatMapProcessor: function (transformer) { return new OptionalFlatMapProcessor(transformer); },
 };
 /**
  * Abstract processor that implements the storage and retrieval of items from
@@ -137,7 +138,7 @@ var MapProcessor = /** @class */ (function (_super) {
     };
     return MapProcessor;
 }(AbstractProcessor));
-/**
+/** //todo test
  * Implemention of a Processor for consuming a value,intermediately but not not
  * altering the stream.
  */
@@ -250,4 +251,22 @@ var StreamFlatMapProcessor = /** @class */ (function (_super) {
         return false;
     };
     return StreamFlatMapProcessor;
+}(AbstractProcessor));
+var OptionalFlatMapProcessor = /** @class */ (function (_super) {
+    __extends(OptionalFlatMapProcessor, _super);
+    function OptionalFlatMapProcessor(transformer) {
+        var _this = _super.call(this) || this;
+        _this.transformer = transformer;
+        return _this;
+    }
+    OptionalFlatMapProcessor.prototype.processAndGetNext = function () {
+        return this.takeNextInput().flatMap(this.transformer);
+    };
+    OptionalFlatMapProcessor.prototype.isStateless = function () {
+        return true;
+    };
+    OptionalFlatMapProcessor.prototype.isShortCircuting = function () {
+        return false;
+    };
+    return OptionalFlatMapProcessor;
 }(AbstractProcessor));

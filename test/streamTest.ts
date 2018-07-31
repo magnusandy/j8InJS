@@ -178,8 +178,8 @@ describe('Stream tests', () => {
 
     describe('forEach tests', () => {
         it('it should consume all values', () => {
-            const stream: Stream<number> = Stream.iterate(0, (i)=> i+1).limit(10);
-            const result = stream.peek(console.log).reduce((x, y) => x+y, 1);
+            const stream: Stream<Optional<number>> = Stream.ofValues(Optional.of(1), Optional.empty(), Optional.of(2));
+            const result = stream.peek(console.log).flatMapOptional(i => i).collect(Collectors.toList())
             console.log(result)
         });
 

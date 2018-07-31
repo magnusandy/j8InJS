@@ -110,6 +110,15 @@ export interface Stream<T> {
      */
     flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>;
     /**
+     * Intermediate Operation
+     * similar idea to flatMap or flatMapList, takes in a transformer function that
+     * returns a optional, and returns a stream of actual values of the optional
+     * results that include a value, functionally equivelant to
+     * stream.map(transformer).filter(o => o.isPresent()).map(o => o.get())
+     * @param transformer
+     */
+    flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;
+    /**
      * Terminal Operation
      * applies a given consumer to each entity in the stream. elements are processed in sequental order;
      * @param consumer: applies the consuming function to all elements in the stream;
@@ -252,9 +261,3 @@ export declare const Stream: {
      */
     rangeClosed(startInclusive: number, endInclusive: number, step?: number | undefined): Stream<number>;
 };
-export interface StreamBuilder<T> {
-    accept(item: T): void;
-    add(item: T): StreamBuilder<T>;
-    addAll(itemList: T[]): StreamBuilder<T>;
-    build(): Stream<T>;
-}
