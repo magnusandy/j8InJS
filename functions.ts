@@ -68,10 +68,47 @@ export interface CheckableSupplier<T> {
     isEmpty(): boolean;
 }
 
+export const Consumer = {
+
+    /**
+     * returns a consumer that takes in an element and does nothing
+     */
+    sink<T>(): Consumer<T> {
+        return i => { };
+    },
+
+    /**
+     * returns a consumer logs the value given to the console
+     */
+    logger<T>(): Consumer<T> {
+        return i => console.log(i);
+    }
+}
+
+export const Transformer = {
+
+    /**
+     * returns Transformer that when passed an argument, will return the given argument
+     */
+    identity<T>(): Transformer<T, T> {
+        return i => i;
+    },
+
+    /**
+     * returns a Transformer logs the given value to the console and then returns the value
+     */
+    logger<T>(): Transformer<T, T> {
+        return (i: T) => {
+            console.log(i);
+            return i;
+        }
+    }
+}
+
 export const BiPredicate = {
 
     /**
-     * function that takes two values of the same type, and returns true if 
+     * returns a BiPredicate that takes two values of the same type, and returns true if 
      * i1 === i2
      */
     defaultEquality<T>(): BiPredicate<T, T> {
@@ -82,7 +119,7 @@ export const BiPredicate = {
 export const Comparator = {
 
     /**
-     * Returns a function that compares the given values with the < and > operators, returns
+     * Returns a Comparator that compares the given values with the < and > operators, returns
      * -1 if i1 less that i2, +1 if i1 is greater, and 0 if they are equal.
      */
     default<T>(): Comparator<T> {

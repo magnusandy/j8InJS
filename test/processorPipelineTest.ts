@@ -10,7 +10,7 @@ import { ProcessorNode } from "../processorPipeline";
 describe('ProcessorPipeline tests', () => {
     describe('ProcessorNode tests', () => {
         it('should create new node with empty previous and next', () => {
-            const processor: Processor<string, string> = Processor.mapProcessor(i => i);
+            const processor: Processor<string, string> = Processor.mapProcessor(Transformer.identity());
             const processorNode: ProcessorNode<string, string> = new ProcessorNode(processor);
 
             expect(processorNode.getNextNode().isPresent()).is.equal(false);
@@ -18,7 +18,7 @@ describe('ProcessorPipeline tests', () => {
         });
 
         it('addNext should add a processor to next', () => {
-            const processor: Processor<string, string> = Processor.mapProcessor(i => i);
+            const processor: Processor<string, string> = Processor.mapProcessor(Transformer.identity());
             const processorNode: ProcessorNode<string, string> = new ProcessorNode(processor);
             const nextProcessor = new ProcessorNode(processor);
             processorNode.addNextNode(nextProcessor);
@@ -27,7 +27,7 @@ describe('ProcessorPipeline tests', () => {
         });
 
         it('addPrev should add a processor to next', () => {
-            const processor: Processor<string, string> = Processor.mapProcessor(i => i);
+            const processor: Processor<string, string> = Processor.mapProcessor(Transformer.identity());
             const processorNode: ProcessorNode<string, string> = new ProcessorNode(processor);
             const prev = new ProcessorNode(processor);
             processorNode.addPreviousNode(prev);

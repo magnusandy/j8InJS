@@ -1,6 +1,6 @@
 import { Processor } from "./processor";
 import { Optional } from "./optional";
-import { Supplier, CheckableSupplier } from "./functions";
+import { Supplier, CheckableSupplier, Transformer } from "./functions";
 
 /**
  * The processor pipeline is a linked list of processor nodes, the pipeline needs to be given items to process first, 
@@ -35,7 +35,7 @@ export class ProcessorPipeline<Source, Final> {
      */
     public static create<S>(source: CheckableSupplier<S>): ProcessorPipeline<S, S> {
         const initialNode = new InitialFeedProcessorNode<S>(source);
-        const node = new ProcessorNode<S, S>(Processor.mapProcessor(i => i)); // identity processor as first node
+        const node = new ProcessorNode<S, S>(Processor.mapProcessor(Transformer.identity()));
         return new ProcessorPipeline(initialNode, node, node);
     }
 
@@ -195,7 +195,7 @@ class InitialFeedProcessorNode<Input> extends ProcessorNode<Input, Input> {
     private checkableSupplier: CheckableSupplier<Input>;
 
     constructor(supplier: CheckableSupplier<Input>) {
-        super(Processor.mapProcessor(i => i));
+        super(Processor.mapProcessor(Transformer.identity()));
         this.checkableSupplier = supplier;
     }   
 
