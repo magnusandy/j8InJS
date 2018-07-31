@@ -26,6 +26,77 @@ describe('Stream tests', () => {
 
     });
 
+    describe('Stream.concat', () => {
+        it('it concatenate two streams with values', () => {
+            const s1: Stream<number> = Stream.ofValues(1, 2, 3);
+            const s2: Stream<number> = Stream.ofValues(4, 5, 6);
+            const concat: Stream<number> = Stream.concat(s1, s2);
+
+            const result = concat.toArray();
+
+            expect(result.length).to.equal(6);
+            expect(result[0]).to.equal(1);
+            expect(result[5]).to.equal(6);
+        });
+
+        it('it concatenate first stream empty', () => {
+            const s1: Stream<number> = Stream.empty();
+            const s2: Stream<number> = Stream.ofValues(4, 5, 6);
+            const concat: Stream<number> = Stream.concat(s1, s2);
+
+            const result = concat.toArray();
+
+            expect(result.length).to.equal(3);
+            expect(result[0]).to.equal(4);
+            expect(result[2]).to.equal(6);
+        });
+
+        it('it concatenate second stream empty', () => {
+            const s1: Stream<number> = Stream.ofValues(1, 2, 3);
+            const s2: Stream<number> = Stream.empty();
+            const concat: Stream<number> = Stream.concat(s1, s2);
+
+            const result = concat.toArray();
+
+            expect(result.length).to.equal(3);
+            expect(result[0]).to.equal(1);
+            expect(result[2]).to.equal(3);
+        });
+
+        it('it concatenate two complex streams', () => {
+            const s1: Stream<number> = Stream.ofValues('1', '2', '3').map((i: string) => parseInt(i)).distinct();
+            const s2: Stream<number> = Stream.ofValues(4, 5, 6, 10, 20, 50).distinct().filter(i => i < 10);
+            const concat: Stream<number> = Stream.concat(s1, s2);
+
+            const result = concat.toArray();
+
+            expect(result.length).to.equal(6);
+            expect(result[0]).to.equal(1);
+            expect(result[5]).to.equal(6);
+        });
+
+        it('it concatenate two complex streams with infinite', () => {
+            const s1: Stream<number> = Stream.generate(() => 1).limit(3);
+            const s2: Stream<number> = Stream.ofValues(4, 5, 6, 10, 20, 50).distinct().filter(i => i < 10);
+            const concat: Stream<number> = Stream.concat(s1, s2);
+
+            const result = concat.toArray();
+
+            expect(result.length).to.equal(6);
+            expect(result[0]).to.equal(1);
+            expect(result[5]).to.equal(6);
+        });
+
+
+        it('it should handle empty stream', () => {
+            const stream: Stream<number> = Stream.empty();
+            const result: number[] = stream.collect(Collectors.toList())
+
+            expect(result.length).to.equal(0);
+        });
+
+    });
+
     describe('forEach', () => {
         it('it should run consumer on all elements', () => {
             let sum = 0;
@@ -140,16 +211,16 @@ describe('Stream tests', () => {
         it('it greedily consume elements even if terminal is short circuiting', () => {
             //todo 
         });
-    
+
     });
 
     describe('filter tests', () => {
         it('it keeps matching values in the stream', () => {
-            const source = [1,2,3,11,12,13];
-            const expectedValues = [1,2,3];
+            const source = [1, 2, 3, 11, 12, 13];
+            const expectedValues = [1, 2, 3];
             const stream = Stream.of(source);
             const result = stream.filter(i => i < 10)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
 
             expect(result.length).to.equal(3);
             expectedValues.forEach(item => expect(result).to.contain(item));
@@ -157,9 +228,9 @@ describe('Stream tests', () => {
 
         it('it should lazily filter only when terminal is called', () => {
             let count = 0;
-            const source = [1,2,3,11,12,13];
+            const source = [1, 2, 3, 11, 12, 13];
             let stream = Stream.of(source);
-            stream = stream.filter(i =>{count++; return i < 10});
+            stream = stream.filter(i => { count++; return i < 10 });
             expect(count).to.equal(0);
             stream.collect(Collectors.toList());
             expect(count).to.equal(6);

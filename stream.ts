@@ -310,7 +310,15 @@ export const Stream = {
     },
 
     //builder(): StreamBuilder<T>; //todo maybe
-    //concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {}, //todo 
+    
+    /**
+     * creates a new stream consisting of all the values of s1, followed by all the values of s2
+     * @param s1 first stream
+     * @param s2 second stream
+     */
+    concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {
+        return PipelineStream.concat(s1, s2);
+    }, 
 
     /**
      * returns a stream of numbers starting at startInclusive, and going to up 
@@ -430,6 +438,24 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
 
     public static empty<S>(): Stream<S> {
         return PipelineStream.of<S>([]);
+    }
+
+    public static concat<S>(stream1: Stream<S>, stream2: Stream<S>): Stream<S> {
+        const iter1 = stream1.streamIterator();
+        const iter2 = stream2.streamIterator();
+        const checkedSupplier: CheckableSupplier<Optional<S>> = {
+            get: () => {
+                if (iter1.hasNext()) {
+                    return iter1.getNext();
+                } else {
+                    return iter2.getNext();
+                }
+            },
+
+            isEmpty: () => !iter1.hasNext() && !iter2.hasNext()
+        }
+        return PipelineStream.ofCheckedSupplier(checkedSupplier)
+                             .flatMapOptional(Transformer.identity());
     }
 
     private getNextProcessedItem(): Optional<any> {

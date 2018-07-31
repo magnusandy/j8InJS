@@ -330,6 +330,7 @@ class StreamFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Out
     }
 }
 
+//todo test
 class OptionalFlatMapProcessor<Input, Output> extends AbstractProcessor<Input, Output> {
     private transformer: Transformer<Input, Optional<Output>>;
 
