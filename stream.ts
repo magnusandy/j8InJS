@@ -321,7 +321,7 @@ export const Stream = {
 
     /**
      * returns a stream of numbers starting at startInclusive, and going to up 
-     * to and including endExculsive in increments of 1, if a step is passed in, the 
+     * to and including endInclusive in increments of 1, if a step is passed in, the 
      * increments of 1 will be changed to increments of size step
      * 
      * IF the start is greater than the end, the default step will be -1 and any positive step
@@ -353,7 +353,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return this.pipeline.addProcessor(processor);
     }
 
-    //spliterator methods
+    //streamIterator methods
     public hasNext(): boolean {
         return this.pipeline.hasNext();
     }

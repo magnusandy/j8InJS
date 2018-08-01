@@ -160,7 +160,7 @@ class RangeSource implements Source<number> {
     comparator: BiPredicate<number, number>;
 
     constructor(startInclusive: number, endExclusive: number, step?: number) {
-        const isAscending = startInclusive <= endExclusive; //todo does = work
+        const isAscending = startInclusive <= endExclusive; 
 
         this.comparator = isAscending
             ? (n1, n2) => n1 < n2

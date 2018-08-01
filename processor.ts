@@ -54,7 +54,7 @@ export const Processor = {
     mapProcessor: <I, O>(transformer: Transformer<I, O>): Processor<I, O> => new MapProcessor<I, O>(transformer),
     filterProcessor: <I>(predicate: Predicate<I>): Processor<I, I> => new FilterProcessor<I>(predicate),
     listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>): Processor<I, O> => new ListFlatMapProcessor(transformer),
-    distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),
+    distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),//todo test
     limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),
     streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer), //todo test
     peekProcessor: <I> (consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer), //todo test
@@ -138,7 +138,7 @@ class LimitProcessor<Input> extends AbstractProcessor<Input, Input> {
     }
 }
 
-/** //todo test
+/**
  * This is a stateful processor, that will return distinct elements provided all 
  * the inputs are given at the start, and no elements are injected mid processing
  */
@@ -210,7 +210,7 @@ class MapProcessor<Input, Output> extends PureStatelessProcessor<Input, Output> 
     }
 }
 
-/** //todo test
+/**
  * Implemention of a Processor for consuming a value,intermediately but not not 
  * altering the stream.
  */
