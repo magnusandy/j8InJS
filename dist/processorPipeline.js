@@ -27,11 +27,12 @@ var ProcessorPipeline = /** @class */ (function () {
         this.headProcessor.addPreviousNode(this.initialFeed);
     }
     /**
-     * return false if any of the processors in the pipeline
-     * still have a value inside it.
+     * returns true if there is still unprocessed items or items still remaining in the
+     * processing queue. hasNext = true does not garentee that getNextResult will be a
+     * non-empty value.
      */
-    ProcessorPipeline.prototype.isProcessorChainEmpty = function () {
-        return !this.tailProcessor.hasNext();
+    ProcessorPipeline.prototype.hasNext = function () {
+        return this.tailProcessor.hasNext();
     };
     /**
      * creates a new Pipeline with the given processor as the first operation
@@ -52,14 +53,6 @@ var ProcessorPipeline = /** @class */ (function () {
         oldTail.addNextNode(newNode);
         newNode.addPreviousNode(oldTail);
         return new ProcessorPipeline(this.initialFeed, this.headProcessor, newNode);
-    };
-    /**
-     * returns true if there is still unprocessed items or items still remaining in the
-     * processing queue. hasNext = true does not garentee that getNextResult will be a
-     * non-empty value.
-     */
-    ProcessorPipeline.prototype.hasNext = function () {
-        return !this.isProcessorChainEmpty();
     };
     /**
      * Returns the next real value to come out of the back of the pipeline (wrapped in an optional)
@@ -99,11 +92,11 @@ var ProcessorNode = /** @class */ (function () {
     ProcessorNode.prototype.addPreviousNode = function (previousProcessor) {
         this.previousNode = optional_1.Optional.of(previousProcessor);
     };
-    ProcessorNode.prototype.getNextNode = function () {
-        return this.nextNode;
-    };
     ProcessorNode.prototype.getPreviousNode = function () {
         return this.previousNode;
+    };
+    ProcessorNode.prototype.getNextNode = function () {
+        return this.nextNode;
     };
     ProcessorNode.prototype.addInput = function (input) {
         this.thisProcessor.add(input);
@@ -121,9 +114,6 @@ var ProcessorNode = /** @class */ (function () {
             return this.thisProcessor.hasNext() || hasPreviousAndItHasValues;
         }
     };
-    // getProcessor(): Processor<Input, Output> {
-    //     return this.thisProcessor;
-    // }
     /**
      * pulls all the values out of the previous processor, if one exists
      * and add them into the current processor;
@@ -146,7 +136,7 @@ var ProcessorNode = /** @class */ (function () {
      * current processor, attempt to add new items to the current processor from the previous upstream processor.
      */
     ProcessorNode.prototype.statelessGet = function () {
-        if (this.thisProcessor.hasNext() && !this.thisProcessor.isShortCircuting()) { //todo explain more, we need to treat short circuiting nodes differently
+        if (this.thisProcessor.hasNext() && !this.thisProcessor.isShortCircuting()) {
             return this.thisProcessor.processAndGetNext();
         }
         else if (this.previousNode.isPresent()) {
@@ -179,6 +169,7 @@ var ProcessorNode = /** @class */ (function () {
 exports.ProcessorNode = ProcessorNode;
 /**
  * a special processor node that acts as a supplier for the rest of the pipeline
+ * pulling from a Source
  */
 var InitialFeedProcessorNode = /** @class */ (function (_super) {
     __extends(InitialFeedProcessorNode, _super);

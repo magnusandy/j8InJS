@@ -249,7 +249,7 @@ describe('Stream tests', () => {
 
     describe('forEach tests', () => {
         it('it should consume all values', () => {
-            const stream: Stream<number> = Stream.range(0, -10, -2);
+            const stream: Stream<number> = Stream.range(0, 2).skip(1);
             const result = stream.peek(Consumer.logger()).collect(Collectors.toList())
             console.log(result)
         });

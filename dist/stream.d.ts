@@ -188,6 +188,13 @@ export interface Stream<T> {
      * step by step data retrieval from the stream
      */
     streamIterator(): StreamIterator<T>;
+    /**
+     * Intermediate Operation:
+     * Returns a stream consisting of all the value after discarding the first n
+     * values. If a negative number is passed in, no values are skipped.
+     * @param n number of elements to skip
+     */
+    skip(n: number): Stream<T>;
     toArray(): T[];
 }
 export interface StreamIterator<T> {

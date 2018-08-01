@@ -149,7 +149,7 @@ var RangeSource = /** @class */ (function () {
         return next;
     };
     RangeSource.prototype.hasNext = function () {
-        return this.nextValue < this.endExclusive;
+        return this.comparator(this.nextValue, this.endExclusive);
     };
     return RangeSource;
 }());

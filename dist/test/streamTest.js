@@ -4,7 +4,6 @@ var chai_1 = require("chai");
 var functions_1 = require("../functions");
 var stream_1 = require("../stream");
 var collectors_1 = require("../collectors");
-var optional_1 = require("../optional");
 describe('Stream tests', function () {
     describe('collect to list tests', function () {
         it('it should put all elements in the stream into the collector', function () {
@@ -197,8 +196,8 @@ describe('Stream tests', function () {
     });
     describe('forEach tests', function () {
         it('it should consume all values', function () {
-            var stream = stream_1.Stream.ofValues(optional_1.Optional.of(1), optional_1.Optional.of(2));
-            var result = stream.peek(functions_1.Consumer.logger()).flatMapOptional(functions_1.Transformer.identity()).collect(collectors_1.default.toList());
+            var stream = stream_1.Stream.range(0, -10).skip(2);
+            var result = stream.peek(functions_1.Consumer.logger()).collect(collectors_1.default.toList());
             console.log(result);
         });
         it('it should consume all values', function () {

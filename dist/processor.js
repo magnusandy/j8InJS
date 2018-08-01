@@ -20,6 +20,7 @@ exports.Processor = {
     streamFlatMapProcessor: function (transformer) { return new StreamFlatMapProcessor(transformer); },
     peekProcessor: function (consumer) { return new PeekProcessor(consumer); },
     optionalFlatMapProcessor: function (transformer) { return new OptionalFlatMapProcessor(transformer); },
+    skipProcessor: function (numberToSkip) { return new SkipProcessor(numberToSkip); },
 };
 /**
  * Abstract processor that implements the storage and retrieval of items from
@@ -40,6 +41,22 @@ var AbstractProcessor = /** @class */ (function () {
     };
     return AbstractProcessor;
 }());
+/**
+ * Abstract processor that is stateless and not short circuiting
+ */
+var PureStatelessProcessor = /** @class */ (function (_super) {
+    __extends(PureStatelessProcessor, _super);
+    function PureStatelessProcessor() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    PureStatelessProcessor.prototype.isStateless = function () {
+        return true;
+    };
+    PureStatelessProcessor.prototype.isShortCircuting = function () {
+        return false;
+    };
+    return PureStatelessProcessor;
+}(AbstractProcessor));
 var LimitProcessor = /** @class */ (function (_super) {
     __extends(LimitProcessor, _super);
     function LimitProcessor(limit) {
@@ -130,14 +147,8 @@ var MapProcessor = /** @class */ (function (_super) {
     MapProcessor.prototype.processAndGetNext = function () {
         return this.takeNextInput().map(this.transformer);
     };
-    MapProcessor.prototype.isStateless = function () {
-        return true;
-    };
-    MapProcessor.prototype.isShortCircuting = function () {
-        return false;
-    };
     return MapProcessor;
-}(AbstractProcessor));
+}(PureStatelessProcessor));
 /** //todo test
  * Implemention of a Processor for consuming a value,intermediately but not not
  * altering the stream.
@@ -154,14 +165,8 @@ var PeekProcessor = /** @class */ (function (_super) {
         item.ifPresent(this.consumer);
         return item;
     };
-    PeekProcessor.prototype.isStateless = function () {
-        return true;
-    };
-    PeekProcessor.prototype.isShortCircuting = function () {
-        return false;
-    };
     return PeekProcessor;
-}(AbstractProcessor));
+}(PureStatelessProcessor));
 /**
  * Stateless process, filters input items against a given predicated, only
  * returning those who match against the given predicate.
@@ -176,14 +181,31 @@ var FilterProcessor = /** @class */ (function (_super) {
     FilterProcessor.prototype.processAndGetNext = function () {
         return this.takeNextInput().filter(this.predicate);
     };
-    FilterProcessor.prototype.isStateless = function () {
-        return true;
-    };
-    FilterProcessor.prototype.isShortCircuting = function () {
-        return false;
-    };
     return FilterProcessor;
-}(AbstractProcessor));
+}(PureStatelessProcessor));
+/**
+ * stateless processor, removes the given number of values before continuing to return values
+ * given value must be positive, or nothing is skipped
+ */
+var SkipProcessor = /** @class */ (function (_super) {
+    __extends(SkipProcessor, _super);
+    function SkipProcessor(amountToSkip) {
+        var _this = _super.call(this) || this;
+        _this.amountToSkip = amountToSkip;
+        return _this;
+    }
+    SkipProcessor.prototype.processAndGetNext = function () {
+        if (this.amountToSkip > 0) {
+            this.amountToSkip = this.amountToSkip - 1;
+            this.takeNextInput(); //throw away
+            return optional_1.Optional.empty();
+        }
+        else {
+            return this.takeNextInput();
+        }
+    };
+    return SkipProcessor;
+}(PureStatelessProcessor));
 /**
  * returns a one to many mapping of elements, transforms input elements into
  * a list of output elements, returning the values off the output lists, one list
@@ -213,14 +235,8 @@ var ListFlatMapProcessor = /** @class */ (function (_super) {
         }
         return optional_1.Optional.empty();
     };
-    ListFlatMapProcessor.prototype.isStateless = function () {
-        return true;
-    };
-    ListFlatMapProcessor.prototype.isShortCircuting = function () {
-        return false;
-    };
     return ListFlatMapProcessor;
-}(AbstractProcessor));
+}(PureStatelessProcessor));
 var StreamFlatMapProcessor = /** @class */ (function (_super) {
     __extends(StreamFlatMapProcessor, _super);
     function StreamFlatMapProcessor(transformer) {
@@ -244,14 +260,8 @@ var StreamFlatMapProcessor = /** @class */ (function (_super) {
         }
         return optional_1.Optional.empty();
     };
-    StreamFlatMapProcessor.prototype.isStateless = function () {
-        return true;
-    };
-    StreamFlatMapProcessor.prototype.isShortCircuting = function () {
-        return false;
-    };
     return StreamFlatMapProcessor;
-}(AbstractProcessor));
+}(PureStatelessProcessor));
 //todo test
 var OptionalFlatMapProcessor = /** @class */ (function (_super) {
     __extends(OptionalFlatMapProcessor, _super);
@@ -263,11 +273,5 @@ var OptionalFlatMapProcessor = /** @class */ (function (_super) {
     OptionalFlatMapProcessor.prototype.processAndGetNext = function () {
         return this.takeNextInput().flatMap(this.transformer);
     };
-    OptionalFlatMapProcessor.prototype.isStateless = function () {
-        return true;
-    };
-    OptionalFlatMapProcessor.prototype.isShortCircuting = function () {
-        return false;
-    };
     return OptionalFlatMapProcessor;
-}(AbstractProcessor));
+}(PureStatelessProcessor));

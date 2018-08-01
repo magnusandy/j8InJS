@@ -23,11 +23,12 @@ export class ProcessorPipeline<S, F> {
     }
 
     /**
-     * return false if any of the processors in the pipeline
-     * still have a value inside it.
+     * returns true if there is still unprocessed items or items still remaining in the 
+     * processing queue. hasNext = true does not garentee that getNextResult will be a 
+     * non-empty value.
      */
-    protected isProcessorChainEmpty(): boolean {
-        return !this.tailProcessor.hasNext();
+    public hasNext(): boolean {
+        return this.tailProcessor.hasNext();
     }
 
     /**
@@ -51,15 +52,6 @@ export class ProcessorPipeline<S, F> {
         newNode.addPreviousNode(oldTail);
 
         return new ProcessorPipeline<S, NF>(this.initialFeed, this.headProcessor, newNode)
-    }
-
-    /**
-     * returns true if there is still unprocessed items or items still remaining in the 
-     * processing queue. hasNext = true does not garentee that getNextResult will be a 
-     * non-empty value.
-     */
-    public hasNext(): boolean {
-        return !this.isProcessorChainEmpty();
     }
 
     /**
@@ -106,12 +98,12 @@ export class ProcessorNode<I, O> {
         this.previousNode = Optional.of(previousProcessor);
     }
 
-    getNextNode(): Optional<ProcessorNode<O, any>> {
-        return this.nextNode;
-    }
-
     getPreviousNode(): Optional<ProcessorNode<any, I>> {
         return this.previousNode;
+    }
+
+    getNextNode(): Optional<ProcessorNode<O, any>> {
+        return this.nextNode;
     }
 
     addInput(input: I): void {
@@ -131,10 +123,6 @@ export class ProcessorNode<I, O> {
             return this.thisProcessor.hasNext() || hasPreviousAndItHasValues;
         }
     }
-
-    // getProcessor(): Processor<Input, Output> {
-    //     return this.thisProcessor;
-    // }
 
     /**
      * pulls all the values out of the previous processor, if one exists
@@ -158,7 +146,7 @@ export class ProcessorNode<I, O> {
      * current processor, attempt to add new items to the current processor from the previous upstream processor.
      */
     statelessGet(): Optional<O> {
-        if (this.thisProcessor.hasNext() && !this.thisProcessor.isShortCircuting()) { //todo explain more, we need to treat short circuiting nodes differently
+        if (this.thisProcessor.hasNext() && !this.thisProcessor.isShortCircuting()) {
             return this.thisProcessor.processAndGetNext();
         } else if (this.previousNode.isPresent()) {
             const processedValue: Optional<I> = this.previousNode.get().getProcessedValue();
@@ -190,6 +178,7 @@ export class ProcessorNode<I, O> {
 
 /**
  * a special processor node that acts as a supplier for the rest of the pipeline
+ * pulling from a Source
  */
 class InitialFeedProcessorNode<I> extends ProcessorNode<I, I> {
     

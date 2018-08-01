@@ -216,8 +216,15 @@ export interface Stream<T> {
      */
     streamIterator(): StreamIterator<T>;
 
+    /**
+     * Intermediate Operation: 
+     * Returns a stream consisting of all the value after discarding the first n
+     * values. If a negative number is passed in, no values are skipped. 
+     * @param n number of elements to skip
+     */
+    skip(n: number): Stream<T>; //intermediate
+
     //todo
-    //skip(numberToSkip: number): Stream<T>; //intermediate
     //sorted(comparator?: Comparator<T>): Stream<T>; //intermediate stateful
     toArray(): T[];
 }
@@ -496,6 +503,11 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
 
     public filter(predicate: Predicate<T>): Stream<T> {
         const newPipeline = this.newPipeline(Processor.filterProcessor(predicate));
+        return new PipelineStream<S, T>(newPipeline);
+    }
+
+    public skip(n: number): Stream<T> {
+        const newPipeline = this.newPipeline(Processor.skipProcessor(n));
         return new PipelineStream<S, T>(newPipeline);
     }
 

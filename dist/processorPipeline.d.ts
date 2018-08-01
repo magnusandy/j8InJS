@@ -13,10 +13,11 @@ export declare class ProcessorPipeline<S, F> {
     private tailProcessor;
     private constructor();
     /**
-     * return false if any of the processors in the pipeline
-     * still have a value inside it.
+     * returns true if there is still unprocessed items or items still remaining in the
+     * processing queue. hasNext = true does not garentee that getNextResult will be a
+     * non-empty value.
      */
-    protected isProcessorChainEmpty(): boolean;
+    hasNext(): boolean;
     /**
      * creates a new Pipeline with the given processor as the first operation
      * @param initalProcessor
@@ -27,12 +28,6 @@ export declare class ProcessorPipeline<S, F> {
      * @param addedProcessor
      */
     addProcessor<NF>(addedProcessor: Processor<F, NF>): ProcessorPipeline<S, NF>;
-    /**
-     * returns true if there is still unprocessed items or items still remaining in the
-     * processing queue. hasNext = true does not garentee that getNextResult will be a
-     * non-empty value.
-     */
-    hasNext(): boolean;
     /**
      * Returns the next real value to come out of the back of the pipeline (wrapped in an optional)
      * if there is no more elements in the in the queue or pipeline, this will return optional empty.
@@ -51,8 +46,8 @@ export declare class ProcessorNode<I, O> {
     private getNextProcessedOutput;
     addNextNode(next: ProcessorNode<O, any>): void;
     addPreviousNode(previousProcessor: ProcessorNode<any, I>): void;
-    getNextNode(): Optional<ProcessorNode<O, any>>;
     getPreviousNode(): Optional<ProcessorNode<any, I>>;
+    getNextNode(): Optional<ProcessorNode<O, any>>;
     addInput(input: I): void;
     isStateless(): boolean;
     hasNext(): boolean;

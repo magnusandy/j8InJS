@@ -55,7 +55,7 @@ exports.Stream = {
      * @param getNext transforming function applied at each step
      */
     iterate: function (seed, getNext) {
-        return PipelineStream.ofCheckedSupplier(source_1.Source.iterateSource(seed, getNext));
+        return PipelineStream.ofSource(source_1.Source.iterateSource(seed, getNext));
     },
     //builder(): StreamBuilder<T>; //todo maybe
     /**
@@ -82,7 +82,7 @@ exports.Stream = {
      * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
      */
     range: function (startInclusive, endExclusive, step) {
-        return PipelineStream.ofCheckedSupplier(source_1.Source.rangeSource(startInclusive, endExclusive, step));
+        return PipelineStream.ofSource(source_1.Source.rangeSource(startInclusive, endExclusive, step));
     },
     /**
      * returns a stream of numbers starting at startInclusive, and going to up
@@ -133,19 +133,19 @@ var PipelineStream = /** @class */ (function () {
         return this;
     };
     PipelineStream.of = function (source) {
-        return PipelineStream.ofCheckedSupplier(source_1.Source.arraySource(source));
+        return PipelineStream.ofSource(source_1.Source.arraySource(source));
     };
     PipelineStream.ofSupplier = function (supplier) {
-        return PipelineStream.ofCheckedSupplier(source_1.Source.supplierSource(supplier));
+        return PipelineStream.ofSource(source_1.Source.supplierSource(supplier));
     };
-    PipelineStream.ofCheckedSupplier = function (checkedSupplier) {
-        return new PipelineStream(processorPipeline_1.ProcessorPipeline.create(checkedSupplier));
+    PipelineStream.ofSource = function (source) {
+        return new PipelineStream(processorPipeline_1.ProcessorPipeline.create(source));
     };
     PipelineStream.empty = function () {
         return PipelineStream.of([]);
     };
     PipelineStream.concat = function (stream1, stream2) {
-        return PipelineStream.ofCheckedSupplier(source_1.Source.concatSource(stream1, stream2))
+        return PipelineStream.ofSource(source_1.Source.concatSource(stream1, stream2))
             .flatMapOptional(functions_1.Transformer.identity());
     };
     PipelineStream.prototype.getNextProcessedItem = function () {
@@ -238,6 +238,10 @@ var PipelineStream = /** @class */ (function () {
     };
     PipelineStream.prototype.filter = function (predicate) {
         var newPipeline = this.newPipeline(processor_1.Processor.filterProcessor(predicate));
+        return new PipelineStream(newPipeline);
+    };
+    PipelineStream.prototype.skip = function (n) {
+        var newPipeline = this.newPipeline(processor_1.Processor.skipProcessor(n));
         return new PipelineStream(newPipeline);
     };
     PipelineStream.prototype.distinct = function (equalsFunction) {

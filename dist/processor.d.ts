@@ -53,4 +53,5 @@ export declare const Processor: {
     streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>) => Processor<I, O>;
     peekProcessor: <I>(consumer: Consumer<I>) => Processor<I, I>;
     optionalFlatMapProcessor: <I, O>(transformer: Transformer<I, Optional<O>>) => Processor<I, O>;
+    skipProcessor: <I>(numberToSkip: number) => Processor<I, I>;
 };
