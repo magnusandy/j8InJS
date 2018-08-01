@@ -1,6 +1,7 @@
 import { Processor } from "./processor";
 import { Optional } from "./optional";
-import { Supplier, CheckableSupplier, Transformer } from "./functions";
+import { Transformer } from "./functions";
+import { Source } from "./source";
 
 /**
  * The processor pipeline is a linked list of processor nodes, the pipeline needs to be given items to process first, 
@@ -8,13 +9,13 @@ import { Supplier, CheckableSupplier, Transformer } from "./functions";
  * only adding new elements to the pipeline once the pipeline is exhausted. If a pipeline contains a stateful operation on the other
  * hand, it is necessary to pass ALL source elements into the pipeline at the start.
  */
-export class ProcessorPipeline<Source, Final> {
+export class ProcessorPipeline<S, F> {
 
-    private initialFeed: InitialFeedProcessorNode<Source>;
-    private headProcessor: ProcessorNode<Source, any>;
-    private tailProcessor: ProcessorNode<any, Final>;
+    private initialFeed: InitialFeedProcessorNode<S>;
+    private headProcessor: ProcessorNode<S, any>;
+    private tailProcessor: ProcessorNode<any, F>;
 
-    private constructor(initialFeed: InitialFeedProcessorNode<Source>, headNode: ProcessorNode<Source, any>, tailNode: ProcessorNode<any, Final>) {
+    private constructor(initialFeed: InitialFeedProcessorNode<S>, headNode: ProcessorNode<S, any>, tailNode: ProcessorNode<any, F>) {
         this.initialFeed = initialFeed;
         this.headProcessor = headNode;
         this.tailProcessor = tailNode;
@@ -33,7 +34,7 @@ export class ProcessorPipeline<Source, Final> {
      * creates a new Pipeline with the given processor as the first operation
      * @param initalProcessor 
      */
-    public static create<S>(source: CheckableSupplier<S>): ProcessorPipeline<S, S> {
+    public static create<S>(source: Source<S>): ProcessorPipeline<S, S> {
         const initialNode = new InitialFeedProcessorNode<S>(source);
         const node = new ProcessorNode<S, S>(Processor.mapProcessor(Transformer.identity()));
         return new ProcessorPipeline(initialNode, node, node);
@@ -43,13 +44,13 @@ export class ProcessorPipeline<Source, Final> {
      * adds a new processor to the end of the pipeline, returning a new pipeline
      * @param addedProcessor 
      */
-    public addProcessor<NewFinal>(addedProcessor: Processor<Final, NewFinal>): ProcessorPipeline<Source, NewFinal> {
+    public addProcessor<NF>(addedProcessor: Processor<F, NF>): ProcessorPipeline<S, NF> {
         const newNode = new ProcessorNode(addedProcessor);
         const oldTail = this.tailProcessor;
         oldTail.addNextNode(newNode);
         newNode.addPreviousNode(oldTail);
 
-        return new ProcessorPipeline<Source, NewFinal>(this.initialFeed, this.headProcessor, newNode)
+        return new ProcessorPipeline<S, NF>(this.initialFeed, this.headProcessor, newNode)
     }
 
     /**
@@ -66,9 +67,9 @@ export class ProcessorPipeline<Source, Final> {
      * if there is no more elements in the in the queue or pipeline, this will return optional empty. 
      * prioritizes items in the processor pipeline before items waiting in the queue.
      */
-    public getNextResult(): Optional<Final> {
+    public getNextResult(): Optional<F> {
         if (this.hasNext()) { 
-            const possibleValue: Optional<Final> = this.tailProcessor.getProcessedValue();
+            const possibleValue: Optional<F> = this.tailProcessor.getProcessedValue();
             if (possibleValue.isPresent()) {
                 return possibleValue;
             } else {
@@ -82,38 +83,38 @@ export class ProcessorPipeline<Source, Final> {
 /**
  * represents a node in the processing pipeline, may or may not have a node before and after.
  */
-export class ProcessorNode<Input, Output> {
-    private previousNode: Optional<ProcessorNode<any, Input>>;
-    private thisProcessor: Processor<Input, Output>;
-    private nextNode: Optional<ProcessorNode<Output, any>>;
+export class ProcessorNode<I, O> {
+    private previousNode: Optional<ProcessorNode<any, I>>;
+    private thisProcessor: Processor<I, O>;
+    private nextNode: Optional<ProcessorNode<O, any>>;
 
-    constructor(processor: Processor<Input, Output>) {
+    constructor(processor: Processor<I, O>) {
         this.previousNode = Optional.empty();
         this.thisProcessor = processor;
         this.nextNode = Optional.empty();
     }
 
-    private getNextProcessedOutput(): Optional<Output> {
+    private getNextProcessedOutput(): Optional<O> {
         return this.thisProcessor.processAndGetNext();
     }
 
-    addNextNode(next: ProcessorNode<Output, any>): void {
+    addNextNode(next: ProcessorNode<O, any>): void {
         this.nextNode = Optional.of(next);
     }
 
-    addPreviousNode(previousProcessor: ProcessorNode<any, Input>): void {
+    addPreviousNode(previousProcessor: ProcessorNode<any, I>): void {
         this.previousNode = Optional.of(previousProcessor);
     }
 
-    getNextNode(): Optional<ProcessorNode<Output, any>> {
+    getNextNode(): Optional<ProcessorNode<O, any>> {
         return this.nextNode;
     }
 
-    getPreviousNode(): Optional<ProcessorNode<any, Input>> {
+    getPreviousNode(): Optional<ProcessorNode<any, I>> {
         return this.previousNode;
     }
 
-    addInput(input: Input): void {
+    addInput(input: I): void {
         this.thisProcessor.add(input);
     }
 
@@ -139,11 +140,11 @@ export class ProcessorNode<Input, Output> {
      * pulls all the values out of the previous processor, if one exists
      * and add them into the current processor;
      */
-    statefulPullAndGet(): Optional<Output> {
+    statefulPullAndGet(): Optional<O> {
         if (this.previousNode.isPresent()) {
             const previousNode = this.previousNode.get();
             while (previousNode.hasNext()) {
-                let previousVal: Optional<Input> = previousNode.getProcessedValue();
+                let previousVal: Optional<I> = previousNode.getProcessedValue();
                 if(previousVal.isPresent()) {
                     this.addInput(previousVal.get());
                 }
@@ -156,11 +157,11 @@ export class ProcessorNode<Input, Output> {
      * goes to the current processor, pulling values out of it first, if there is nothing left in the 
      * current processor, attempt to add new items to the current processor from the previous upstream processor.
      */
-    statelessGet(): Optional<Output> {
+    statelessGet(): Optional<O> {
         if (this.thisProcessor.hasNext() && !this.thisProcessor.isShortCircuting()) { //todo explain more, we need to treat short circuiting nodes differently
             return this.thisProcessor.processAndGetNext();
         } else if (this.previousNode.isPresent()) {
-            const processedValue: Optional<Input> = this.previousNode.get().getProcessedValue();
+            const processedValue: Optional<I> = this.previousNode.get().getProcessedValue();
             if (processedValue.isPresent()) {
                 this.addInput(processedValue.get());
                 return this.thisProcessor.processAndGetNext();
@@ -180,7 +181,7 @@ export class ProcessorNode<Input, Output> {
      * 
      * 
      */
-    getProcessedValue(): Optional<Output> {
+    getProcessedValue(): Optional<O> {
         return this.isStateless()
             ? this.statelessGet()
             : this.statefulPullAndGet();
@@ -190,20 +191,20 @@ export class ProcessorNode<Input, Output> {
 /**
  * a special processor node that acts as a supplier for the rest of the pipeline
  */
-class InitialFeedProcessorNode<Input> extends ProcessorNode<Input, Input> {
+class InitialFeedProcessorNode<I> extends ProcessorNode<I, I> {
     
-    private checkableSupplier: CheckableSupplier<Input>;
+    private source: Source<I>;
 
-    constructor(supplier: CheckableSupplier<Input>) {
+    constructor(supplier: Source<I>) {
         super(Processor.mapProcessor(Transformer.identity()));
-        this.checkableSupplier = supplier;
+        this.source = supplier;
     }   
 
     public hasNext(): boolean {
-        return !this.checkableSupplier.isEmpty();
+        return this.source.hasNext();
     }
 
-    public getProcessedValue(): Optional<Input> {
-        return Optional.ofNullable(this.checkableSupplier.get());
+    public getProcessedValue(): Optional<I> {
+        return Optional.ofNullable(this.source.get());
     }
 }

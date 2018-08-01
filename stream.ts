@@ -1,8 +1,9 @@
-import { Transformer, Supplier, BiConsumer, Consumer, Predicate, BiPredicate, CheckableSupplier, Comparator, BiFunction } from "./functions";
+import { Transformer, Supplier, BiConsumer, Consumer, Predicate, BiPredicate, Comparator, BiFunction } from "./functions";
 import Collectors, { Collector } from "./collectors";
 import { Optional } from "./optional";
 import { ProcessorPipeline } from "./processorPipeline";
 import { Processor } from "./processor";
+import { Source } from "./source";
 
 /**
  * A stream is a sequence of elements with possibly unlimited length
@@ -227,34 +228,6 @@ export interface StreamIterator<T> {
     tryAdvance(consumer: Consumer<T>): boolean;
 }
 
-class IterateSource<S> implements CheckableSupplier<S> {
-    seed: S;
-    currentValue: Optional<S>;
-    transformer: Transformer<S, S>;
-
-    constructor(seed: S, transformer: Transformer<S, S>) {
-        this.seed = seed;
-        this.currentValue = Optional.empty();
-        this.transformer = transformer;
-    }
-
-    get(): S {
-        let nextValue;
-        if (this.currentValue.isPresent()) {
-            nextValue = this.transformer(this.currentValue.get());
-        } else {
-            nextValue = this.seed;
-        }
-        this.currentValue = Optional.of(nextValue);
-        return nextValue;
-    }
-
-    isEmpty(): boolean {
-        return false;
-    }
-
-}
-
 //Static methods of the stream interface
 export const Stream = {
     /**
@@ -306,7 +279,7 @@ export const Stream = {
      * @param getNext transforming function applied at each step
      */
     iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {
-        return PipelineStream.ofCheckedSupplier(new IterateSource(seed, getNext))
+        return PipelineStream.ofSource(Source.iterateSource(seed, getNext))
     },
 
     //builder(): StreamBuilder<T>; //todo maybe
@@ -336,26 +309,7 @@ export const Stream = {
      * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
      */
     range(startInclusive: number, endExclusive: number, step?: number): Stream<number> {
-        let stepToUse: number;
-        let comparator: BiPredicate<number, number>;
-
-        if (startInclusive === endExclusive) {
-            return Stream.empty();
-        } else if (startInclusive < endExclusive) {
-            comparator = (next: number, end: number) => next < end;
-            stepToUse = step ? Math.abs(step) : 1;
-        } else {
-            comparator = (next: number, end: number) => next > end;
-            stepToUse = step ? (0 - Math.abs(step)) : -1;
-        }
-
-        let list = [startInclusive];
-        let nextItem = startInclusive + stepToUse;
-        while (comparator(nextItem, endExclusive)) {
-            list.push(nextItem);
-            nextItem = nextItem + stepToUse;
-        }
-        return Stream.of(list);
+        return PipelineStream.ofSource(Source.rangeSource(startInclusive, endExclusive, step));
     },
 
     /**
@@ -416,24 +370,15 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     }
 
     public static of<S>(source: S[]): Stream<S> {
-        const copy = source.slice();
-        const checkedSource: CheckableSupplier<S> = {
-            get: () => copy.shift(),
-            isEmpty: () => copy.length === 0,
-        }
-        return PipelineStream.ofCheckedSupplier(checkedSource);
+        return PipelineStream.ofSource(Source.arraySource(source));
     }
 
     public static ofSupplier<S>(supplier: Supplier<S>): Stream<S> {
-        const checkedSource: CheckableSupplier<S> = {
-            get: () => supplier(),
-            isEmpty: () => false,
-        }
-        return PipelineStream.ofCheckedSupplier(checkedSource);
+        return PipelineStream.ofSource(Source.supplierSource(supplier));
     }
 
-    public static ofCheckedSupplier<S>(checkedSupplier: CheckableSupplier<S>): Stream<S> {
-        return new PipelineStream<S, S>(ProcessorPipeline.create(checkedSupplier));
+    public static ofSource<S>(source: Source<S>): Stream<S> {
+        return new PipelineStream<S, S>(ProcessorPipeline.create(source));
     }
 
     public static empty<S>(): Stream<S> {
@@ -441,20 +386,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     }
 
     public static concat<S>(stream1: Stream<S>, stream2: Stream<S>): Stream<S> {
-        const iter1 = stream1.streamIterator();
-        const iter2 = stream2.streamIterator();
-        const checkedSupplier: CheckableSupplier<Optional<S>> = {
-            get: () => {
-                if (iter1.hasNext()) {
-                    return iter1.getNext();
-                } else {
-                    return iter2.getNext();
-                }
-            },
-
-            isEmpty: () => !iter1.hasNext() && !iter2.hasNext()
-        }
-        return PipelineStream.ofCheckedSupplier(checkedSupplier)
+        return PipelineStream.ofSource(Source.concatSource(stream1, stream2))
                              .flatMapOptional(Transformer.identity());
     }
 

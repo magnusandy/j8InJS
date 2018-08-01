@@ -12,6 +12,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var processor_1 = require("./processor");
 var optional_1 = require("./optional");
+var functions_1 = require("./functions");
 /**
  * The processor pipeline is a linked list of processor nodes, the pipeline needs to be given items to process first,
  * and then once elements are passed in, they will be run through the pipeline as lazily as possible,
@@ -38,7 +39,7 @@ var ProcessorPipeline = /** @class */ (function () {
      */
     ProcessorPipeline.create = function (source) {
         var initialNode = new InitialFeedProcessorNode(source);
-        var node = new ProcessorNode(processor_1.Processor.mapProcessor(function (i) { return i; })); // identity processor as first node
+        var node = new ProcessorNode(processor_1.Processor.mapProcessor(functions_1.Transformer.identity()));
         return new ProcessorPipeline(initialNode, node, node);
     };
     /**
@@ -182,15 +183,15 @@ exports.ProcessorNode = ProcessorNode;
 var InitialFeedProcessorNode = /** @class */ (function (_super) {
     __extends(InitialFeedProcessorNode, _super);
     function InitialFeedProcessorNode(supplier) {
-        var _this = _super.call(this, processor_1.Processor.mapProcessor(function (i) { return i; })) || this;
-        _this.checkableSupplier = supplier;
+        var _this = _super.call(this, processor_1.Processor.mapProcessor(functions_1.Transformer.identity())) || this;
+        _this.source = supplier;
         return _this;
     }
     InitialFeedProcessorNode.prototype.hasNext = function () {
-        return !this.checkableSupplier.isEmpty();
+        return this.source.hasNext();
     };
     InitialFeedProcessorNode.prototype.getProcessedValue = function () {
-        return optional_1.Optional.ofNullable(this.checkableSupplier.get());
+        return optional_1.Optional.ofNullable(this.source.get());
     };
     return InitialFeedProcessorNode;
 }(ProcessorNode));

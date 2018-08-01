@@ -55,18 +55,6 @@ export type Comparator<T> = (t1: T, t2: T) => number;
  * defines a supplier function interface, with the added ability of checking if the supplier 
  * still contains values or not.
  */
-export interface CheckableSupplier<T> {
-    /**
-     * Returns a value if exists in the supplier, otherwise undefined. isEmpty() can be
-     * used to reliably check if a value exists.
-     */
-    get(): T | undefined,
-
-    /**
-     * returns true if no more values will be returned by this supplier through get();
-     */
-    isEmpty(): boolean;
-}
 
 export const Consumer = {
 

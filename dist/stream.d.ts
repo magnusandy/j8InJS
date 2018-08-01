@@ -230,6 +230,12 @@ export declare const Stream: {
      */
     iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T>;
     /**
+     * creates a new stream consisting of all the values of s1, followed by all the values of s2
+     * @param s1 first stream
+     * @param s2 second stream
+     */
+    concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T>;
+    /**
      * returns a stream of numbers starting at startInclusive, and going to up
      * to but not including endExculsive in increments of 1, if a step is passed in, the
      * increments of 1 will be changed to increments of size step, negative steps will be treated

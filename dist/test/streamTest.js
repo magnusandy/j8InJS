@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var chai_1 = require("chai");
+var functions_1 = require("../functions");
 var stream_1 = require("../stream");
 var collectors_1 = require("../collectors");
 var optional_1 = require("../optional");
@@ -12,6 +13,58 @@ describe('Stream tests', function () {
             var result = stream.collect(collectors_1.default.toList());
             chai_1.expect(result.length).to.equal(5);
             source.forEach(function (item) { return chai_1.expect(result).to.contain(item); });
+        });
+        it('it should handle empty stream', function () {
+            var stream = stream_1.Stream.empty();
+            var result = stream.collect(collectors_1.default.toList());
+            chai_1.expect(result.length).to.equal(0);
+        });
+    });
+    describe('Stream.concat', function () {
+        it('it concatenate two streams with values', function () {
+            var s1 = stream_1.Stream.ofValues(1, 2, 3);
+            var s2 = stream_1.Stream.ofValues(4, 5, 6);
+            var concat = stream_1.Stream.concat(s1, s2);
+            var result = concat.toArray();
+            chai_1.expect(result.length).to.equal(6);
+            chai_1.expect(result[0]).to.equal(1);
+            chai_1.expect(result[5]).to.equal(6);
+        });
+        it('it concatenate first stream empty', function () {
+            var s1 = stream_1.Stream.empty();
+            var s2 = stream_1.Stream.ofValues(4, 5, 6);
+            var concat = stream_1.Stream.concat(s1, s2);
+            var result = concat.toArray();
+            chai_1.expect(result.length).to.equal(3);
+            chai_1.expect(result[0]).to.equal(4);
+            chai_1.expect(result[2]).to.equal(6);
+        });
+        it('it concatenate second stream empty', function () {
+            var s1 = stream_1.Stream.ofValues(1, 2, 3);
+            var s2 = stream_1.Stream.empty();
+            var concat = stream_1.Stream.concat(s1, s2);
+            var result = concat.toArray();
+            chai_1.expect(result.length).to.equal(3);
+            chai_1.expect(result[0]).to.equal(1);
+            chai_1.expect(result[2]).to.equal(3);
+        });
+        it('it concatenate two complex streams', function () {
+            var s1 = stream_1.Stream.ofValues('1', '2', '3').map(function (i) { return parseInt(i); }).distinct();
+            var s2 = stream_1.Stream.ofValues(4, 5, 6, 10, 20, 50).distinct().filter(function (i) { return i < 10; });
+            var concat = stream_1.Stream.concat(s1, s2);
+            var result = concat.toArray();
+            chai_1.expect(result.length).to.equal(6);
+            chai_1.expect(result[0]).to.equal(1);
+            chai_1.expect(result[5]).to.equal(6);
+        });
+        it('it concatenate two complex streams with infinite', function () {
+            var s1 = stream_1.Stream.generate(function () { return 1; }).limit(3);
+            var s2 = stream_1.Stream.ofValues(4, 5, 6, 10, 20, 50).distinct().filter(function (i) { return i < 10; });
+            var concat = stream_1.Stream.concat(s1, s2);
+            var result = concat.toArray();
+            chai_1.expect(result.length).to.equal(6);
+            chai_1.expect(result[0]).to.equal(1);
+            chai_1.expect(result[5]).to.equal(6);
         });
         it('it should handle empty stream', function () {
             var stream = stream_1.Stream.empty();
@@ -144,8 +197,8 @@ describe('Stream tests', function () {
     });
     describe('forEach tests', function () {
         it('it should consume all values', function () {
-            var stream = stream_1.Stream.ofValues(optional_1.Optional.of(1), optional_1.Optional.empty(), optional_1.Optional.of(2));
-            var result = stream.peek(console.log).flatMapOptional(function (i) { return i; }).collect(collectors_1.default.toList());
+            var stream = stream_1.Stream.ofValues(optional_1.Optional.of(1), optional_1.Optional.of(2));
+            var result = stream.peek(functions_1.Consumer.logger()).flatMapOptional(functions_1.Transformer.identity()).collect(collectors_1.default.toList());
             console.log(result);
         });
         it('it should consume all values', function () {

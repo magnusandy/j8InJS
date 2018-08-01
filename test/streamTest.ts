@@ -249,8 +249,8 @@ describe('Stream tests', () => {
 
     describe('forEach tests', () => {
         it('it should consume all values', () => {
-            const stream: Stream<Optional<number>> = Stream.ofValues(Optional.of(1), Optional.of(2));
-            const result = stream.peek(Consumer.logger()).flatMapOptional(Transformer.identity<Optional<number>>()).collect(Collectors.toList())
+            const stream: Stream<number> = Stream.range(0, -10, -2);
+            const result = stream.peek(Consumer.logger()).collect(Collectors.toList())
             console.log(result)
         });
 

@@ -46,27 +46,36 @@ export declare type Comparator<T> = (t1: T, t2: T) => number;
  * defines a supplier function interface, with the added ability of checking if the supplier
  * still contains values or not.
  */
-export interface CheckableSupplier<T> {
+export declare const Consumer: {
     /**
-     * Returns a value if exists in the supplier, otherwise undefined. isEmpty() can be
-     * used to reliably check if a value exists.
+     * returns a consumer that takes in an element and does nothing
      */
-    get(): T | undefined;
+    sink<T>(): Consumer<T>;
     /**
-     * returns true if no more values will be returned by this supplier through get();
+     * returns a consumer logs the value given to the console
      */
-    isEmpty(): boolean;
-}
+    logger<T>(): Consumer<T>;
+};
+export declare const Transformer: {
+    /**
+     * returns Transformer that when passed an argument, will return the given argument
+     */
+    identity<T>(): Transformer<T, T>;
+    /**
+     * returns a Transformer logs the given value to the console and then returns the value
+     */
+    logger<T>(): Transformer<T, T>;
+};
 export declare const BiPredicate: {
     /**
-     * function that takes two values of the same type, and returns true if
+     * returns a BiPredicate that takes two values of the same type, and returns true if
      * i1 === i2
      */
     defaultEquality<T>(): BiPredicate<T, T>;
 };
 export declare const Comparator: {
     /**
-     * Returns a function that compares the given values with the < and > operators, returns
+     * Returns a Comparator that compares the given values with the < and > operators, returns
      * -1 if i1 less that i2, +1 if i1 is greater, and 0 if they are equal.
      */
     default<T>(): Comparator<T>;
