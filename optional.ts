@@ -22,7 +22,7 @@ export class Optional<T> {
 	 */
 	public get = (): T => {
 		if (this.value === null || this.value === undefined) {
-			throw Errors.NoSuchElementException;
+			throw Error(Errors.NoSuchElementException);
 		} else {
 			return this.value;
 		}
@@ -87,7 +87,7 @@ export class Optional<T> {
 	/**
 	 * Return the contained value, if present, otherwise throw an error to be created by the provided supplier.
 	 */
-	public orElseThrow = (exceptionSupplier: Supplier<any>): T => {
+	public orElseThrow = (exceptionSupplier: Supplier<Error>): T => {
 		if (this.isPresent()) {
 			return this.get();
 		} else {
@@ -103,7 +103,7 @@ export class Optional<T> {
 		if (!isNull(value)) {
 			return new Optional(value);
 		} else {
-			throw Errors.NullPointerException;
+			throw Error(Errors.NullPointerException);
 		}
 	}
 

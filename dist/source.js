@@ -109,30 +109,13 @@ var ConcatSource = /** @class */ (function () {
     };
     return ConcatSource;
 }());
-/*
- let stepToUse: number;
-        let comparator: BiPredicate<number, number>;
-
-        if (startInclusive === endExclusive) {
-            return Stream.empty();
-        } else if (startInclusive < endExclusive) {
-            comparator = (next: number, end: number) => next < end;
-            stepToUse = step ? Math.abs(step) : 1;
-        } else {
-            comparator = (next: number, end: number) => next > end;
-            stepToUse = step ? (0 - Math.abs(step)) : -1;
-        }
-
-        let list = [startInclusive];
-        let nextItem = startInclusive + stepToUse;
-        while (comparator(nextItem, endExclusive)) {
-            list.push(nextItem);
-            nextItem = nextItem + stepToUse;
-        }
-*/
+/**
+ * creates a source of number  based on the given start and end bounds and the step size
+ * a limited source counting until the values get to the end bound.
+ */
 var RangeSource = /** @class */ (function () {
     function RangeSource(startInclusive, endExclusive, step) {
-        var isAscending = startInclusive <= endExclusive; //todo does = work
+        var isAscending = startInclusive <= endExclusive;
         this.comparator = isAscending
             ? function (n1, n2) { return n1 < n2; }
             : function (n1, n2) { return n1 > n2; };

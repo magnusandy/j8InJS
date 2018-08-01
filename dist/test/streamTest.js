@@ -196,7 +196,7 @@ describe('Stream tests', function () {
     });
     describe('forEach tests', function () {
         it('it should consume all values', function () {
-            var stream = stream_1.Stream.range(0, -10).skip(2);
+            var stream = stream_1.Stream.range(0, 0).skip(1);
             var result = stream.peek(functions_1.Consumer.logger()).collect(collectors_1.default.toList());
             console.log(result);
         });
@@ -207,9 +207,7 @@ describe('Stream tests', function () {
         });
         it('it should filterValues', function () {
             var stream = stream_1.Stream.of([4, 4, 5, 1, 2, 3, 4, 4, 5, 1])
-                .distinct(function (i1, i2) { return i1 === i2; })
-                .map(function (e) { return "1"; })
-                .distinct(function (s1, s2) { return s1 === s2; });
+                .sorted();
             console.log(stream.collect(collectors_1.default.toList()));
         });
     });

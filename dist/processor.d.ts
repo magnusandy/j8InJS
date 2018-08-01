@@ -1,4 +1,4 @@
-import { Transformer, Predicate, BiPredicate, Consumer } from "./functions";
+import { Transformer, Predicate, BiPredicate, Consumer, Comparator } from "./functions";
 import { Optional } from "./optional";
 import { Stream } from "./stream";
 /**
@@ -54,4 +54,5 @@ export declare const Processor: {
     peekProcessor: <I>(consumer: Consumer<I>) => Processor<I, I>;
     optionalFlatMapProcessor: <I, O>(transformer: Transformer<I, Optional<O>>) => Processor<I, O>;
     skipProcessor: <I>(numberToSkip: number) => Processor<I, I>;
+    sortProcessor: <I>(comparator: Comparator<I>) => Processor<I, I>;
 };

@@ -13,4 +13,5 @@ export declare class Collector<T, A, R> {
 }
 export default class Collectors {
     static toList<T>(): Collector<T, T[], T[]>;
+    static toArray<T>(): Collector<T, T[], T[]>;
 }

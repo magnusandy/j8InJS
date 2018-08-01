@@ -41,7 +41,7 @@ export declare class Optional<T> {
     /**
      * Return the contained value, if present, otherwise throw an error to be created by the provided supplier.
      */
-    orElseThrow: (exceptionSupplier: Supplier<any>) => T;
+    orElseThrow: (exceptionSupplier: Supplier<Error>) => T;
     /**
      * Returns an Optional with the specified present non-null value. Throws 'NullPointerException' if the value does not exist
      * Use ofNullable when the value might not be present;

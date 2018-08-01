@@ -71,7 +71,7 @@ export interface Stream<T> {
     /**
      * Intermediate Operation - Stateful
      * return a distinct stream of elements according to the given equality function, if an equality function
-     * is not supplied, the === operator is used to compare elements.
+     * is not supplied, the BiPredicate.defaultEquality() function is used.
      * @param equalsFunction function that takes two parameters, returns true if they are equal, false otherwise
      */
     distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>;
@@ -195,6 +195,17 @@ export interface Stream<T> {
      * @param n number of elements to skip
      */
     skip(n: number): Stream<T>;
+    /**
+     * Intermediate Operation - Stateful
+     * If comparator is passed in, it is used to sort the values in the stream, otherwise
+     * the default Comparator.default() comparator is used.
+     * @param comparator optional comparator to use to sort the objects
+     */
+    sorted(comparator?: Comparator<T>): Stream<T>;
+    /**
+     * Terminal Operation:
+     * returns the Stream as an array of elements.
+     */
     toArray(): T[];
 }
 export interface StreamIterator<T> {
@@ -260,7 +271,7 @@ export declare const Stream: {
     range(startInclusive: number, endExclusive: number, step?: number | undefined): Stream<number>;
     /**
      * returns a stream of numbers starting at startInclusive, and going to up
-     * to and including endExculsive in increments of 1, if a step is passed in, the
+     * to and including endInclusive in increments of 1, if a step is passed in, the
      * increments of 1 will be changed to increments of size step
      *
      * IF the start is greater than the end, the default step will be -1 and any positive step

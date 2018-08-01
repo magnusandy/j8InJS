@@ -24,11 +24,16 @@ export class Collector<T, A, R> {
 };
 
 export default class Collectors {
+    
     public static toList<T>(): Collector<T, T[], T[]> {
         const supplier: Supplier<T[]> = () => [];
         const accumulator: BiConsumer<T[], T> = (list, item) => list.push(item);
         const combiner: BiFunction<T[]> = (list1, list2) => list1.concat(list2);
         const finisher: Transformer<T[], T[]> = (list) => list;
         return Collector.of(supplier, accumulator, combiner, finisher);
+    }
+
+    public static toArray<T>(): Collector<T, T[], T[]> {
+        return Collectors.toList();
     }
 }

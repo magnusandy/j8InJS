@@ -261,10 +261,8 @@ describe('Stream tests', () => {
         });
 
         it('it should filterValues', () => {
-            const stream: Stream<string> = Stream.of([4, 4, 5, 1, 2, 3, 4, 4, 5, 1])
-                .distinct((i1, i2) => i1 === i2)
-                .map(e => `1`)
-                .distinct((s1, s2) => s1 === s2);
+            const stream: Stream<number> = Stream.of([4, 4, 5, 1, 2, 3, 4, 4, 5, 1])
+                .sorted();
 
             console.log(stream.collect(Collectors.toList()));
         });

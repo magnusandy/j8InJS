@@ -29,6 +29,9 @@ var Collectors = /** @class */ (function () {
         var finisher = function (list) { return list; };
         return Collector.of(supplier, accumulator, combiner, finisher);
     };
+    Collectors.toArray = function () {
+        return Collectors.toList();
+    };
     return Collectors;
 }());
 exports.default = Collectors;

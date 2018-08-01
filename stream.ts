@@ -81,7 +81,7 @@ export interface Stream<T> {
     /**
      * Intermediate Operation - Stateful
      * return a distinct stream of elements according to the given equality function, if an equality function 
-     * is not supplied, the === operator is used to compare elements.
+     * is not supplied, the BiPredicate.defaultEquality() function is used. 
      * @param equalsFunction function that takes two parameters, returns true if they are equal, false otherwise
      */
     distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>;
@@ -222,17 +222,40 @@ export interface Stream<T> {
      * values. If a negative number is passed in, no values are skipped. 
      * @param n number of elements to skip
      */
-    skip(n: number): Stream<T>; //intermediate
+    skip(n: number): Stream<T>; 
 
-    //todo
-    //sorted(comparator?: Comparator<T>): Stream<T>; //intermediate stateful
+    /**
+     * Intermediate Operation - Stateful
+     * If comparator is passed in, it is used to sort the values in the stream, otherwise
+     * the default Comparator.default() comparator is used. 
+     * @param comparator optional comparator to use to sort the objects
+     */
+    sorted(comparator?: Comparator<T>): Stream<T>;
+    
+    /**
+     * Terminal Operation: 
+     * returns the Stream as an array of elements.
+     */
     toArray(): T[];
+
+    //V2 //todo
+    //reverse() //intermediate stateful
+    //append(stream: Stream<T>): Stream<T> //intermediate
+    //skipRight(n: number): Stream<> //stateful drops the LAST n values in the stream
+    //skipWhile(predicate: Predicate<T>): Stream<T>, //intermediate remove elements from the stream while predicate is true, once one value is false, stop dropping.
+    //reduceRight()
+    //findLast()
 }
 
 export interface StreamIterator<T> {
     hasNext(): boolean;
     getNext(): Optional<T>;
     tryAdvance(consumer: Consumer<T>): boolean;
+
+    //V2 //todo
+    //take(n:number): []T;
+    //drop(n: number): []T;
+    //forEachRemaining(consumer: Consumer<T>): void;
 }
 
 //Static methods of the stream interface
@@ -289,8 +312,6 @@ export const Stream = {
         return PipelineStream.ofSource(Source.iterateSource(seed, getNext))
     },
 
-    //builder(): StreamBuilder<T>; //todo maybe
-    
     /**
      * creates a new stream consisting of all the values of s1, followed by all the values of s2
      * @param s1 first stream
@@ -339,6 +360,8 @@ export const Stream = {
             : Stream.range(startInclusive, endInclusive - 1, step);
     }
 
+    //V2 //todo
+    //builder(): StreamBuilder<T>;
 }
 
 class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
@@ -514,6 +537,12 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
     public distinct(equalsFunction?: BiPredicate<T, T>): Stream<T> {
         const equalsFunctionToUse: BiPredicate<T, T> = equalsFunction ? equalsFunction : BiPredicate.defaultEquality()
         const newPipeline = this.newPipeline(Processor.distinctProcessor(equalsFunctionToUse));
+        return new PipelineStream<S, T>(newPipeline);
+    }
+
+    public sorted(comparator?: Comparator<T>): Stream<T> {
+        const comparatorToUse = comparator ? comparator : Comparator.default();
+        const newPipeline = this.newPipeline(Processor.sortProcessor(comparatorToUse));
         return new PipelineStream<S, T>(newPipeline);
     }
 

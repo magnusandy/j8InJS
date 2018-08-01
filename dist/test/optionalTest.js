@@ -230,21 +230,21 @@ describe('Optional tests', function () {
         it('should return value if present', function () {
             var value = 'value';
             var error = 'Error';
-            var throwSupplier = function () { return error; };
+            var throwSupplier = function () { return Error(error); };
             var resulter = function () { return optional_1.Optional.of(value).orElseThrow(throwSupplier); };
             chai_1.expect(resulter).to.not.throw(error);
             chai_1.expect(resulter()).to.equal(value);
         });
         it('should throw value given by the supplier', function () {
             var error = 'Error';
-            var throwSupplier = function () { return error; };
+            var throwSupplier = function () { return Error(error); };
             var resulter = function () { return optional_1.Optional.empty().orElseThrow(throwSupplier); };
             chai_1.expect(resulter).to.throw(error);
         });
         it('should lazily envoke supplier, only when value not present', function () {
             var activated = false;
             var value = 'value';
-            var throwSupplier = function () { activated = true; return 'Error'; };
+            var throwSupplier = function () { activated = true; return Error('Error'); };
             optional_1.Optional.of(value).orElseThrow(throwSupplier);
             chai_1.expect(activated).to.equal(false);
         });

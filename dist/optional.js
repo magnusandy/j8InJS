@@ -17,7 +17,7 @@ var Optional = /** @class */ (function () {
          */
         this.get = function () {
             if (_this.value === null || _this.value === undefined) {
-                throw errors_1.Errors.NoSuchElementException;
+                throw Error(errors_1.Errors.NoSuchElementException);
             }
             else {
                 return _this.value;
@@ -98,7 +98,7 @@ var Optional = /** @class */ (function () {
             return new Optional(value);
         }
         else {
-            throw errors_1.Errors.NullPointerException;
+            throw Error(errors_1.Errors.NullPointerException);
         }
     };
     /**

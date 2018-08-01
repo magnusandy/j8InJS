@@ -57,7 +57,6 @@ exports.Stream = {
     iterate: function (seed, getNext) {
         return PipelineStream.ofSource(source_1.Source.iterateSource(seed, getNext));
     },
-    //builder(): StreamBuilder<T>; //todo maybe
     /**
      * creates a new stream consisting of all the values of s1, followed by all the values of s2
      * @param s1 first stream
@@ -86,7 +85,7 @@ exports.Stream = {
     },
     /**
      * returns a stream of numbers starting at startInclusive, and going to up
-     * to and including endExculsive in increments of 1, if a step is passed in, the
+     * to and including endInclusive in increments of 1, if a step is passed in, the
      * increments of 1 will be changed to increments of size step
      *
      * IF the start is greater than the end, the default step will be -1 and any positive step
@@ -103,6 +102,8 @@ exports.Stream = {
             ? exports.Stream.range(startInclusive, endInclusive + 1, step)
             : exports.Stream.range(startInclusive, endInclusive - 1, step);
     }
+    //V2 //todo
+    //builder(): StreamBuilder<T>;
 };
 var PipelineStream = /** @class */ (function () {
     function PipelineStream(pipeline) {
@@ -112,7 +113,7 @@ var PipelineStream = /** @class */ (function () {
     PipelineStream.prototype.newPipeline = function (processor) {
         return this.pipeline.addProcessor(processor);
     };
-    //spliterator methods
+    //streamIterator methods
     PipelineStream.prototype.hasNext = function () {
         return this.pipeline.hasNext();
     };
@@ -247,6 +248,11 @@ var PipelineStream = /** @class */ (function () {
     PipelineStream.prototype.distinct = function (equalsFunction) {
         var equalsFunctionToUse = equalsFunction ? equalsFunction : functions_1.BiPredicate.defaultEquality();
         var newPipeline = this.newPipeline(processor_1.Processor.distinctProcessor(equalsFunctionToUse));
+        return new PipelineStream(newPipeline);
+    };
+    PipelineStream.prototype.sorted = function (comparator) {
+        var comparatorToUse = comparator ? comparator : functions_1.Comparator.default();
+        var newPipeline = this.newPipeline(processor_1.Processor.sortProcessor(comparatorToUse));
         return new PipelineStream(newPipeline);
     };
     PipelineStream.prototype.limit = function (maxSize) {

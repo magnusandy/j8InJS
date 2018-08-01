@@ -268,7 +268,7 @@ describe('Optional tests', () => {
         it('should return value if present', () => {
             const value = 'value';
             const error = 'Error';
-            const throwSupplier = () => error;
+            const throwSupplier = () => Error(error);
             const resulter = () => Optional.of(value).orElseThrow(throwSupplier);
             expect(resulter).to.not.throw(error);
             expect(resulter()).to.equal(value);
@@ -276,7 +276,7 @@ describe('Optional tests', () => {
 
         it('should throw value given by the supplier', () => {
             const error = 'Error';
-            const throwSupplier = () => error;
+            const throwSupplier = () => Error(error);
             const resulter = () => Optional.empty().orElseThrow(throwSupplier);
             expect(resulter).to.throw(error);
         });
@@ -284,7 +284,7 @@ describe('Optional tests', () => {
         it('should lazily envoke supplier, only when value not present', () => {
             let activated = false;
             const value = 'value';
-            const throwSupplier = () => { activated = true; return 'Error'; }
+            const throwSupplier = () => { activated = true; return Error('Error'); }
             Optional.of(value).orElseThrow(throwSupplier);
             expect(activated).to.equal(false);
         });

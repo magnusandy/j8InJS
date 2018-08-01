@@ -1,4 +1,4 @@
-import { Transformer, Predicate, BiPredicate, Consumer } from "./functions";
+import { Transformer, Predicate, BiPredicate, Consumer, Comparator } from "./functions";
 import { Optional } from "./optional";
 import { Stream, StreamIterator } from "./stream";
 
@@ -57,9 +57,10 @@ export const Processor = {
     distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),//todo test
     limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),
     streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer), //todo test
-    peekProcessor: <I> (consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer), //todo test
-    optionalFlatMapProcessor: <I, O> (transformer: Transformer<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(transformer), //todo test
-    skipProcessor: <I> (numberToSkip: number): Processor<I, I> => new SkipProcessor(numberToSkip), //todo test
+    peekProcessor: <I>(consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer), //todo test
+    optionalFlatMapProcessor: <I, O>(transformer: Transformer<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(transformer), //todo test
+    skipProcessor: <I>(numberToSkip: number): Processor<I, I> => new SkipProcessor(numberToSkip), //todo test
+    sortProcessor: <I>(comparator: Comparator<I>): Processor<I, I> => new SortProcessor(comparator), //todo
 }
 
 /**
@@ -94,7 +95,7 @@ abstract class AbstractProcessor<Input, Output> implements Processor<Input, Outp
  * Abstract processor that is stateless and not short circuiting
  */
 abstract class PureStatelessProcessor<Input, Output> extends AbstractProcessor<Input, Output> {
-    
+
     public isStateless(): boolean {
         return true;
     }
@@ -188,9 +189,48 @@ class DistinctProcessor<Input> extends AbstractProcessor<Input, Input> {
         this.inputs = [];
         this.distinctList = Optional.of(distinctList);
     }
-
 }
 
+class SortProcessor<Input> extends AbstractProcessor<Input, Input> {
+
+    private comparator: Comparator<Input>;
+    private sortedList: Optional<Input[]>;
+
+    constructor(comparator: Comparator<Input>) {
+        super();
+        this.comparator = comparator;
+        this.sortedList = Optional.empty();
+    }
+
+    private processValues(): void {
+        const list = this.inputs.slice();
+        list.sort(this.comparator);
+        this.inputs = [];
+        this.sortedList = Optional.of(list);
+    }
+
+    public hasNext(): boolean {
+        const sortedListExistsAndHasValues = this.sortedList.isPresent() ? this.sortedList.get().length > 0 : false;
+        return this.inputs.length > 0 || sortedListExistsAndHasValues;
+    }
+
+    public processAndGetNext(): Optional<Input> {
+        if (!this.sortedList.isPresent()) {
+            this.processValues();
+            return this.processAndGetNext();
+        } else {
+            return Optional.ofNullable(this.sortedList.get().shift());
+        }
+    }
+
+    public isStateless(): boolean {
+        return false;
+    }
+
+    public isShortCircuting(): boolean {
+        return false;
+    }
+}
 /**
  * Implemention of a Processor for value mapping, lazily transforms values
  * when returned from the processor. 

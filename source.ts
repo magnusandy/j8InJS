@@ -34,7 +34,7 @@ export const Source = {
 abstract class InfiniteSource<S> implements Source<S> {
     abstract get(): S;
 
-    hasNext(): boolean {
+    public hasNext(): boolean {
         return true;
     }
 }
@@ -45,9 +45,9 @@ abstract class InfiniteSource<S> implements Source<S> {
  * seed, transformer(seed), transformer(transformer(seed)), etc
  */
 class IterateSource<S> extends InfiniteSource<S> {
-    seed: S;
-    currentValue: Optional<S>;
-    transformer: Transformer<S, S>;
+    private seed: S;
+    private currentValue: Optional<S>;
+    private transformer: Transformer<S, S>;
 
     constructor(seed: S, transformer: Transformer<S, S>) {
         super();
@@ -56,7 +56,7 @@ class IterateSource<S> extends InfiniteSource<S> {
         this.transformer = transformer;
     }
 
-    get(): S {
+    public get(): S {
         let nextValue;
         if (this.currentValue.isPresent()) {
             nextValue = this.transformer(this.currentValue.get());
@@ -72,14 +72,14 @@ class IterateSource<S> extends InfiniteSource<S> {
  * basic infinite Source coming from a Supplier function
  */
 class SupplierSource<S> extends InfiniteSource<S> {
-    supplier: Supplier<S>;
+    private supplier: Supplier<S>;
 
     constructor(supplier: Supplier<S>) {
         super();
         this.supplier = supplier;
     }
 
-    get(): S {
+    public get(): S {
         return this.supplier();
     }
 }
@@ -88,17 +88,17 @@ class SupplierSource<S> extends InfiniteSource<S> {
  * a source coming from an array, it is not infinite
  */
 class ArraySource<S> implements Source<S> {
-    array: S[];
+    private array: S[];
 
     constructor(arraySource: S[]) {
         this.array = arraySource.slice();
     }
 
-    get(): S | undefined {
+    public get(): S | undefined {
         return this.array.shift();
     }
 
-    hasNext(): boolean {
+    public hasNext(): boolean {
         return this.array.length !== 0;
     }
 }
@@ -107,15 +107,15 @@ class ArraySource<S> implements Source<S> {
  * source used for concatination of streams
  */
 class ConcatSource<S> implements Source<Optional<S>> {
-    stream1Iterator: StreamIterator<S>;
-    stream2Iterator: StreamIterator<S>;
+    private stream1Iterator: StreamIterator<S>;
+    private stream2Iterator: StreamIterator<S>;
 
     constructor(stream1: Stream<S>, stream2: Stream<S>) {
         this.stream1Iterator = stream1.streamIterator();
         this.stream2Iterator = stream2.streamIterator();
     }
 
-    get(): Optional<S> {
+    public get(): Optional<S> {
         const { stream1Iterator, stream2Iterator } = this;
         if (stream1Iterator.hasNext()) {
             return stream1Iterator.getNext();
@@ -124,40 +124,21 @@ class ConcatSource<S> implements Source<Optional<S>> {
         }
     }
 
-    hasNext(): boolean {
+    public hasNext(): boolean {
         return this.stream1Iterator.hasNext() || this.stream2Iterator.hasNext()
     }
 }
 
-
-/*
- let stepToUse: number;
-        let comparator: BiPredicate<number, number>;
-
-        if (startInclusive === endExclusive) {
-            return Stream.empty();
-        } else if (startInclusive < endExclusive) {
-            comparator = (next: number, end: number) => next < end;
-            stepToUse = step ? Math.abs(step) : 1;
-        } else {
-            comparator = (next: number, end: number) => next > end;
-            stepToUse = step ? (0 - Math.abs(step)) : -1;
-        }
-
-        let list = [startInclusive];
-        let nextItem = startInclusive + stepToUse;
-        while (comparator(nextItem, endExclusive)) {
-            list.push(nextItem);
-            nextItem = nextItem + stepToUse;
-        }
-*/
-
+/**
+ * creates a source of number  based on the given start and end bounds and the step size
+ * a limited source counting until the values get to the end bound.
+ */
 class RangeSource implements Source<number> {
-    startInclusive: number;
-    endExclusive: number;
-    step: number;
-    nextValue: number;
-    comparator: BiPredicate<number, number>;
+    private startInclusive: number;
+    private endExclusive: number;
+    private step: number;
+    private nextValue: number;
+    private comparator: BiPredicate<number, number>;
 
     constructor(startInclusive: number, endExclusive: number, step?: number) {
         const isAscending = startInclusive <= endExclusive; 
@@ -175,12 +156,13 @@ class RangeSource implements Source<number> {
         this.nextValue = startInclusive;
     }
 
-    get(): number {
+    public get(): number {
         const next = this.nextValue;
         this.nextValue = next + this.step;
         return next;
     }
-    hasNext(): boolean {
+
+    public  hasNext(): boolean {
         return this.comparator(this.nextValue, this.endExclusive);
     }
 }

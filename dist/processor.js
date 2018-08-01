@@ -21,6 +21,7 @@ exports.Processor = {
     peekProcessor: function (consumer) { return new PeekProcessor(consumer); },
     optionalFlatMapProcessor: function (transformer) { return new OptionalFlatMapProcessor(transformer); },
     skipProcessor: function (numberToSkip) { return new SkipProcessor(numberToSkip); },
+    sortProcessor: function (comparator) { return new SortProcessor(comparator); },
 };
 /**
  * Abstract processor that implements the storage and retrieval of items from
@@ -85,7 +86,7 @@ var LimitProcessor = /** @class */ (function (_super) {
     };
     return LimitProcessor;
 }(AbstractProcessor));
-/** //todo test
+/**
  * This is a stateful processor, that will return distinct elements provided all
  * the inputs are given at the start, and no elements are injected mid processing
  */
@@ -132,6 +133,41 @@ var DistinctProcessor = /** @class */ (function (_super) {
     };
     return DistinctProcessor;
 }(AbstractProcessor));
+var SortProcessor = /** @class */ (function (_super) {
+    __extends(SortProcessor, _super);
+    function SortProcessor(comparator) {
+        var _this = _super.call(this) || this;
+        _this.comparator = comparator;
+        _this.sortedList = optional_1.Optional.empty();
+        return _this;
+    }
+    SortProcessor.prototype.processValues = function () {
+        var list = this.inputs.slice();
+        list.sort(this.comparator);
+        this.inputs = [];
+        this.sortedList = optional_1.Optional.of(list);
+    };
+    SortProcessor.prototype.hasNext = function () {
+        var sortedListExistsAndHasValues = this.sortedList.isPresent() ? this.sortedList.get().length > 0 : false;
+        return this.inputs.length > 0 || sortedListExistsAndHasValues;
+    };
+    SortProcessor.prototype.processAndGetNext = function () {
+        if (!this.sortedList.isPresent()) {
+            this.processValues();
+            return this.processAndGetNext();
+        }
+        else {
+            return optional_1.Optional.ofNullable(this.sortedList.get().shift());
+        }
+    };
+    SortProcessor.prototype.isStateless = function () {
+        return false;
+    };
+    SortProcessor.prototype.isShortCircuting = function () {
+        return false;
+    };
+    return SortProcessor;
+}(AbstractProcessor));
 /**
  * Implemention of a Processor for value mapping, lazily transforms values
  * when returned from the processor.
@@ -149,7 +185,7 @@ var MapProcessor = /** @class */ (function (_super) {
     };
     return MapProcessor;
 }(PureStatelessProcessor));
-/** //todo test
+/**
  * Implemention of a Processor for consuming a value,intermediately but not not
  * altering the stream.
  */
@@ -237,6 +273,11 @@ var ListFlatMapProcessor = /** @class */ (function (_super) {
     };
     return ListFlatMapProcessor;
 }(PureStatelessProcessor));
+/**
+ * one to many mapping transformation, transforms elements through the stream bearing
+ * transformation operation, and lazily returns elements off the resulting streams
+ * one a time.
+ */
 var StreamFlatMapProcessor = /** @class */ (function (_super) {
     __extends(StreamFlatMapProcessor, _super);
     function StreamFlatMapProcessor(transformer) {
@@ -262,7 +303,10 @@ var StreamFlatMapProcessor = /** @class */ (function (_super) {
     };
     return StreamFlatMapProcessor;
 }(PureStatelessProcessor));
-//todo test
+/**
+ * Processor that takes in source values, and transforms them through an optional bearing
+ * transformer, and returns the values in a flattened optional state
+ */
 var OptionalFlatMapProcessor = /** @class */ (function (_super) {
     __extends(OptionalFlatMapProcessor, _super);
     function OptionalFlatMapProcessor(transformer) {
