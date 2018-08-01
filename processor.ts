@@ -56,10 +56,10 @@ export const Processor = {
     listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>): Processor<I, O> => new ListFlatMapProcessor(transformer),
     distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),
     limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),
-    streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer),
-    peekProcessor: <I> (consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer),
-    optionalFlatMapProcessor: <I, O> (transformer: Transformer<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(transformer),
-    skipProcessor: <I> (numberToSkip: number): Processor<I, I> => new SkipProcessor(numberToSkip),
+    streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer), //todo test
+    peekProcessor: <I> (consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer), //todo test
+    optionalFlatMapProcessor: <I, O> (transformer: Transformer<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(transformer), //todo test
+    skipProcessor: <I> (numberToSkip: number): Processor<I, I> => new SkipProcessor(numberToSkip), //todo test
 }
 
 /**
@@ -303,6 +303,11 @@ class ListFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, 
     }
 }
 
+/**
+ * one to many mapping transformation, transforms elements through the stream bearing 
+ * transformation operation, and lazily returns elements off the resulting streams
+ * one a time.
+ */
 class StreamFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, Output> {
     private outputSpliterator?: StreamIterator<Output>;
     private transformer: Transformer<Input, Stream<Output>>;
@@ -330,7 +335,10 @@ class StreamFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input
     }
 }
 
-//todo test
+/**
+ * Processor that takes in source values, and transforms them through an optional bearing
+ * transformer, and returns the values in a flattened optional state
+ */
 class OptionalFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, Output> {
     private transformer: Transformer<Input, Optional<Output>>;
 
