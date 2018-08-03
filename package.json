@@ -34,5 +34,16 @@
     "nyc": "^12.0.2",
     "ts-node": "^7.0.0",
     "typescript": "^2.9.2"
+  },
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts"
+    ],
+
+    "all": true  
   }
 }
