@@ -25,6 +25,8 @@ export const Source = {
      * An infinite source that continually applies a function to a previous result, starting with the seed value
      * 
      * seed, transformer(seed), transformer(transformer(seed)), etc
+     * @param seed initial starting value
+     * @param transformer function to be continually applied to the previous result, starting with the seed
      */
     iterateSource: <S>(seed: S, transformer: Transformer<S, S>): Source<S> => new IterateSource(seed, transformer),
     
@@ -39,8 +41,8 @@ export const Source = {
     arraySource: <S>(array: S[]): Source<S> => new ArraySource(array),
     
     /**
-    * source used for concatination of streams
-    */
+     * source of values that first draws values from stream1 and then stream2
+     */
     concatSource: <S>(stream1: Stream<S>, stream2: Stream<S>): Source<Optional<S>> => new ConcatSource(stream1, stream2),
     
     /**
