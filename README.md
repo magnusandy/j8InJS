@@ -1,4 +1,5 @@
-# j8InJS
+# java8script
+[![Build Status](https://travis-ci.org/magnusandy/java8script.svg?branch=master)](https://travis-ci.org/magnusandy/java8script)
 
 Implementation of a Java 8 style Stream library in Javascript/Typescript.
 the implementation tries to follow as closely to the Stream interface in Java 8 as possible. 
