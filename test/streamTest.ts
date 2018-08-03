@@ -1,9 +1,7 @@
 import { expect } from "chai";
-import { Errors } from "../errors";
-import { Predicate, Consumer, Transformer } from "../functions";
+import { Consumer } from "../functions";
 import { Stream } from '../stream';
-import Collectors, { Collector } from "../collectors";
-import { Optional } from "../optional";
+import Collectors from "../collectors";
 
 describe('Stream tests', () => {
 

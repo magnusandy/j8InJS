@@ -1,9 +1,5 @@
 import { expect } from "chai";
-import { Errors } from "../errors";
-import { Predicate, Consumer, Transformer } from "../functions";
-import { Stream } from '../stream';
-import Collectors from "../collectors";
-import { Optional } from "../optional";
+import { Transformer } from "../functions";
 import { Processor } from "../processor";
 import { ProcessorNode } from "../processorPipeline";
 

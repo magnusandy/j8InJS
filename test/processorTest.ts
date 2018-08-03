@@ -1,7 +1,4 @@
-import { Errors } from "../errors";
-import { Predicate, Consumer, Transformer, BiPredicate } from "../functions";
-import { Stream } from '../stream';
-import Collectors from "../collectors";
+import { Predicate, Transformer, BiPredicate } from "../functions";
 import { Optional } from "../optional";
 import { Processor } from "../processor";
 import { expect } from "chai";

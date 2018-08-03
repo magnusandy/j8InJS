@@ -1,4 +1,4 @@
-import { Transformer, Supplier, BiConsumer, Consumer, BiFunction } from "./functions";
+import { Transformer, Supplier, BiConsumer, BiFunction } from "./functions";
 
 /**
  * A mutable reduction operation that accumulates input elements into a mutable result container, 

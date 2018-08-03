@@ -21,10 +21,36 @@ export interface Source<T> {
 
 //todo test all
 export const Source = {
+    /**
+     * An infinite source that continually applies a function to a previous result, starting with the seed value
+     * 
+     * seed, transformer(seed), transformer(transformer(seed)), etc
+     */
     iterateSource: <S>(seed: S, transformer: Transformer<S, S>): Source<S> => new IterateSource(seed, transformer),
+    
+    /**
+    * basic infinite Source coming from a Supplier function
+    */
     supplierSource: <S>(supplier: Supplier<S>): Source<S> => new SupplierSource(supplier),
+    
+    /**
+     * a source backed by the given array, it is not infinite
+    */
     arraySource: <S>(array: S[]): Source<S> => new ArraySource(array),
+    
+    /**
+    * source used for concatination of streams
+    */
     concatSource: <S>(stream1: Stream<S>, stream2: Stream<S>): Source<Optional<S>> => new ConcatSource(stream1, stream2),
+    
+    /**
+     * creates a source of numbers based on the given start and end bounds and the step size
+     * a limited source counting by step (or 1) until the values get to the end bound.
+     * steps are always considered as absolute values and step in the direction of the end bound. a step of -1 will
+     * be treated the same as step of 1. if the start is larger than the end steps will be taken in a decreasing fashion
+     * i.e. rangeSource(10, 5, -1) -> [10,9,8,7,6] as well as (10, 5, 1) will yield the same result
+     * 
+     */
     rangeSource: (startInclusive: number, endExclusive: number, step?: number): Source<number> => new RangeSource(startInclusive, endExclusive, step),
 }
 
@@ -39,11 +65,6 @@ abstract class InfiniteSource<S> implements Source<S> {
     }
 }
 
-/**
- * An infinite source that continually applies a function to a previous result, starting with the seed object
- * 
- * seed, transformer(seed), transformer(transformer(seed)), etc
- */
 class IterateSource<S> extends InfiniteSource<S> {
     private seed: S;
     private currentValue: Optional<S>;
@@ -68,9 +89,6 @@ class IterateSource<S> extends InfiniteSource<S> {
     }
 }
 
-/**
- * basic infinite Source coming from a Supplier function
- */
 class SupplierSource<S> extends InfiniteSource<S> {
     private supplier: Supplier<S>;
 
@@ -84,9 +102,6 @@ class SupplierSource<S> extends InfiniteSource<S> {
     }
 }
 
-/**
- * a source coming from an array, it is not infinite
- */
 class ArraySource<S> implements Source<S> {
     private array: S[];
 
@@ -103,9 +118,6 @@ class ArraySource<S> implements Source<S> {
     }
 }
 
-/**
- * source used for concatination of streams
- */
 class ConcatSource<S> implements Source<Optional<S>> {
     private stream1Iterator: StreamIterator<S>;
     private stream2Iterator: StreamIterator<S>;
@@ -129,19 +141,14 @@ class ConcatSource<S> implements Source<Optional<S>> {
     }
 }
 
-/**
- * creates a source of number  based on the given start and end bounds and the step size
- * a limited source counting until the values get to the end bound.
- */
 class RangeSource implements Source<number> {
-    private startInclusive: number;
     private endExclusive: number;
     private step: number;
     private nextValue: number;
     private comparator: BiPredicate<number, number>;
 
     constructor(startInclusive: number, endExclusive: number, step?: number) {
-        const isAscending = startInclusive <= endExclusive; 
+        const isAscending = startInclusive <= endExclusive;
 
         this.comparator = isAscending
             ? (n1, n2) => n1 < n2
@@ -151,7 +158,6 @@ class RangeSource implements Source<number> {
             ? step ? Math.abs(step) : 1
             : step ? (0 - Math.abs(step)) : -1;
 
-        this.startInclusive = startInclusive;
         this.endExclusive = endExclusive;
         this.nextValue = startInclusive;
     }
@@ -162,7 +168,7 @@ class RangeSource implements Source<number> {
         return next;
     }
 
-    public  hasNext(): boolean {
+    public hasNext(): boolean {
         return this.comparator(this.nextValue, this.endExclusive);
     }
 }
