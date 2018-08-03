@@ -8,5 +8,5 @@ script:
  - npm run test
  - npm run test:js
 after_success: 
- - npm run coverage:ts
+ - npm run travis:coverage
 
