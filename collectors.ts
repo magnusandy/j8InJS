@@ -64,4 +64,8 @@ export default class Collectors {
     public static toList<T>(): Collector<T, T[], T[]> {
         return Collectors.toArray();
     }
+
+    //v2 
+    //countingBy(keyMapper: Transfromer<T, string>) counts values based on the keys returned by the mapper when feeding elements through
+    //countingBy(equalityFn?) groups elements and counts them based on equality function
 }

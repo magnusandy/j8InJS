@@ -54,13 +54,13 @@ export const Processor = {
     mapProcessor: <I, O>(transformer: Transformer<I, O>): Processor<I, O> => new MapProcessor<I, O>(transformer),
     filterProcessor: <I>(predicate: Predicate<I>): Processor<I, I> => new FilterProcessor<I>(predicate),
     listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>): Processor<I, O> => new ListFlatMapProcessor(transformer),
-    distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),//todo test
-    limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),
-    streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer), //todo test
-    peekProcessor: <I>(consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer), //todo test
-    optionalFlatMapProcessor: <I, O>(transformer: Transformer<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(transformer), //todo test
-    skipProcessor: <I>(numberToSkip: number): Processor<I, I> => new SkipProcessor(numberToSkip), //todo test
-    sortProcessor: <I>(comparator: Comparator<I>): Processor<I, I> => new SortProcessor(comparator), //todo
+    distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),
+    limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),//todo test
+    streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer),
+    peekProcessor: <I>(consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer),
+    optionalFlatMapProcessor: <I, O>(transformer: Transformer<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(transformer),
+    skipProcessor: <I>(numberToSkip: number): Processor<I, I> => new SkipProcessor(numberToSkip),
+    sortProcessor: <I>(comparator: Comparator<I>): Processor<I, I> => new SortProcessor(comparator),
 }
 
 /**
@@ -83,7 +83,7 @@ abstract class AbstractProcessor<Input, Output> implements Processor<Input, Outp
     }
 
     public hasNext(): boolean {
-        return this.inputs ? this.inputs.length > 0 : false;
+        return this.inputs.length > 0;
     }
 
     abstract processAndGetNext(): Optional<Output>;
@@ -146,16 +146,18 @@ class LimitProcessor<Input> extends AbstractProcessor<Input, Input> {
 class DistinctProcessor<Input> extends AbstractProcessor<Input, Input> {
 
     private comparator: BiPredicate<Input, Input>;
-    private distinctList: Optional<Input[]>;
+    private distinctList: Input[];
 
     constructor(comparator: BiPredicate<Input, Input>) {
         super();
         this.comparator = comparator;
-        this.distinctList = Optional.empty();
+        this.distinctList = []
     }
 
+    //distinct if stateful in the sense that it needs to keep track
+    //of previous elements, but it does NOT need to greedily accumulate values
     public isStateless(): boolean {
-        return false;
+        return true;
     }
 
     public isShortCircuting(): boolean {
@@ -163,31 +165,28 @@ class DistinctProcessor<Input> extends AbstractProcessor<Input, Input> {
     }
 
     public hasNext(): boolean {
-        const distinctListExistsAndHasValues = this.distinctList.isPresent() ? this.distinctList.get().length > 0 : false;
-        return this.inputs.length > 0 || distinctListExistsAndHasValues;
+        return this.inputs.length > 0;
     }
 
     public processAndGetNext(): Optional<Input> {
-        if (!this.distinctList.isPresent()) {
-            this.processValues();
-            return this.processAndGetNext();
-        } else {
-            return Optional.ofNullable(this.distinctList.get().shift());
-        }
+        return this.takeNextInput().filter(i => this.addIfUnique(i));
     }
 
-    private processValues(): void {
-        let distinctList: Input[] = [];
-        this.inputs.forEach(item => {
-            //compare the current Item with the given value
-            const doesMatchItem = (distinct: Input): boolean => this.comparator(item, distinct);
-            const matchingItems = distinctList.filter(doesMatchItem);
+    /**
+     * checks to see if the item is unique, adds it to the list if it is, 
+     * returns true if the value is distinct, otherwise false
+     * @param item 
+     */
+    //todo test
+    public addIfUnique(item: Input): boolean {
+        const doesMatchItem = (distinct: Input): boolean => this.comparator(item, distinct);
+            const matchingItems = this.distinctList.filter(doesMatchItem);
             if (matchingItems.length === 0) {
-                distinctList.push(item)
+                this.distinctList.push(item)
+                return true;
+            } else {
+                return false;
             }
-        });
-        this.inputs = [];
-        this.distinctList = Optional.of(distinctList);
     }
 }
 
