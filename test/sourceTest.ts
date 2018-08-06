@@ -1,25 +1,25 @@
-import { expect, use, spy  } from "chai";
+import { expect, use, spy } from "chai";
 import * as spies from "chai-spies";
 import { Transformer, Supplier } from "../functions";
 import { Source } from "../source";
-import { Stream } from "../stream";
-import { Optional } from "../optional";
+import Stream from "../stream";
+import Optional from "../optional";
 use(spies);
 
 describe('Source tests', () => {
     describe('Iterate Source', () => {
         it('should return seed first', () => {
             const seed = 0;
-            const transformer: Transformer<number, number> = (n: number) => n+1;
+            const transformer: Transformer<number, number> = (n: number) => n + 1;
             const source: Source<number> = Source.iterateSource(seed, transformer);
 
             const result = source.get();
             expect(result).to.equal(seed);
         });
-        
+
         it('should return seed first', () => {
             const seed = 0;
-            const transformer: Transformer<number, number> = (n: number) => n+1;
+            const transformer: Transformer<number, number> = (n: number) => n + 1;
             const source: Source<number> = Source.iterateSource(seed, transformer);
 
             const result = source.get();
@@ -28,17 +28,17 @@ describe('Source tests', () => {
 
         it('should transform seed each call', () => {
             const seed = 0;
-            const transformer: Transformer<number, number> = (n: number) => n+1;
+            const transformer: Transformer<number, number> = (n: number) => n + 1;
             const source: Source<number> = Source.iterateSource(seed, transformer);
 
-            
+
             expect(source.get()).to.equal(seed);
             expect(source.get()).to.equal(transformer(seed));
             expect(source.get()).to.equal(transformer(transformer(seed)));
         });
 
         it('should hasNext should be true', () => {
-            const transformer: Transformer<number, number> = (n: number) => n+1;
+            const transformer: Transformer<number, number> = (n: number) => n + 1;
             const source: Source<number> = Source.iterateSource(0, transformer);
 
             expect(source.hasNext()).to.equal(true);
@@ -75,7 +75,7 @@ describe('Source tests', () => {
 
     describe('Array Source', () => {
         it('should return values from array', () => {
-            const sourceArray = [1,2,3];
+            const sourceArray = [1, 2, 3];
             const source: Source<number> = Source.arraySource(sourceArray);
 
             expect(source.get()).to.equal(sourceArray[0]);
@@ -85,7 +85,7 @@ describe('Source tests', () => {
         });
 
         it('should hasNext when still values in array', () => {
-            const sourceArray = [1,2,3];
+            const sourceArray = [1, 2, 3];
             const source: Source<number> = Source.arraySource(sourceArray);
 
             expect(source.get()).to.equal(sourceArray[0]);
@@ -94,7 +94,7 @@ describe('Source tests', () => {
         });
 
         it('should hasNext when still values in array', () => {
-            const sourceArray = [1,2];
+            const sourceArray = [1, 2];
             const source: Source<number> = Source.arraySource(sourceArray);
 
             expect(source.get()).to.equal(sourceArray[0]);
@@ -106,27 +106,27 @@ describe('Source tests', () => {
     describe('Concat Source', () => {
 
         it('should hasNext true, first stream has values, second does not', () => {
-            const stream1: Stream<number> = Stream.ofValues(1,2,3);
+            const stream1: Stream<number> = Stream.ofValues(1, 2, 3);
             const stream2: Stream<number> = Stream.ofValues();
             const source: Source<Optional<number>> = Source.concatSource(stream1, stream2);
 
-            expect(source.hasNext()).to.equal(true); 
+            expect(source.hasNext()).to.equal(true);
         });
 
         it('should hasNext first stream empty, second not empty', () => {
-            const stream2: Stream<number> = Stream.ofValues(1,2,3);
+            const stream2: Stream<number> = Stream.ofValues(1, 2, 3);
             const stream1: Stream<number> = Stream.ofValues();
             const source: Source<Optional<number>> = Source.concatSource(stream1, stream2);
 
-            expect(source.hasNext()).to.equal(true); 
+            expect(source.hasNext()).to.equal(true);
         });
 
         it('should hasNext true when both have values', () => {
-            const stream1: Stream<number> = Stream.ofValues(1,2,3);
-            const stream2: Stream<number> = Stream.ofValues(4,5,6);
+            const stream1: Stream<number> = Stream.ofValues(1, 2, 3);
+            const stream2: Stream<number> = Stream.ofValues(4, 5, 6);
             const source: Source<Optional<number>> = Source.concatSource(stream1, stream2);
 
-            expect(source.hasNext()).to.equal(true); 
+            expect(source.hasNext()).to.equal(true);
         });
 
         it('should hasNext fa;se when both have no values', () => {
@@ -134,7 +134,7 @@ describe('Source tests', () => {
             const stream2: Stream<number> = Stream.ofValues();
             const source: Source<Optional<number>> = Source.concatSource(stream1, stream2);
 
-            expect(source.hasNext()).to.equal(false); 
+            expect(source.hasNext()).to.equal(false);
         });
 
         it('should get values first from stream1', () => {
@@ -173,8 +173,8 @@ describe('Source tests', () => {
         it('default step to 1 when none supplied, ancending', () => {
             const source: Source<number> = Source.rangeSource(1, 3);
 
-            const first:any = source.get();
-            const second:any = source.get();
+            const first: any = source.get();
+            const second: any = source.get();
             const step = second - first;
 
             expect(Math.abs(step)).to.equal(1);
@@ -183,8 +183,8 @@ describe('Source tests', () => {
         it('default step to 1 when none supplied, descending', () => {
             const source: Source<number> = Source.rangeSource(-1, -3);
 
-            const first:any = source.get();
-            const second:any = source.get();
+            const first: any = source.get();
+            const second: any = source.get();
             const step = second - first;
 
             expect(Math.abs(step)).to.equal(1);
@@ -193,8 +193,8 @@ describe('Source tests', () => {
         it('uses supplied step as absolute value', () => {
             const source: Source<number> = Source.rangeSource(1, 10, 2);
 
-            const first:any = source.get();
-            const second:any = source.get();
+            const first: any = source.get();
+            const second: any = source.get();
             const step = second - first;
 
             expect(Math.abs(step)).to.equal(2);
@@ -203,8 +203,8 @@ describe('Source tests', () => {
         it('uses supplied step as absolute value', () => {
             const source: Source<number> = Source.rangeSource(1, 10, -2);
 
-            const first:any = source.get();
-            const second:any = source.get();
+            const first: any = source.get();
+            const second: any = source.get();
             const step = second - first;
 
             expect(Math.abs(step)).to.equal(2);
@@ -213,8 +213,8 @@ describe('Source tests', () => {
         it('uses supplied step as absolute value, decending range', () => {
             const source: Source<number> = Source.rangeSource(-1, -10, 2);
 
-            const first:any = source.get();
-            const second:any = source.get();
+            const first: any = source.get();
+            const second: any = source.get();
             const step = second - first;
 
             expect(Math.abs(step)).to.equal(2);
@@ -223,8 +223,8 @@ describe('Source tests', () => {
         it('uses supplied step as absolute value, descending range', () => {
             const source: Source<number> = Source.rangeSource(-1, -10, -2);
 
-            const first:any = source.get();
-            const second:any = source.get();
+            const first: any = source.get();
+            const second: any = source.get();
             const step = second - first;
 
             expect(Math.abs(step)).to.equal(2);
@@ -233,8 +233,8 @@ describe('Source tests', () => {
         it('should exclude end value', () => {
             const source: Source<number> = Source.rangeSource(0, 1);
 
-            const first:any = source.get();
-            const second:any = source.get();
+            const first: any = source.get();
+            const second: any = source.get();
 
             expect(first).to.equal(0);
             expect(second).to.equal(undefined);

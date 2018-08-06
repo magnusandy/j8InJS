@@ -1,11 +1,11 @@
-import { Predicate, Consumer, Transformer, Supplier } from "./functions";
-import { Errors } from './errors';
+import { Predicate, Consumer, Transformer, Supplier } from "../functions";
+import Errors from '../errors';
 
 const isNull = (x: any): boolean => (x === null || x === undefined)
 /**
  * A container object which may or may not contain a non-null value. If a value is present, isPresent() will return true and get() will return the value.
  */
-export class Optional<T> {
+class Optional<T> {
 	private value?: T;
 
 	private constructor(value?: T) {
@@ -117,3 +117,5 @@ export class Optional<T> {
 	 */
 	public static empty = <U>(): Optional<U> => new Optional();
 }
+
+export default Optional;

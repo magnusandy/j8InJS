@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { Consumer } from "../functions";
-import { Stream } from '../stream';
+import Stream from '../stream';
 import Collectors from "../collectors";
 
 describe('Stream tests', () => {

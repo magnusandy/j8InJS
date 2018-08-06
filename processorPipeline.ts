@@ -1,5 +1,5 @@
 import { Processor } from "./processor";
-import { Optional } from "./optional";
+import Optional from "./optional";
 import { Transformer } from "./functions";
 import { Source } from "./source";
 

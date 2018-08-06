@@ -1,6 +1,6 @@
-import { Optional } from "../optional";
+import Optional from "../optional";
 import { expect } from "chai";
-import { Errors } from "../errors";
+import Errors from "../errors";
 import { Predicate, Consumer, Transformer } from "../functions";
 
 describe('Optional tests', () => {

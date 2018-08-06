@@ -1,8 +1,8 @@
 import { Predicate, Transformer, BiPredicate, Consumer, Comparator } from "../functions";
-import { Optional } from "../optional";
+import Optional from "../optional";
 import { Processor } from "../processor";
 import { expect } from "chai";
-import { Stream } from "../stream";
+import Stream from "../stream";
 
 
 describe('Processor tests', () => {

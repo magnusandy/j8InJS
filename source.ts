@@ -1,6 +1,6 @@
 import { Transformer, Supplier, BiPredicate } from "./functions";
-import { Optional } from "./optional";
-import { StreamIterator, Stream } from "./stream";
+import Optional from "./optional";
+import Stream, { StreamIterator } from "./stream";
 
 /**
  * Defines the basic outline of a stream source, it needs to be iterable

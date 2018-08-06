@@ -1,6 +1,6 @@
 import { Transformer, Predicate, BiPredicate, Consumer, Comparator } from "./functions";
-import { Optional } from "./optional";
-import { Stream, StreamIterator } from "./stream";
+import Optional from "./optional";
+import Stream, { StreamIterator } from "./stream";
 
 /**
  * A Processor describes a operation to be applied to a given input to transform it
@@ -180,13 +180,13 @@ class DistinctProcessor<Input> extends AbstractProcessor<Input, Input> {
     //todo test
     public addIfUnique(item: Input): boolean {
         const doesMatchItem = (distinct: Input): boolean => this.comparator(item, distinct);
-            const matchingItems = this.distinctList.filter(doesMatchItem);
-            if (matchingItems.length === 0) {
-                this.distinctList.push(item)
-                return true;
-            } else {
-                return false;
-            }
+        const matchingItems = this.distinctList.filter(doesMatchItem);
+        if (matchingItems.length === 0) {
+            this.distinctList.push(item)
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 
