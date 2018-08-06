@@ -164,10 +164,12 @@ class RangeSource implements Source<number> {
         this.nextValue = startInclusive;
     }
 
-    public get(): number {
-        const next = this.nextValue;
-        this.nextValue = next + this.step;
-        return next;
+    public get(): number | undefined {
+        if(this.hasNext()) {
+            const next = this.nextValue;
+            this.nextValue = next + this.step;
+            return next;
+        }
     }
 
     public hasNext(): boolean {
