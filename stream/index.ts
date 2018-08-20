@@ -46,20 +46,20 @@ interface Stream<T> {
      * if the stream is empty, return true, the predicate is never evaluated;
      * @param predicate 
      */
-    allMatch(predicate: Predicate<T>): boolean;
+    allMatch(predicate: Predicate<T>): boolean; //TESTED
 
     /**
      * Terminal Operation - Short Circuting:
      * returns true if any 1 item in the stream match the given predicate, if any item returns true, return true, else false;
      * @param predicate 
      */
-    anyMatch(predicate: Predicate<T>): boolean;
+    anyMatch(predicate: Predicate<T>): boolean; //TESTED
 
     /**
      * Terminal Operation:
      * returns the count of all the elements of the stream.
      */
-    count(): number;
+    count(): number;//TESTED
 
     /**
      * Terminal Operation:
@@ -69,14 +69,14 @@ interface Stream<T> {
      * @param accumulator adds an element T to a given collection of type R
      * @param combiner combines all the values in the second collection into the first
      */
-    customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
+    customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R; //TESTED
 
     /**
      * Terminal Operation:
      * applies a mutable reduction operation to the elements in the collection using the given collector
      * @param collector a Collector used to apply the mutable reduction.
      */
-    collect<R, A>(collector: Collector<T, A, R>): R;
+    collect<R, A>(collector: Collector<T, A, R>): R;//TESTED
 
     /**
      * Intermediate Operation - Stateful:
@@ -85,7 +85,7 @@ interface Stream<T> {
      * it needs to keep track of previous elements, but does not need access to the full stream before proceeding
      * @param equalsFunction function that takes two parameters, returns true if they are equal, false otherwise
      */
-    distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>;
+    distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>; //TESTED
 
     /**
      * Intermediate Operation:
@@ -93,21 +93,21 @@ interface Stream<T> {
      * function. Keep all elements who match the given predicate.
      * @param predicate
      */
-    filter(predicate: Predicate<T>): Stream<T>;
+    filter(predicate: Predicate<T>): Stream<T>; //TESTED
 
     /**
      * Terminal Operation: Short Circuiting:
      * Returns an optional describing the first element of the stream, if the stream is empty,
      * return an empty Optional.
      */
-    findFirst(): Optional<T>;
+    findFirst(): Optional<T>; //TESTED
 
     /**
      * Terminal Operation: Short Circuiting:
      * Returns an optional describing the an element of the stream, if the stream is empty,
      * return an empty Optional.
      */
-    findAny(): Optional<T>;
+    findAny(): Optional<T>; //TESTED
 
     /**
      * Intermediate Operation:
@@ -115,7 +115,7 @@ interface Stream<T> {
      * elements of all the output streams of the transformer function.
      * @param transformer 
      */
-    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>;
+    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>;//TESTED
 
     /**
      * Intermediate Operation:
@@ -134,7 +134,7 @@ interface Stream<T> {
      * stream.map(transformer).filter(o => o.isPresent()).map(o => o.get())
      * @param transformer 
      */
-    flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;
+    flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;//TESTED
 
 
     /**
@@ -142,14 +142,14 @@ interface Stream<T> {
      * applies a given consumer to each entity in the stream. elements are processed in sequental order;
      * @param consumer: applies the consuming function to all elements in the stream;
      */
-    forEachOrdered(consumer: Consumer<T>): void;
+    forEachOrdered(consumer: Consumer<T>): void; //TESTED
 
     /**
      * Terminal Operation:
      * applies a given consumer to each entity in the stream. ordering is not garenteed;
      * @param consumer: applies the consuming function to all elements in the stream;
      */
-    forEach(consumer: Consumer<T>): void;
+    forEach(consumer: Consumer<T>): void;//TESTED
 
     /**
      * Intermediate Operation - Short Circuiting
@@ -327,7 +327,7 @@ const Stream = {
      * @param s1 first stream
      * @param s2 second stream
      */
-    concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {
+    concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> { //TESTED
         return PipelineStream.concat(s1, s2);
     }, 
 
@@ -571,7 +571,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         }
     }
 
-    public forEach(consumer: Consumer<T>): void {
+    public forEach(consumer: Consumer<T>): void { //TESTED
         this.forEachOrdered(consumer);
     }
 

@@ -1,7 +1,10 @@
-import { expect } from "chai";
-import { Consumer } from "../functions";
 import Stream from '../stream';
 import Collectors from "../collectors";
+import { use, spy, expect } from "chai";
+import * as spies from "chai-spies";
+import Optional from '../optional';
+import {Supplier, Transformer } from '../functions';
+use(spies);
 
 describe('Stream tests', () => {
 
@@ -205,11 +208,6 @@ describe('Stream tests', () => {
             expect(result.length).to.equal(2)
             expected.forEach(item => expect(result).to.contain(item));
         });
-
-        it('it greedily consume elements even if terminal is short circuiting', () => {
-            //todo 
-        });
-
     });
 
     describe('filter tests', () => {
@@ -233,37 +231,219 @@ describe('Stream tests', () => {
             stream.collect(Collectors.toList());
             expect(count).to.equal(6);
         });
+    });
 
-        it('it should lazily filter only as necessary for short circuiting terminal', () => {
-            //todo
+    describe('allMatch', () => {
+        it('it should return true if all items match', () => {
+            const source = [1, 2, 3];
+            const stream = Stream.of(source);
+            const result = stream.allMatch(i => i < 5);
+            expect(result).to.equal(true);
+        });
+
+        it('it should return false if not all items match', () => {
+            const source = [1, 2, 3, 9];
+            const stream = Stream.of(source);
+            const result = stream.allMatch(i => i < 5);
+            expect(result).to.equal(false);
+        });
+
+        it('it should short circuit and only go until false is reached', () => {
+            const source = [1, 2, 1, 1];
+            const stream = Stream.of(source);
+            const spyMatcher = spy((i: number) => i === 1)
+            const result = stream.allMatch(spyMatcher);
+            expect(spyMatcher).to.be.called.exactly(2);
         });
     });
 
-    describe('forEach tests', () => {
-        it('it should consume all values', () => {
+    describe('anyMatch', () => {
+        it('it should return true if any items match', () => {
+            const source = [1, 2, 3];
+            const stream = Stream.of(source);
+            const result = stream.anyMatch(i => i === 2);
+            expect(result).to.equal(true);
+        });
 
+        it('it should return false if no items match', () => {
+            const source = [1, 2, 3, 9];
+            const stream = Stream.of(source);
+            const result = stream.anyMatch(i => i === 0);
+            expect(result).to.equal(false);
+        });
+
+        it('it should short circuit and only go until match is reached', () => {
+            const source = [1, 2, 1, 1];
+            const stream = Stream.of(source);
+            const spyMatcher = spy((i: number) => i === 2)
+            const result = stream.anyMatch(spyMatcher);
+            expect(spyMatcher).to.be.called.exactly(2);
         });
     });
 
-    describe('forEach tests', () => {
-        it('it should consume all values', () => {
-            const stream: Stream<number> = Stream.range(0, 0).skip(1);
-            const result = stream.peek(Consumer.logger()).collect(Collectors.toList())
-            console.log(result)
+    describe('count', () => {
+        it('it should return number of values in the stream', () => {
+            const source = [1, 2, 3, 11, 12, 13];
+            const stream = Stream.of(source);
+            const result = stream.count();
+            expect(result).equal(source.length);
         });
 
-        it('it should consume all values', () => {
-            const stream: Stream<string> = Stream.of(['a,b,c', 'e,f,g']).flatMap(i => Stream.of(i.split(',')));
-            const consumer: Consumer<string> = (s: string) => console.log(s);
-            console.log(stream.collect(Collectors.toList()));
+        it('it should return number of values in the stream 0 if empty', () => {
+            const stream = Stream.empty();
+            const result = stream.count();
+            expect(result).equal(0);
         });
 
-        it('it should filterValues', () => {
-            const stream: Stream<number> = Stream.of([4, 4, 5, 1, 2, 3, 4, 4, 5, 1])
-                .sorted();
-
-            console.log(stream.collect(Collectors.toList()));
+        it('it should return number of values in the stream 0 if empty', () => {
+            const stream = Stream.ofValues(1, 1, 1);
+            const result = stream.filter(i => i === 2).count();
+            expect(result).equal(0);
         });
     });
 
+    describe('customCollect', () => {
+        it('it should apply a mutable reduction, works for basic list builder', () => {
+            const supplier: Supplier<number[]> = () => [];
+            const accumulator = (s: number[], n: number) => s.push(n);
+            const combiner = (s1: number[], s2:number[]) => s1.concat(s2);
+            const result = Stream.ofValues(1,2,3).customCollect(supplier, accumulator, combiner);
+            expect(result.length).to.eq(3);
+            expect(result).to.contain(1);
+            expect(result).to.contain(2);
+            expect(result).to.contain(3);
+        });
+    });
+
+    describe('findFirst', () => {
+        it('it return the first element in the stream', () => {
+            const source = [1, 2, 3, 11, 12, 13];
+            const stream = Stream.of(source);
+            const result = stream.findFirst();
+            expect(result.isPresent()).to.equal(true);
+            expect(result.get()).to.equal(1);
+        });
+
+        it('it return optional empty if stream is empty', () => {
+            const stream = Stream.empty()
+            const result = stream.findFirst();
+            expect(result.isPresent()).to.equal(false);
+        });
+
+        it('it should be short circuiting', () => {
+            const source = [1, 2, 3, 11, 12, 13];
+            const stream = Stream.of(source);
+
+            const spyTransformer = spy(Transformer.identity());
+            stream.map(spyTransformer).findFirst();
+
+            expect(spyTransformer).to.be.called.exactly(1);
+        });
+    });
+    describe('findFirst', () => {
+        it('it return the first element in the stream', () => {
+            const source = [1, 2, 3, 11, 12, 13];
+            const stream = Stream.of(source);
+            const result = stream.findFirst();
+            expect(result.isPresent()).to.equal(true);
+            expect(result.get()).to.equal(1);
+        });
+
+        it('it return optional empty if stream is empty', () => {
+            const stream = Stream.empty()
+            const result = stream.findFirst();
+            expect(result.isPresent()).to.equal(false);
+        });
+
+        it('it should be short circuiting', () => {
+            const source = [1, 2, 3, 11, 12, 13];
+            const stream = Stream.of(source);
+
+            const spyTransformer = spy(Transformer.identity());
+            stream.map(spyTransformer).findFirst();
+
+            expect(spyTransformer).to.be.called.exactly(1);
+        });
+    });
+
+    describe('findAny', () => {
+        it('it return an item in the stream', () => {
+            const source = [1, 2, 3, 11, 12, 13];
+            const stream = Stream.of(source);
+            const result = stream.findAny();
+            expect(result.isPresent()).to.equal(true);
+            expect(source).to.contain(result.get());
+        });
+
+        it('it return optional empty if stream is empty', () => {
+            const stream = Stream.empty()
+            const result = stream.findAny();
+            expect(result.isPresent()).to.equal(false);
+        });
+
+        it('it should be short circuiting', () => {
+            const source = [1, 2, 3, 11, 12, 13];
+            const stream = Stream.of(source);
+
+            const spyTransformer = spy(Transformer.identity());
+            stream.map(spyTransformer).findAny();
+
+            expect(spyTransformer).to.be.called.exactly(1);
+        });
+    });
+
+    describe('flatMap', () => {
+        it('it should, flatten a stream of streams', () => {
+            const stream1 = Stream.ofValues(1,2,3);
+            const stream2 = Stream.ofValues(1,2,3);
+            const stream = Stream.ofValues(stream1, stream2);
+            
+            const listResult = stream.flatMap(i => i).collect(Collectors.toList());
+            
+            expect(listResult.length).to.equal(6);
+            expect(listResult[0]).to.equal(1);
+            expect(listResult[5]).to.equal(3); 
+        });
+
+        it('it should lazily pull from input streams', () => {
+            
+            const s1Spy = spy(Transformer.identity());
+            const s2Spy = spy(Transformer.identity());        
+
+            const stream1 = Stream.ofValues(1,2,3).map(s1Spy);
+            const stream2 = Stream.ofValues(1,2,3).map(s2Spy);
+            const stream = Stream.ofValues(stream1, stream2);
+            
+            stream.flatMap(i => i).filter(i => i === 2).findFirst();
+            
+            expect(s1Spy).to.be.called.exactly(2);
+            expect(s2Spy).to.be.called.exactly(0);
+        });
+    });
+
+    describe('flatMapList', () => {
+        it('it should, flatten a stream of lists', () => {
+            const l1 = [1,2,3];
+            const l2 = [1,2,3];
+            const stream = Stream.ofValues(l1, l2);
+            
+            const listResult = stream.flatMapList(i => i).collect(Collectors.toList());
+            
+            expect(listResult.length).to.equal(6);
+            expect(listResult[0]).to.equal(1);
+            expect(listResult[5]).to.equal(3); 
+        });
+    });
+
+    describe('flatMapOptional', () => {
+        it('it should return stream of values when optional has a value', () => {
+            const stream: Stream<Optional<number>> = Stream.ofValues(Optional.of(1), Optional.of(2), Optional.empty(), Optional.of(3));
+            const listResult = stream.flatMapOptional(i => i).collect(Collectors.toList());
+            
+            expect(listResult.length).to.equal(3);
+            expect(listResult[0]).to.equal(1);
+            expect(listResult[1]).to.equal(2); 
+            expect(listResult[2]).to.equal(3); 
+        });
+    });
 });
