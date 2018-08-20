@@ -157,14 +157,14 @@ interface Stream<T> {
      * will create finite stream out of infinite stream. 
      * @param maxSize 
      */
-    limit(maxSize: number): Stream<T>;
+    limit(maxSize: number): Stream<T>;//TESTED
 
     /**
      * Intermediate Operation:
      * Returns a stream consisting of the results of applying the given function to the elements of this stream.
      * @param transformer: function that transforms a value in the stream to a new value;
      */
-    map<U>(transformer: Transformer<T, U>): Stream<U>;
+    map<U>(transformer: Transformer<T, U>): Stream<U>;//TESTED
 
     /**
      * Terminal Operation:
@@ -173,7 +173,7 @@ interface Stream<T> {
      * comparator is supplied, a default comparator using the > and < operators is used.
      * @param comparator function to compare elements in the stream, 
      */
-    max(comparator?: Comparator<T>): Optional<T>;
+    max(comparator?: Comparator<T>): Optional<T>;//TESTED
 
     /**
      * Terminal Operation:
@@ -182,7 +182,7 @@ interface Stream<T> {
      * comparator is supplied, a default comparator using the > and < operators is used.
      * @param comparator function to compare elements in the stream, 
      */
-    min(comparator?: Comparator<T>): Optional<T>;
+    min(comparator?: Comparator<T>): Optional<T>; //TESTED
 
     /**
      * Terminal Operation - Short Circuting:
@@ -190,7 +190,7 @@ interface Stream<T> {
      * if the stream is empty, return true, the predicate is never evaluated;
      * @param predicate 
      */
-    noneMatch(predicate: Predicate<T>): boolean;
+    noneMatch(predicate: Predicate<T>): boolean;//TESTED
 
     /**
      * Intermediate Operation:
@@ -200,7 +200,7 @@ interface Stream<T> {
      * and non altering function otherwise problems can be caused down the pipeline
      * @param consumer 
      */
-    peek(consumer: Consumer<T>): Stream<T>;
+    peek(consumer: Consumer<T>): Stream<T>;//TESTED
 
     /**
      * Terminal Operation:
@@ -209,13 +209,13 @@ interface Stream<T> {
      * value can be specified, if the stream is empty, an optional describing the initial value will
      * be returned. 
      */
-    reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T>;
+    reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T>;//TESTED
 
     /**
      * returns a StreamIterator of the current stream, allowing easier
      * step by step data retrieval from the stream
      */
-    streamIterator(): StreamIterator<T>;
+    streamIterator(): StreamIterator<T>;//TODO
 
     /**
      * Intermediate Operation: 
@@ -223,7 +223,7 @@ interface Stream<T> {
      * values. If a negative number is passed in, no values are skipped. 
      * @param n number of elements to skip
      */
-    skip(n: number): Stream<T>; 
+    skip(n: number): Stream<T>; //TESTED
 
     /**
      * Intermediate Operation - Stateful:

@@ -673,6 +673,13 @@ describe('Processor tests', () => {
             expect(processor.isStateless()).to.equal(false);
         });
 
+        it('should not be short circuiting', () => {
+            const comparator: Comparator<number> = Comparator.default();
+            const processor: Processor<number, number> = Processor.sortProcessor(comparator);
+
+            expect(processor.isShortCircuting()).to.equal(false);
+        });
+
         it('should not have next with no values', () => {
             const comparator: Comparator<number> = Comparator.default();
             const processor: Processor<number, number> = Processor.sortProcessor(comparator);
