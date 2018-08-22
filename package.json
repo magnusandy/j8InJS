@@ -53,7 +53,8 @@
       "**/*.d.ts",
       "test/",
       "coverage/",
-      "dist/"
+      "dist/",
+      "benchmark/"
     ],
     "all": true
   },
