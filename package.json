@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register test/*.ts",
-    "benchmark": "mocha -r ts-node/register benchmark/*.ts",
+    "benchmark": "mocha -r ts-node/register test/benchmark/*.ts",
     "test:js": "mocha dist/test/*.js",
     "test:coverage": "nyc npm run test",
     "travis:coverage": "npm run test:coverage && nyc report --reporter=text-lcov | coveralls",
