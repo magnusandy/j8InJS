@@ -95,6 +95,83 @@ Stream.iterate(2, (n) => n+2)
 
 # Methods
 
+
+Creates a new stream from the given source array
+
+```typescript 
+of<T>(source: T[]): Stream<T>;
+```
+
+Creates a new stream from the given source values
+
+```typescript  
+ofValues<T>(...values: T[]): Stream<T>;
+```
+
+creates a stream of a single element with the given source value;
+
+```typescript  
+ofValue<T>(value: T): Stream<T>;
+```
+
+
+creates an empty Stream
+
+```typescript  
+empty<T>(): Stream<T>;
+```
+
+generates a infinite stream where elements are generated
+by the given supplier.
+
+```typescript  
+generate<T>(supplier: Supplier<T>): Stream<T>;
+```
+
+
+creates an infinte stream of values by incrementally applying getNext to
+the last item in the stream, so you have a stream like:
+seed, getNext(seed), getNext(getNext(seed)), etc
+
+```typescript 
+iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T>;
+```
+
+creates a new stream consisting of all the values of s1, followed by all the values of s2
+ 
+```typescript 
+concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T>;
+```
+
+
+returns a stream of numbers starting at startInclusive, and going to up 
+to but not including endExculsive in increments of 1, if a step is passed in, the 
+increments of 1 will be changed to increments of size step, negative steps will be treated
+as positive.
+
+IF the start is greater than the end, the default step will be -1 and any positive step
+values will be treated as negative i.e. 5 => -5, -5 => -5
+
+an empty stream will be returned if start and end are the same
+
+
+```typescript 
+range(startInclusive: number, endExclusive: number, step?: number): Stream<number>;
+```
+
+returns a stream of numbers starting at startInclusive, and going to up 
+to and including endInclusive in increments of 1, if a step is passed in, the 
+increments of 1 will be changed to increments of size step
+
+IF the start is greater than the end, the default step will be -1 and any positive step
+values will be treated as negative i.e. 5 => -5, -5 => -5
+
+an empty stream will be returned if start and end are the same
+
+```typescript 
+rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number>;
+```
+
 **Terminal Operation - Short Circuting:**
 returns true if all items in the stream match the given predicate, if any item returns false, return false
 if the stream is empty, return true, the predicate is never evaluated.
