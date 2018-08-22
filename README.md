@@ -15,7 +15,7 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 * [Methods](https://github.com/magnusandy/java8script#methods)
 
 [Optional](https://github.com/magnusandy/java8script#optional)
-* [Methods]()
+* [Methods](https://github.com/magnusandy/java8script#methods-1)
 
 
 ## Stream
