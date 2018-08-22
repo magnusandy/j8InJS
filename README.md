@@ -10,8 +10,15 @@ Also includes an Optional class that works the same as the Java8 optional
 
 https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 
+[Stream](https://github.com/magnusandy/java8script#stream)
+* [Examples](https://github.com/magnusandy/java8script#examples)
+* [Methods](https://github.com/magnusandy/java8script#methods)
 
-# Stream
+[Optional](https://github.com/magnusandy/java8script#optional)
+* [Methods]()
+
+
+## Stream
 A stream is a sequence of elements with possibly unlimited length
 and a sequence of 0 or more operations to be undertaken on the elements.
 Streams computations are lazy and only take place when necessary, rather than at the time
@@ -44,7 +51,7 @@ for example consider an infinite stream S. `S.findFirst()` will correctly short 
 stream. `S.sorted().findFirst()`. on the other hand will infinitly loop as `sorted()` tries to greedily consume elements
 before proceeding. this could be remedied by first limiting the streams output. `S.limit(10).sorted().findFirst()`
 
-# Examples
+### Examples
 Assume you have a large list of `Employee` objects containing such data as name, salary, gender, jobTitle, yearsOfExperience, listOfPromotions.
 
 **Find list of all female developers**
@@ -93,7 +100,7 @@ Stream.iterate(2, (n) => n+2)
 ```
 *Note: it is important when using functions like iterate that you properly terminate the stream with a short circuiting operation, as otherwise and infinite loop will occur.*
 
-# Methods
+### Methods
 
 
 Creates a new stream from the given source array
@@ -420,5 +427,9 @@ returns the Stream as an array of elements.
 ```typescript
 toArray(): T[];
 ```
+
+## Optional
+
+### Methods
 
 
