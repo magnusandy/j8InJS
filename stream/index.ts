@@ -237,7 +237,7 @@ interface Stream<T> {
      * Terminal Operation: 
      * returns the Stream as an array of elements.
      */
-    toArray(): T[];
+    toArray(): T[]; //TESTED
 
     //V2 //todo
     //reverse() //intermediate stateful

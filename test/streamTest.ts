@@ -664,6 +664,16 @@ describe('Stream tests', () => {
             expect(result[3]).to.equal(4);
         });
 
+        it('it should, return a sorted stream based on reverse sorter', () => {
+            const stream: Stream<number> = Stream.ofValues(2, 1, 4, 3);
+            const result = stream.sorted((n1, n2) => Comparator.default()(n2 , n1)).collect(Collectors.toList());
+            expect(result.length).equal(4);
+            expect(result[0]).to.equal(4);
+            expect(result[1]).to.equal(3);
+            expect(result[2]).to.equal(2);
+            expect(result[3]).to.equal(1);
+        });
+
         it('it should, return a sorted stream based on a custom sort sort', () => {
             const stream: Stream<TestItem> = Stream.ofValues({ i: 2 }, { i: 1 }, { i: 3 }, { i: 4 });
             const result = stream.sorted(testItemComparator).collect(Collectors.toList());

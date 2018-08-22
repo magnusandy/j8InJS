@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register test/*.ts",
+    "benchmark": "mocha -r ts-node/register benchmark/*.ts",
     "test:js": "mocha dist/test/*.js",
     "test:coverage": "nyc npm run test",
     "travis:coverage": "npm run test:coverage && nyc report --reporter=text-lcov | coveralls",
@@ -23,18 +24,25 @@
   },
   "homepage": "https://github.com/magnusandy/java8script#readme",
   "devDependencies": {
+    "@types/benchmark": "^1.0.31",
     "@types/chai": "^4.1.4",
     "@types/chai-spies": "^1.0.0",
+    "@types/lazy.js": "^0.3.30",
+    "@types/lodash": "^4.14.116",
     "@types/mocha": "^5.2.4",
+    "benchmark": "^2.1.4",
     "chai": "^4.1.2",
     "chai-spies": "^1.0.0",
     "coveralls": "^3.0.2",
     "istanbul": "^0.4.5",
+    "lazy.js": "^0.5.1",
+    "lodash": "^4.17.10",
     "mocha": "^5.2.0",
     "mocha-lcov-reporter": "^1.3.0",
     "nyc": "^12.0.2",
     "ts-node": "^7.0.0",
-    "typescript": "^2.9.2"
+    "typescript": "^2.9.2",
+    "underscore": "^1.9.1"
   },
   "nyc": {
     "extension": [
