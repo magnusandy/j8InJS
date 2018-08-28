@@ -699,4 +699,14 @@ describe('Stream tests', () => {
             expect(result).to.have.ordered.members([1,2])
         });
     });
+
+    describe('of', () => {
+        it('it should return a stream of elements from given array', () => {
+            const source = [1,2,3];
+            const stream = Stream.of(source);
+            const result = stream.toArray();
+
+            expect(result).to.contain.ordered.members(source);
+        });
+    });
 });

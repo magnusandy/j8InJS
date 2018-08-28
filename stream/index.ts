@@ -258,9 +258,9 @@ interface Stream<T> {
 }
 
 export interface StreamIterator<T> {
-    hasNext(): boolean;
-    getNext(): Optional<T>;
-    tryAdvance(consumer: Consumer<T>): boolean;
+    hasNext(): boolean;//TESTED
+    getNext(): Optional<T>;//TESTED
+    tryAdvance(consumer: Consumer<T>): boolean;//TESTED
 
     //V2 //todo
 
