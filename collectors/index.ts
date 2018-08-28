@@ -1,4 +1,5 @@
 import { Transformer, Supplier, BiConsumer, BiFunction } from "../functions";
+import { MutableString } from './mutableCollections';
 
 /**
  * A mutable reduction operation that accumulates input elements into a mutable result container, 
@@ -57,12 +58,30 @@ class Collectors {
         const supplier: Supplier<T[]> = () => [];
         const accumulator: BiConsumer<T[], T> = (list, item) => list.push(item);
         const combiner: BiFunction<T[]> = (list1, list2) => list1.concat(list2);
-        const finisher: Transformer<T[], T[]> = (list) => list;
+        const finisher: Transformer<T[], T[]> = Transformer.identity();
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
     public static toList<T>(): Collector<T, T[], T[]> {
         return Collectors.toArray();
+    }
+
+    public static joining(delimiter?: string, prefix?: string, suffix?: string): Collector<string, MutableString, string> {
+        const ifElseBlank = (val?: string): string => val ? val : "";
+        const delimiterToUse = ifElseBlank(delimiter);
+
+        const supplier: Supplier<MutableString> = () => MutableString.empty();
+        const accumulator: BiConsumer<MutableString, string> = (mutable, str) => mutable.append(str + delimiterToUse);
+        const combiner: BiFunction<MutableString> = (mutable1, mutable2) => mutable1.concat(mutable2);
+        const finisher: Transformer<MutableString, string> = (mutable) => {
+            const valueWithExtraDelimiter = mutable.getValue();
+            const valueWithOutExtraDelimiter = delimiterToUse.length === 0
+                ? valueWithExtraDelimiter
+                : valueWithExtraDelimiter.slice(0, -delimiterToUse.length);
+
+            return ifElseBlank(prefix) + valueWithOutExtraDelimiter + ifElseBlank(suffix);
+        }
+        return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
     //v2 

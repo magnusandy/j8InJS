@@ -1,5 +1,5 @@
-import {Consumer, Transformer, BiPredicate, Comparator } from "../functions";
-import {use, spy, expect} from "chai";
+import { Consumer, Transformer, BiPredicate, Comparator } from "../functions";
+import { use, spy, expect } from "chai";
 import * as spies from "chai-spies";
 use(spies);
 const consoleSpy = spy.on(console, 'log');
@@ -23,14 +23,14 @@ describe('Function tests', () => {
 
     describe('Transformer', () => {
         it('identity function returns the value passed in', () => {
-            const valueStruct = {i: 1, o: 'value'};
+            const valueStruct = { i: 1, o: 'value' };
             const identity = Transformer.identity();
             const returned = identity(valueStruct);
             expect(returned).to.equal(valueStruct);
         });
 
         it('logger function returns the value passed in, and logs to console', () => {
-            const valueStruct = {i: 1, o: 'LOG ME PLZ'};
+            const valueStruct = { i: 1, o: 'LOG ME PLZ' };
             const logger = Transformer.logger();
             const returned = logger(valueStruct);
             expect(returned).to.equal(valueStruct);
@@ -77,14 +77,14 @@ describe('Function tests', () => {
         });
 
         it('defaultEquality returns a function that returns true if two items === each other', () => {
-            const value1 = {i: '1'};
-            const value2 = {i: '1'};
+            const value1 = { i: '1' };
+            const value2 = { i: '1' };
             const result = BiPredicate.defaultEquality()(value1, value2);
             expect(result).to.eq(false);
         });
-        
+
         it('defaultEquality returns a function that returns true if two items === each other', () => {
-            const value1 = {i: '1'};
+            const value1 = { i: '1' };
             const value2 = value1;
             const result = BiPredicate.defaultEquality()(value1, value2);
             expect(result).to.eq(true);
