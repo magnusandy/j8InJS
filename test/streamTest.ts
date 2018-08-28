@@ -1,5 +1,5 @@
 import Stream from '../stream';
-import Collectors, { Collector } from "../collectors";
+import Collectors from "../collectors";
 import { use, spy, expect } from "chai";
 import * as spies from "chai-spies";
 import Optional from '../optional';

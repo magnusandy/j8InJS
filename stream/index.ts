@@ -231,7 +231,7 @@ interface Stream<T> {
      * the default Comparator.default() comparator is used. 
      * @param comparator optional comparator to use to sort the objects
      */
-    sorted(comparator?: Comparator<T>): Stream<T>;
+    sorted(comparator?: Comparator<T>): Stream<T>;//tested
     
     /**
      * Terminal Operation: 
@@ -253,7 +253,8 @@ interface Stream<T> {
     //chunk(size) //returns list of lists of length size
     //lazyDistinct(equalityTest?)//filter out values as they pass through, never returning the same value twice
 
-    //todo create aliases for http://danieltao.com/lazy.js/docs/ lazy.js function names
+    //todo create aliases for http://danieltao.com/lazy.js/docs/ lazy.js function names and lodash
+
 }
 
 export interface StreamIterator<T> {
@@ -571,7 +572,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         }
     }
 
-    public forEach(consumer: Consumer<T>): void { //TESTED
+    public forEach(consumer: Consumer<T>): void { 
         this.forEachOrdered(consumer);
     }
 
