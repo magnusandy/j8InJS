@@ -275,7 +275,7 @@ const Stream = {
      * Creates a new stream from the given source array
      * @param source 
      */
-    of<T>(source: T[]): Stream<T> {
+    of<T>(source: T[]): Stream<T> { //TESTED
         return PipelineStream.of(source);
     },
 
@@ -283,7 +283,7 @@ const Stream = {
      * Creates a new stream from the given source values
      * @param source 
      */
-    ofValues<T>(...values: T[]): Stream<T> {
+    ofValues<T>(...values: T[]): Stream<T> { //TESTED
         return PipelineStream.of(values);
     },
 
@@ -291,7 +291,7 @@ const Stream = {
      * creates a stream of a single element with the given source value;
      * @param value 
      */
-    ofValue<T>(value: T): Stream<T> {
+    ofValue<T>(value: T): Stream<T> { //TESTED
         return PipelineStream.of([value]);
     },
 
@@ -299,7 +299,7 @@ const Stream = {
     /**
      * creates an empty Stream
      */
-    empty<T>(): Stream<T> {
+    empty<T>(): Stream<T> { //TESTED
         return PipelineStream.of<T>([]);
     },
 
@@ -308,7 +308,7 @@ const Stream = {
      * by the given supplier.
      * @param supplier 
      */
-    generate<T>(supplier: Supplier<T>): Stream<T> {
+    generate<T>(supplier: Supplier<T>): Stream<T> { //TESTED
         return PipelineStream.ofSupplier(supplier);
     },
 
@@ -319,7 +319,7 @@ const Stream = {
      * @param seed initial value of the stream
      * @param getNext transforming function applied at each step
      */
-    iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {
+    iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> { //TESTED
         return PipelineStream.ofSource(Source.iterateSource(seed, getNext))
     },
 
@@ -347,7 +347,7 @@ const Stream = {
      * @param endExclusive end of the range, not included
      * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
      */
-    range(startInclusive: number, endExclusive: number, step?: number): Stream<number> {
+    range(startInclusive: number, endExclusive: number, step?: number): Stream<number> { //TESTED
         return PipelineStream.ofSource(Source.rangeSource(startInclusive, endExclusive, step));
     },
 
@@ -359,13 +359,11 @@ const Stream = {
      * IF the start is greater than the end, the default step will be -1 and any positive step
      * values will be treated as negative i.e. 5 => -5, -5 => -5
      * 
-     * an empty stream will be returned if start and end are the same
-     * 
      * @param startInclusive starting value of the range, included in the range
      * @param endInclusive end of the range
      * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
      */
-    rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number> {
+    rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number> { //TESTED
         return startInclusive < endInclusive
             ? Stream.range(startInclusive, endInclusive + 1, step)
             : Stream.range(startInclusive, endInclusive - 1, step);

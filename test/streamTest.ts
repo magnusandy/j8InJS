@@ -706,7 +706,230 @@ describe('Stream tests', () => {
             const stream = Stream.of(source);
             const result = stream.toArray();
 
+            expect(result.length).to.eq(source.length);
             expect(result).to.contain.ordered.members(source);
+        });
+    });
+
+    describe('ofValues', () => {
+        it('it should return a stream of elements from given array', () => {
+            const source = [1,2,3];
+            const stream = Stream.ofValues(...source);
+            const result = stream.toArray();
+
+            expect(result.length).to.eq(source.length);
+            expect(result).to.contain.ordered.members(source);
+        });
+    });
+
+    describe('ofValue', () => {
+        it('it should return a stream of a single element from given array', () => {
+            const source = 1;
+            const stream = Stream.ofValue(source);
+            const result = stream.toArray();
+
+            expect(result.length).to.eq(1);
+            expect(result[0]).eq(source);
+        });
+    });
+
+    describe('empty', () => {
+        it('it should return a empty stream of elements', () => {
+            const stream = Stream.empty();
+            const result = stream.toArray();
+
+            expect(result.length).to.eq(0);
+        });
+    });
+
+    describe('generate', () => {
+        it('it should return a stream created by a supplier function', () => {
+            const supplierSpy = spy(() => 1);
+            const stream = Stream.generate(supplierSpy);
+            const result = stream.limit(3).toArray();
+
+            expect(result.length).to.eq(3);
+            expect(supplierSpy).to.have.been.called.exactly(3);
+        });
+    });
+
+    describe('iterate', () => {
+        it('it should start stream with seed', () => {
+            const seed = 0;
+            const transformerSpy = spy((n: number) => n+1);
+            const stream = Stream.iterate(seed, transformerSpy);
+            const result = stream.limit(3).toArray();
+
+            expect(result[0]).to.equal(seed);
+        });
+
+        it('it should start based on seed', () => {
+            const seed = 0;
+            const transformerSpy = spy((n: number) => n+1);
+            const stream = Stream.iterate(seed, transformerSpy);
+            const result = stream.limit(3).toArray();
+
+            expect(result[0]).to.equal(seed);
+            expect(result[1]).to.equal(transformerSpy(seed));
+            expect(result[2]).to.equal(transformerSpy(transformerSpy(seed)));
+        });
+    });
+
+    describe('range', () => {
+        it('it should start with start value', () => {
+            const start = 0;
+            const end = 11;
+            const step = 1;
+            const stream = Stream.range(start, end, step);
+            const result = stream.toArray();
+
+            expect(result[0]).to.eq(start);
+        });
+
+        it('it should not include end value', () => {
+            const start = 0;
+            const end = 11;
+            const step = 1;
+            const stream = Stream.range(start, end, step);
+            const result = stream.toArray();
+
+            expect(result).to.not.contain.members([end]);
+        });
+
+        it('it should use step when provided', () => {
+            const start = 2;
+            const end = 10;
+            const step = 2;
+            const stream = Stream.range(start, end, step);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(step);
+        });
+
+        it('it should default step to 1 step when not provided', () => {
+            const start = 2;
+            const end = 10;
+            const stream = Stream.range(start, end);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(1);
+        });
+
+        it('it should use absoulte step when given negative step', () => {
+            const start = 2;
+            const end = 10;
+            const step = -2;
+            const stream = Stream.range(start, end, step);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(Math.abs(step));
+        });
+
+        it('it should use negative step when start above end', () => {
+            const start = 10;
+            const end = 0;
+            const step = 2;
+            const stream = Stream.range(start, end, step);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(-step);
+        });
+
+        it('it should use negative step when start above end', () => {
+            const start = 10;
+            const end = 0;
+            const stream = Stream.range(start, end);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(-1);
+        });
+
+        it('it should return empty if start and end are the same', () => {
+            const start = 10;
+            const end = 10;
+            const stream = Stream.range(start, end);
+            const result = stream.toArray();
+
+            expect(result.length).to.be.eq(0);
+        });
+    });
+
+    describe('rangeClosed', () => {
+        it('it should start with start value', () => {
+            const start = 0;
+            const end = 11;
+            const step = 1;
+            const stream = Stream.range(start, end, step);
+            const result = stream.toArray();
+
+            expect(result[0]).to.eq(start);
+        });
+
+        it('it should include end value', () => {
+            const start = 0;
+            const end = 11;
+            const step = 1;
+            const stream = Stream.rangeClosed(start, end, step);
+            const result = stream.toArray();
+
+            expect(result).to.contain.members([end]);
+        });
+
+        it('it should use step when provided', () => {
+            const start = 2;
+            const end = 10;
+            const step = 2;
+            const stream = Stream.rangeClosed(start, end, step);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(step);
+        });
+
+        it('it should default step to 1 step when not provided', () => {
+            const start = 2;
+            const end = 10;
+            const stream = Stream.rangeClosed(start, end);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(1);
+        });
+
+        it('it should use absoulte step when given negative step', () => {
+            const start = 2;
+            const end = 10;
+            const step = -2;
+            const stream = Stream.rangeClosed(start, end, step);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(Math.abs(step));
+        });
+
+        it('it should use negative step when start above end', () => {
+            const start = 10;
+            const end = 0;
+            const step = 2;
+            const stream = Stream.rangeClosed(start, end, step);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(-step);
+        });
+
+        it('it should use negative step when start above end', () => {
+            const start = 10;
+            const end = 0;
+            const stream = Stream.rangeClosed(start, end);
+            const result = stream.toArray();
+
+            expect(result[2] - result[1]).to.equal(-1);
+        });
+
+        it('it should return a single value if start and end are the same', () => {
+            const start = 10;
+            const end = 10;
+            const stream = Stream.rangeClosed(start, end);
+            const result = stream.toArray();
+
+            expect(result.length).to.be.eq(1);
         });
     });
 });
