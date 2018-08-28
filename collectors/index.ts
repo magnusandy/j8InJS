@@ -66,6 +66,13 @@ class Collectors {
         return Collectors.toArray();
     }
 
+    /**
+     * Returns a collector that combines strings into a single long string, a delimiter string can be specified
+     * to seperate individual items, the prefix and suffix are added to the resulting final string, each item.
+     * @param delimiter: optional. Seperator for items being joined
+     * @param prefix: optional. string added to the beginning of the joined result
+     * @param suffix: optional. string added to the end of the joined result 
+     */
     public static joining(delimiter?: string, prefix?: string, suffix?: string): Collector<string, MutableString, string> {
         const ifElseBlank = (val?: string): string => val ? val : "";
         const delimiterToUse = ifElseBlank(delimiter);
