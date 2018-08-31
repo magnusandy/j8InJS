@@ -17,6 +17,7 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 [Optional](https://github.com/magnusandy/java8script#optional)
 * [Methods](https://github.com/magnusandy/java8script#methods-1)
 
+[Functional Types](https://github.com/magnusandy/java8script/blob/master/README.md#functions-types-and-default-methods)
 
 ## Stream
 A stream is a sequence of elements with possibly unlimited length
