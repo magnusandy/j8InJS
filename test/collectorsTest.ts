@@ -101,4 +101,14 @@ describe('Collectors', () => {
             expect(average).eq(20);
         });
     });
+
+    describe('collectingAndThen', () => {
+        it('it should return collector that applies new finisher as well', () => {
+            const source = ["10", "20", "30"];
+            const average = Stream.of(source)
+                .map(parseInt)
+                .collect(Collectors.collectingAndThen(Collectors.averaging(), (i) => `${i}`));
+            expect(average).eq("20");
+        });
+    });
 });

@@ -33,7 +33,7 @@ export class Collector<T, A, R> {
 
     public supplier = (): Supplier<A> => this.supp;
     public accumulator = (): BiConsumer<A, T> => this.accu;
-    public combiner = (): BiConsumer<A, A> => this.comb;
+    public combiner = (): BiFunction<A> => this.comb;
     public finisher = (): Transformer<A, R> => this.fini;
 
     /**
@@ -104,13 +104,18 @@ class Collectors {
                 ? mutable.getTotal() / mutable.getInputCount()
                 : 0;
         return Collector.of(supplier, accumulator, combiner, finisher);
-    } 
+    }
 
     /**
      * returns a Collector that produces the arithmetic mean of input numbers
      */
     public static averaging(): Collector<number, MutableNumber, number> {
         return Collectors.averagingNumber(Transformer.identity());
+    }
+
+    public static collectingAndThen<Input, Mutable, Intermediate, Output>(downStream: Collector<Input, Mutable, Intermediate>, finisher: Transformer<Intermediate, Output>): Collector<Input, Mutable, Output> {
+        const newFinisher = (input: Mutable) => finisher(downStream.finisher()(input))
+        return Collector.of(downStream.supplier(),  downStream.accumulator(), downStream.combiner(), newFinisher)
     }
 
     //v2 
