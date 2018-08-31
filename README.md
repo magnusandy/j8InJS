@@ -520,10 +520,10 @@ orElseThrow(exceptionSupplier: Supplier<Error>): T;
 ## Functions Types and Default methods
 There are several core function types that are referenced throughout the documentation as well as used within the code itself, some of these functional types have useful static methods attached to them 
 
-#### Predicate<I>
+#### Predicate
 A function that takes in a single input of type I and returns a boolean result, used for stream actions like `filter`
 
-#### BiPredicate<I, O>
+#### BiPredicate
 A function that takes two inputs of types I and O. and returns a boolean result, used for things like testing equality.
 
 Returns a Bi predicate function uses `===` to test if the inputs are equivelant
@@ -531,7 +531,7 @@ Returns a Bi predicate function uses `===` to test if the inputs are equivelant
 BiPredicate.defaultEquality()
 ```
 
-#### Consumer<I>
+#### Consumer
 A function that takes in a value of type I, but does not return anything. 
 
 Returns a Consumer that logs the input to the console and nothing else.
@@ -544,10 +544,10 @@ Returns a Consumer takes in an input and does nothing with it.
 Consumer.sink()
 ```
 
-#### BiConsumer<I, U> 
+#### BiConsumer
 A function that takes two inputs of type I and U, but does not return any value.
 
-#### Transformer<I, O>
+#### Transformer
 the most generic or basic function type, simply a function that takes in an input of type I and returns an output of type O.
 
 Returns a Transformer that simply returns the input value
@@ -560,13 +560,13 @@ Returns a Tranformer takes in an input and logs the value, returning the same va
 Transformer.logger()
 ```
 
-#### Supplier<O> 
+#### Supplier
 A function that takes no inputs, but returns a value of type O.
       
-#### BiFunction<I>
+#### BiFunction
 A function that takes two inputs, both of type I and also returns a value of type T.
       
-#### Comparator<T>
+#### Comparator
 A function that takes in two values of type T, and compares them for order. Returns a negative number, zero,
 or a positive number if the first argument is less than, equal to, or greater than the second.
       
