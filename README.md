@@ -516,3 +516,64 @@ Return the contained value, if present, otherwise throw an error to be created b
 orElseThrow(exceptionSupplier: Supplier<Error>): T;
 ```
 
+## Functions Types and Default methods
+There are several core function types that are referenced throughout the documentation as well as used within the code itself, some of these functional types have useful static methods attached to them 
+
+#### Predicate<I>
+A function that takes in a single input of type I and returns a boolean result, used for stream actions like `filter`
+
+#### BiPredicate<I, O>
+A function that takes two inputs of types I and O. and returns a boolean result, used for things like testing equality.
+
+Returns a Bi predicate function uses `===` to test if the inputs are equivelant
+```typescript
+BiPredicate.defaultEquality()
+```
+
+#### Consumer<I>
+A function that takes in a value of type I, but does not return anything. 
+
+Returns a Consumer that logs the input to the console and nothing else.
+```typescript
+Consumer.logger()
+```
+
+Returns a Consumer takes in an input and does nothing with it.
+```typescript
+Consumer.sink()
+```
+
+#### BiConsumer<I, U> 
+A function that takes two inputs of type I and U, but does not return any value.
+
+#### Transformer<I, O>
+the most generic or basic function type, simply a function that takes in an input of type I and returns an output of type O.
+
+Returns a Transformer that simply returns the input value
+```typescript
+Tranformer.identity()
+```
+
+Returns a Tranformer takes in an input and logs the value, returning the same value;
+```typescript
+Transformer.logger()
+```
+
+#### Supplier<O> 
+A function that takes no inputs, but returns a value of type O.
+      
+#### BiFunction<I>
+A function that takes two inputs, both of type I and also returns a value of type T.
+      
+#### Comparator<T>
+A function that takes in two values of type T, and compares them for order. Returns a negative number, zero,
+or a positive number if the first argument is less than, equal to, or greater than the second.
+      
+Returns a Comparator that compares the given values with the < and > operators, returns
+-1 if first input is less that second input, +1 if first input is greater, and 0 if they are equal.
+```typescript
+Comparator.default()
+```
+      
+      
+
