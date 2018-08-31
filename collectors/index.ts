@@ -1,5 +1,5 @@
 import { Transformer, Supplier, BiConsumer, BiFunction } from "../functions";
-import { MutableString } from './mutableCollections';
+import { MutableString, MutableNumber } from './mutableCollections';
 
 /**
  * A mutable reduction operation that accumulates input elements into a mutable result container, 
@@ -89,6 +89,28 @@ class Collectors {
             return ifElseBlank(prefix) + valueWithOutExtraDelimiter + ifElseBlank(suffix);
         }
         return Collector.of(supplier, accumulator, combiner, finisher);
+    }
+
+    /**
+     * Returns a Collector that produces the arithmetic mean of a number-valued function applied to the input elements.
+     * @param mapper Transformer function to transform input elements into a number
+     */
+    public static averagingNumber<I>(mapper: Transformer<I, number>): Collector<I, MutableNumber, number> {
+        const supplier: Supplier<MutableNumber> = MutableNumber.empty;
+        const accumulator: BiConsumer<MutableNumber, I> = (mutable, item) => mutable.add(mapper(item));
+        const combiner: BiFunction<MutableNumber> = (mNum1, mNum2) => mNum1.addTogether(mNum2);
+        const finisher: Transformer<MutableNumber, number> = (mutable: MutableNumber) =>
+            mutable.getInputCount() > 0
+                ? mutable.getTotal() / mutable.getInputCount()
+                : 0;
+        return Collector.of(supplier, accumulator, combiner, finisher);
+    } 
+
+    /**
+     * returns a Collector that produces the arithmetic mean of input numbers
+     */
+    public static averaging(): Collector<number, MutableNumber, number> {
+        return Collectors.averagingNumber(Transformer.identity());
     }
 
     //v2 

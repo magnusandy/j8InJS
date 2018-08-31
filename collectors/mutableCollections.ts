@@ -29,5 +29,41 @@ export class MutableString {
     public getValue(): string {
         return this.value;
     }
+}
 
+export class MutableNumber {
+    private inputs: number[];
+    private total: number;
+
+    private constructor(inputs: number[], total: number) {
+        this.inputs = inputs;
+        this.total = total;
+    }
+
+    public static empty(): MutableNumber {
+        return new MutableNumber([], 0);
+    }
+
+    public add(value: number): void {
+        this.total = this.total + value;
+        this.inputs.push(value);
+    }
+
+    public addTogether(other: MutableNumber): MutableNumber { 
+        const newInputs = this.inputs.concat(other.getInputs());
+        const newTotal = this.total + this.getTotal();
+        return new MutableNumber(newInputs, newTotal);
+    }
+
+    public getInputs(): number[] {
+        return this.inputs.slice();
+    }
+
+    public getTotal(): number {
+        return this.total;
+    }
+
+    public getInputCount(): number {
+       return this.inputs.length;
+    }
 }
