@@ -549,6 +549,36 @@ Return the contained value, if present, otherwise throw an error to be created b
 orElseThrow(exceptionSupplier: Supplier<Error>): T;
 ```
 ---
+
+## Collectors
+Firstly is the `Collector` interface. A Collector is an abstraction of all the pieces needed to perform a mutable reduction operation. A mutable reduction operation is similar in concept to a normal reduction like `Stream.reduce` above or `array.reduce`, except that a mutable reduction uses an intermediate mutable container to collect values into before optionally performing a final transformation in the intermediate result. This can provide numerious computational efficencies over a default reduction as there is less copying of results, rather a building up of a single mutable result container.
+
+a simple example might be concatinating a stream of arrays into a single output array
+```typescript
+streamOfArrays.reduce((a1, a2) -> a1.concat(a2));
+```
+This will work, but it involves a lot of creation of new arrays, whereas a mutable reduction would create a single initial array (as this is a mutable container) and add all the arrays of the stream into it, rather than creating a new array after every array is added.
+
+A Collector contains four types of of methods to do its job:
+
+`supplier()`: provides a `Supplier` function that provides a new mutable container.
+
+`accumulator()`: provides a `BiConsumer` function that takes in a mutable container and a value, and adds the value to the container. 
+
+`combiner()`: provides a `BiFunction`, that takes two mutable result containers and returns a the combined result.
+
+`finisher()`: provides a `Transformer` that takes in a mutable result container and provides the final value. 
+
+NOTE: Performing a reduction operation with a Collector should produce a result equivalent to:
+```typescript
+const container: C = collectors.supplier()();
+for(let d in someData) {
+    collector.accumulator()(container, d);
+}
+return collector.finisher()(container);
+```
+---
+
 ## Functions Types and Default methods
 There are several core function types that are referenced throughout the documentation as well as used within the code itself, some of these functional types have useful static methods attached to them 
 
