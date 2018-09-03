@@ -46,20 +46,20 @@ interface Stream<T> {
      * if the stream is empty, return true, the predicate is never evaluated;
      * @param predicate 
      */
-    allMatch(predicate: Predicate<T>): boolean; //TESTED
+    allMatch(predicate: Predicate<T>): boolean; 
 
     /**
      * Terminal Operation - Short Circuting:
      * returns true if any 1 item in the stream match the given predicate, if any item returns true, return true, else false;
      * @param predicate 
      */
-    anyMatch(predicate: Predicate<T>): boolean; //TESTED
+    anyMatch(predicate: Predicate<T>): boolean; 
 
     /**
      * Terminal Operation:
      * returns the count of all the elements of the stream.
      */
-    count(): number;//TESTED
+    count(): number;
 
     /**
      * Terminal Operation:
@@ -69,14 +69,14 @@ interface Stream<T> {
      * @param accumulator adds an element T to a given collection of type R
      * @param combiner combines all the values in the second collection into the first
      */
-    customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R; //TESTED
+    customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R; 
 
     /**
      * Terminal Operation:
      * applies a mutable reduction operation to the elements in the collection using the given collector
      * @param collector a Collector used to apply the mutable reduction.
      */
-    collect<R, A>(collector: Collector<T, A, R>): R;//TESTED
+    collect<R, A>(collector: Collector<T, A, R>): R;
 
     /**
      * Intermediate Operation - Stateful:
@@ -85,7 +85,7 @@ interface Stream<T> {
      * it needs to keep track of previous elements, but does not need access to the full stream before proceeding
      * @param equalsFunction function that takes two parameters, returns true if they are equal, false otherwise
      */
-    distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>; //TESTED
+    distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>; 
 
     /**
      * Intermediate Operation:
@@ -93,21 +93,21 @@ interface Stream<T> {
      * function. Keep all elements who match the given predicate.
      * @param predicate
      */
-    filter(predicate: Predicate<T>): Stream<T>; //TESTED
+    filter(predicate: Predicate<T>): Stream<T>; 
 
     /**
      * Terminal Operation: Short Circuiting:
      * Returns an optional describing the first element of the stream, if the stream is empty,
      * return an empty Optional.
      */
-    findFirst(): Optional<T>; //TESTED
+    findFirst(): Optional<T>; 
 
     /**
      * Terminal Operation: Short Circuiting:
      * Returns an optional describing the an element of the stream, if the stream is empty,
      * return an empty Optional.
      */
-    findAny(): Optional<T>; //TESTED
+    findAny(): Optional<T>; 
 
     /**
      * Intermediate Operation:
@@ -115,7 +115,7 @@ interface Stream<T> {
      * elements of all the output streams of the transformer function.
      * @param transformer 
      */
-    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>;//TESTED
+    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>;
 
     /**
      * Intermediate Operation:
@@ -134,7 +134,7 @@ interface Stream<T> {
      * stream.map(transformer).filter(o => o.isPresent()).map(o => o.get())
      * @param transformer 
      */
-    flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;//TESTED
+    flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;
 
 
     /**
@@ -142,14 +142,14 @@ interface Stream<T> {
      * applies a given consumer to each entity in the stream. elements are processed in sequental order;
      * @param consumer: applies the consuming function to all elements in the stream;
      */
-    forEachOrdered(consumer: Consumer<T>): void; //TESTED
+    forEachOrdered(consumer: Consumer<T>): void; 
 
     /**
      * Terminal Operation:
      * applies a given consumer to each entity in the stream. ordering is not garenteed;
      * @param consumer: applies the consuming function to all elements in the stream;
      */
-    forEach(consumer: Consumer<T>): void;//TESTED
+    forEach(consumer: Consumer<T>): void;
 
     /**
      * Intermediate Operation - Short Circuiting
@@ -157,14 +157,14 @@ interface Stream<T> {
      * will create finite stream out of infinite stream. 
      * @param maxSize 
      */
-    limit(maxSize: number): Stream<T>;//TESTED
+    limit(maxSize: number): Stream<T>;
 
     /**
      * Intermediate Operation:
      * Returns a stream consisting of the results of applying the given function to the elements of this stream.
      * @param transformer: function that transforms a value in the stream to a new value;
      */
-    map<U>(transformer: Transformer<T, U>): Stream<U>;//TESTED
+    map<U>(transformer: Transformer<T, U>): Stream<U>;
 
     /**
      * Terminal Operation:
@@ -173,7 +173,7 @@ interface Stream<T> {
      * comparator is supplied, a default comparator using the > and < operators is used.
      * @param comparator function to compare elements in the stream, 
      */
-    max(comparator?: Comparator<T>): Optional<T>;//TESTED
+    max(comparator?: Comparator<T>): Optional<T>;
 
     /**
      * Terminal Operation:
@@ -182,7 +182,7 @@ interface Stream<T> {
      * comparator is supplied, a default comparator using the > and < operators is used.
      * @param comparator function to compare elements in the stream, 
      */
-    min(comparator?: Comparator<T>): Optional<T>; //TESTED
+    min(comparator?: Comparator<T>): Optional<T>; 
 
     /**
      * Terminal Operation - Short Circuting:
@@ -190,7 +190,7 @@ interface Stream<T> {
      * if the stream is empty, return true, the predicate is never evaluated;
      * @param predicate 
      */
-    noneMatch(predicate: Predicate<T>): boolean;//TESTED
+    noneMatch(predicate: Predicate<T>): boolean;
 
     /**
      * Intermediate Operation:
@@ -200,7 +200,7 @@ interface Stream<T> {
      * and non altering function otherwise problems can be caused down the pipeline
      * @param consumer 
      */
-    peek(consumer: Consumer<T>): Stream<T>;//TESTED
+    peek(consumer: Consumer<T>): Stream<T>;
 
     /**
      * Terminal Operation:
@@ -209,7 +209,7 @@ interface Stream<T> {
      * value can be specified, if the stream is empty, an optional describing the initial value will
      * be returned. 
      */
-    reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T>;//TESTED
+    reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T>;
 
     /**
      * returns a StreamIterator of the current stream, allowing easier
@@ -223,7 +223,7 @@ interface Stream<T> {
      * values. If a negative number is passed in, no values are skipped. 
      * @param n number of elements to skip
      */
-    skip(n: number): Stream<T>; //TESTED
+    skip(n: number): Stream<T>; 
 
     /**
      * Intermediate Operation - Stateful:
@@ -231,13 +231,13 @@ interface Stream<T> {
      * the default Comparator.default() comparator is used. 
      * @param comparator optional comparator to use to sort the objects
      */
-    sorted(comparator?: Comparator<T>): Stream<T>;//tested
+    sorted(comparator?: Comparator<T>): Stream<T>;
     
     /**
      * Terminal Operation: 
      * returns the Stream as an array of elements.
      */
-    toArray(): T[]; //TESTED
+    toArray(): T[]; 
 
     //V2 //todo
     //reverse() //intermediate stateful
@@ -252,22 +252,19 @@ interface Stream<T> {
     //take(n) alias of findFirstN
     //chunk(size) //returns list of lists of length size
     //lazyDistinct(equalityTest?)//filter out values as they pass through, never returning the same value twice
-
-    //todo create aliases for http://danieltao.com/lazy.js/docs/ lazy.js function names and lodash
-
 }
 
 export interface StreamIterator<T> {
     /**
      * Returns true if there is another value available in the iterator, false otherwise
      */
-    hasNext(): boolean;//TESTED
+    hasNext(): boolean;
 
     /**
      * Returns a value bearing Optional of the next value in the given iterator,
      * if there is no next value an empty optional will be returned.
      */
-    getNext(): Optional<T>;//TESTED
+    getNext(): Optional<T>;
 
     /**
      * Takes a value consuming function and, if a next value exists within the iterator
@@ -275,7 +272,7 @@ export interface StreamIterator<T> {
      * will not be called and false will be returned.
      * @param consumer function to call on the next value. 
      */
-    tryAdvance(consumer: Consumer<T>): boolean;//TESTED
+    tryAdvance(consumer: Consumer<T>): boolean;
 
     //V2 //todo
 
@@ -290,7 +287,7 @@ const Stream = {
      * Creates a new stream from the given source array
      * @param source 
      */
-    of<T>(source: T[]): Stream<T> { //TESTED
+    of<T>(source: T[]): Stream<T> { 
         return PipelineStream.of(source);
     },
 
@@ -298,7 +295,7 @@ const Stream = {
      * Creates a new stream from the given source values
      * @param source 
      */
-    ofValues<T>(...values: T[]): Stream<T> { //TESTED
+    ofValues<T>(...values: T[]): Stream<T> { 
         return PipelineStream.of(values);
     },
 
@@ -306,7 +303,7 @@ const Stream = {
      * creates a stream of a single element with the given source value;
      * @param value 
      */
-    ofValue<T>(value: T): Stream<T> { //TESTED
+    ofValue<T>(value: T): Stream<T> { 
         return PipelineStream.of([value]);
     },
 
@@ -314,7 +311,7 @@ const Stream = {
     /**
      * creates an empty Stream
      */
-    empty<T>(): Stream<T> { //TESTED
+    empty<T>(): Stream<T> { 
         return PipelineStream.of<T>([]);
     },
 
@@ -323,7 +320,7 @@ const Stream = {
      * by the given supplier.
      * @param supplier 
      */
-    generate<T>(supplier: Supplier<T>): Stream<T> { //TESTED
+    generate<T>(supplier: Supplier<T>): Stream<T> { 
         return PipelineStream.ofSupplier(supplier);
     },
 
@@ -334,7 +331,7 @@ const Stream = {
      * @param seed initial value of the stream
      * @param getNext transforming function applied at each step
      */
-    iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> { //TESTED
+    iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> { 
         return PipelineStream.ofSource(Source.iterateSource(seed, getNext))
     },
 
@@ -343,7 +340,7 @@ const Stream = {
      * @param s1 first stream
      * @param s2 second stream
      */
-    concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> { //TESTED
+    concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> { 
         return PipelineStream.concat(s1, s2);
     }, 
 
@@ -362,7 +359,7 @@ const Stream = {
      * @param endExclusive end of the range, not included
      * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
      */
-    range(startInclusive: number, endExclusive: number, step?: number): Stream<number> { //TESTED
+    range(startInclusive: number, endExclusive: number, step?: number): Stream<number> { 
         return PipelineStream.ofSource(Source.rangeSource(startInclusive, endExclusive, step));
     },
 
@@ -378,7 +375,7 @@ const Stream = {
      * @param endInclusive end of the range
      * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
      */
-    rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number> { //TESTED
+    rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number> { 
         return startInclusive < endInclusive
             ? Stream.range(startInclusive, endInclusive + 1, step)
             : Stream.range(startInclusive, endInclusive - 1, step);
