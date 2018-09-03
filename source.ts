@@ -19,7 +19,6 @@ export interface Source<T> {
     hasNext(): boolean;
 }
 
-//todo test all
 export const Source = {
     /**
      * An infinite source that continually applies a function to a previous result, starting with the seed value

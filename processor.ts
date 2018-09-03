@@ -177,7 +177,6 @@ class DistinctProcessor<Input> extends AbstractProcessor<Input, Input> {
      * returns true if the value is distinct, otherwise false
      * @param item 
      */
-    //todo test
     public addIfUnique(item: Input): boolean {
         const doesMatchItem = (distinct: Input): boolean => this.comparator(item, distinct);
         const matchingItems = this.distinctList.filter(doesMatchItem);

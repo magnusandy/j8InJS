@@ -448,7 +448,6 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return this.pipeline.getNextResult();
     }
 
-    //todo test case should NOT pull another item is short circuit happens
     public allMatch(predicate: Predicate<T>): boolean {
         let nextItem: Optional<T> = this.getNextProcessedItem();
         while (nextItem.isPresent()) {
