@@ -20,6 +20,9 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 [Optional](https://github.com/magnusandy/java8script#optional)
 * [Methods](https://github.com/magnusandy/java8script#methods-2)
 
+[Optional](https://github.com/magnusandy/java8script#collectors)
+* [Methods](https://github.com/magnusandy/java8script#methods-3)
+
 [Functional Types](https://github.com/magnusandy/java8script/blob/master/README.md#functions-types-and-default-methods)
 
 ## Stream
@@ -110,33 +113,33 @@ Stream.iterate(2, (n) => n+2)
 Creates a new stream from the given source array
 
 ```typescript 
-of<T>(source: T[]): Stream<T>;
+Stream.of<T>(source: T[]): Stream<T>;
 ```
 ---
 Creates a new stream from the given source values
 
 ```typescript  
-ofValues<T>(...values: T[]): Stream<T>;
+Stream.ofValues<T>(...values: T[]): Stream<T>;
 ```
 ---
 creates a stream of a single element with the given source value;
 
 ```typescript  
-ofValue<T>(value: T): Stream<T>;
+Stream.ofValue<T>(value: T): Stream<T>;
 ```
 ---
 
 creates an empty Stream
 
 ```typescript  
-empty<T>(): Stream<T>;
+Stream.empty<T>(): Stream<T>;
 ```
 ---
 generates a infinite stream where elements are generated
 by the given supplier.
 
 ```typescript  
-generate<T>(supplier: Supplier<T>): Stream<T>;
+Stream.generate<T>(supplier: Supplier<T>): Stream<T>;
 ```
 ---
 
@@ -145,13 +148,13 @@ the last item in the stream, so you have a stream like:
 seed, getNext(seed), getNext(getNext(seed)), etc
 
 ```typescript 
-iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T>;
+Stream.iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T>;
 ```
 ---
 creates a new stream consisting of all the values of s1, followed by all the values of s2
  
 ```typescript 
-concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T>;
+Stream.concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T>;
 ```
 ---
 
@@ -167,7 +170,7 @@ an empty stream will be returned if start and end are the same
 
 
 ```typescript 
-range(startInclusive: number, endExclusive: number, step?: number): Stream<number>;
+Stream.range(startInclusive: number, endExclusive: number, step?: number): Stream<number>;
 ```
 ---
 returns a stream of numbers starting at startInclusive, and going to up 
@@ -180,7 +183,7 @@ values will be treated as negative i.e. 5 => -5, -5 => -5
 an empty stream will be returned if start and end are the same
 
 ```typescript 
-rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number>;
+Stream.rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number>;
 ```
 ---
 **Terminal Operation - Short Circuting:**
@@ -576,6 +579,49 @@ for(let d in someData) {
     collector.accumulator()(container, d);
 }
 return collector.finisher()(container);
+```
+---
+
+`Collectors` therefore is a grouping of useful and predefined collectors that can be used for all manner of things such as summing values, combining strings, pulling values into a array, etc. 
+
+### Methods
+
+Returns a `Collector` that accumulates the input elements into a new array.
+```typescript
+Collectors.toArray(): Collector<T, T[], T[]>;
+```
+---
+
+Alias of `toArray`: Returns a `Collector` that accumulates the input elements into a new array.
+```typescript
+Collectors.toList(): Collector<T, T[], T[]>;
+```
+---
+
+Returns a `Collector` that combines strings into a single long string, a delimiter string can be specified
+to seperate individual items, the prefix and suffix are added to the resulting final string, not each item.
+
+`delimiter`: optional. Seperator for items being joined
+
+`prefix`: optional. string added to the beginning of the joined result
+
+`suffix`: optional. string added to the end of the joined result 
+```typescript 
+Collectors.joining(delimiter?: string, prefix?: string, suffix?: string): Collector<string, _, string>;
+```
+---
+
+
+Returns a `Collector` that produces the arithmetic mean of a number-valued function applied to the input elements.
+mapper: Transformer function to transform input elements into a number
+```typescript
+Collectors.averagingNumber<I>(mapper: Transformer<I, number>): Collector<I, _, number>;
+```
+---
+
+Returns a Collector that produces the arithmetic mean of input numbers.
+```typescript
+Collectors.averaging(): Collector<number, _, number>;
 ```
 ---
 
