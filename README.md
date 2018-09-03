@@ -21,7 +21,7 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 * [Methods](https://github.com/magnusandy/java8script#methods-2)
 
 [Collectors](https://github.com/magnusandy/java8script#collectors)
-* [Methods](https://github.com/magnusandy/java8script#methods-3)
+* [Methods](https://github.com/magnusandy/java8script#methods-3) (more to come!)
 
 [Functional Types](https://github.com/magnusandy/java8script/blob/master/README.md#functions-types-and-default-methods)
 
