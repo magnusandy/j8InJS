@@ -15,10 +15,10 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 * [Methods](https://github.com/magnusandy/java8script#methods)
 
 [StreamIterator](https://github.com/magnusandy/java8script#streamiterator)
-* [Methods](https://github.com/magnusandy/java8script#stream)
+* [Methods](https://github.com/magnusandy/java8script#methods-1)
 
 [Optional](https://github.com/magnusandy/java8script#optional)
-* [Methods](https://github.com/magnusandy/java8script#methods-1)
+* [Methods](https://github.com/magnusandy/java8script#methods-2)
 
 [Functional Types](https://github.com/magnusandy/java8script/blob/master/README.md#functions-types-and-default-methods)
 
