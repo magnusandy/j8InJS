@@ -14,6 +14,9 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 * [Examples](https://github.com/magnusandy/java8script#examples)
 * [Methods](https://github.com/magnusandy/java8script#methods)
 
+[StreamIterator](https://github.com/magnusandy/java8script#streamiterator)
+* [Methods](https://github.com/magnusandy/java8script#stream)
+
 [Optional](https://github.com/magnusandy/java8script#optional)
 * [Methods](https://github.com/magnusandy/java8script#methods-1)
 
@@ -429,6 +432,35 @@ returns the Stream as an array of elements.
 toArray(): T[];
 ```
 ---
+
+## StreamIterator
+A Stream pipeline is designed to act on all its elements (or until a termination is reached) as a batch or group, because of this a stream iterator exists be be able to manually pull items out of a stream, processing them one at a time. 
+
+A StreamInterator is a basic Iterator interface consisting of three methods `hasNext` to check if a next value exists, `getNext` to get the next value in the iterator, and `tryAdvance` a method where a `Consumer` is passed in, and will be used to act on the next element in the iterator (if one exists).
+
+### Methods
+
+Returns true if there is another value available in the iterator, false otherwise
+```typescript 
+hasNext(): boolean;
+```
+---
+
+Returns a value bearing `Optional` of the next value in the given iterator,
+if there is no next value an empty `Optional` will be returned.
+```typescript
+getNext(): Optional<T>;
+```
+---
+
+Takes a value consuming function and, if a next value exists within the iterator
+applies the consumer to the value and returns true. If no value exists the consumer function
+will not be called and false will be returned.
+```typescript 
+tryAdvance(consumer: Consumer<T>): boolean;
+```
+---
+
 ## Optional
 
 A container object which may or may not contain a non-null value. If a value is present, `isPresent()` will return true and `get()` will return the value.
