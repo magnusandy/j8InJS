@@ -54,6 +54,9 @@ export class Collector<T, A, R> {
  */
 class Collectors {
 
+    /**
+     * A collector that combines input into an array.
+     */
     public static toArray<T>(): Collector<T, T[], T[]> {
         const supplier: Supplier<T[]> = () => [];
         const accumulator: BiConsumer<T[], T> = (list, item) => list.push(item);
@@ -62,6 +65,9 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
+    /**
+     * alias of toArray()
+     */
     public static toList<T>(): Collector<T, T[], T[]> {
         return Collectors.toArray();
     }
