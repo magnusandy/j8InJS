@@ -258,8 +258,23 @@ interface Stream<T> {
 }
 
 export interface StreamIterator<T> {
+    /**
+     * Returns true if there is another value available in the iterator, false otherwise
+     */
     hasNext(): boolean;//TESTED
+
+    /**
+     * Returns a value bearing Optional of the next value in the given iterator,
+     * if there is no next value an empty optional will be returned.
+     */
     getNext(): Optional<T>;//TESTED
+
+    /**
+     * Takes a value consuming function and, if a next value exists within the iterator
+     * applies the consumer to the value and returns true. If no value exists the consumer function
+     * will not be called and false will be returned.
+     * @param consumer function to call on the next value. 
+     */
     tryAdvance(consumer: Consumer<T>): boolean;//TESTED
 
     //V2 //todo
