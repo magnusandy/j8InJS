@@ -62,7 +62,7 @@ Stream.of(fullEmployeeList)
       .filter(e => e.gender === "FEMALE")
       .toArray(); //terminal action, its not until this call that the stream is processed.
 ```
-
+---
 **return the top 5 salaries in descending order**
 ```typescript
   Stream.of(fullEmployeeList)
@@ -80,7 +80,7 @@ Stream.of(fullEmployeeList)
       .map(e => e.yearsOfExperience)
       .reduce((y1, y2) => y1 + y2);
 ```
-
+---
 **find first promotion for a manager whose current salary is over 65,000**
 ```typescript
 Stream.of(fullEmployeeList)
@@ -109,33 +109,33 @@ Creates a new stream from the given source array
 ```typescript 
 of<T>(source: T[]): Stream<T>;
 ```
-
+---
 Creates a new stream from the given source values
 
 ```typescript  
 ofValues<T>(...values: T[]): Stream<T>;
 ```
-
+---
 creates a stream of a single element with the given source value;
 
 ```typescript  
 ofValue<T>(value: T): Stream<T>;
 ```
-
+---
 
 creates an empty Stream
 
 ```typescript  
 empty<T>(): Stream<T>;
 ```
-
+---
 generates a infinite stream where elements are generated
 by the given supplier.
 
 ```typescript  
 generate<T>(supplier: Supplier<T>): Stream<T>;
 ```
-
+---
 
 creates an infinte stream of values by incrementally applying getNext to
 the last item in the stream, so you have a stream like:
@@ -144,13 +144,13 @@ seed, getNext(seed), getNext(getNext(seed)), etc
 ```typescript 
 iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T>;
 ```
-
+---
 creates a new stream consisting of all the values of s1, followed by all the values of s2
  
 ```typescript 
 concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T>;
 ```
-
+---
 
 returns a stream of numbers starting at startInclusive, and going to up 
 to but not including endExculsive in increments of 1, if a step is passed in, the 
@@ -166,7 +166,7 @@ an empty stream will be returned if start and end are the same
 ```typescript 
 range(startInclusive: number, endExclusive: number, step?: number): Stream<number>;
 ```
-
+---
 returns a stream of numbers starting at startInclusive, and going to up 
 to and including endInclusive in increments of 1, if a step is passed in, the 
 increments of 1 will be changed to increments of size step
@@ -179,7 +179,7 @@ an empty stream will be returned if start and end are the same
 ```typescript 
 rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number>;
 ```
-
+---
 **Terminal Operation - Short Circuting:**
 returns true if all items in the stream match the given predicate, if any item returns false, return false
 if the stream is empty, return true, the predicate is never evaluated.
@@ -187,7 +187,7 @@ if the stream is empty, return true, the predicate is never evaluated.
 ```typescript
 allMatch(predicate: Predicate<T>): boolean;
 ```
-
+---
 
 
 **Terminal Operation - Short Circuting:**
@@ -196,7 +196,7 @@ returns true if any 1 item in the stream match the given predicate, if any item 
 ```typescript
 anyMatch(predicate: Predicate<T>): boolean;
 ```
-
+---
 
 
 **Terminal Operation:**
@@ -205,7 +205,7 @@ returns the count of all the elements of the stream.
 ```typescript
 count(): number;
 ```
-
+---
 
 
 **Terminal Operation:**
@@ -215,7 +215,7 @@ use of the combiner is not garenteed
 ```typescript
 customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
 ```
-
+---
 
 
 **Terminal Operation:**
@@ -224,7 +224,7 @@ applies a mutable reduction operation to the elements in the collection using th
 ```typescript
 collect<R, A>(collector: Collector<T, A, R>): R;
 ```
-
+---
 
 
 **Intermediate Operation - Stateful:**
@@ -235,7 +235,7 @@ it needs to keep track of previous elements, but does not need access to the ful
 ```typescript
 distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>;
 ```
-
+---
 
 
 **Intermediate Operation:**
@@ -245,7 +245,7 @@ function. Keep all elements who match the given predicate.
 ```typescript
 filter(predicate: Predicate<T>): Stream<T>;
 ```
-
+---
 
 
 **Terminal Operation:** Short Circuiting:
@@ -255,7 +255,7 @@ return an empty Optional.
 ```typescript
 findFirst(): Optional<T>;
 ```
-
+---
 
 
 **Terminal Operation:** Short Circuiting:
@@ -265,7 +265,7 @@ return an empty Optional.
 ```typescript
 findAny(): Optional<T>;
 ```
-
+---
 
 
 **Intermediate Operation:**
@@ -275,7 +275,7 @@ elements of all the output streams of the transformer function.
 ```typescript
 flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>;
 ```
-
+---
 
 
 **Intermediate Operation:**
@@ -296,7 +296,7 @@ stream.map(transformer).filter(o => o.isPresent()).map(o => o.get())
 ```typescript
 flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;
 ```
-
+---
 
 
 
@@ -306,7 +306,7 @@ applies a given consumer to each entity in the stream. elements are processed in
 ```typescript
 forEachOrdered(consumer: Consumer<T>): void;
 ```
-
+---
 
 
 **Terminal Operation:**
@@ -315,7 +315,7 @@ applies a given consumer to each entity in the stream. ordering is not garenteed
 ```typescript
 forEach(consumer: Consumer<T>): void;
 ```
-
+---
 
 
 **Intermediate Operation - Short Circuiting:**
@@ -325,7 +325,7 @@ will create finite stream out of infinite stream.
 ```typescript
 limit(maxSize: number): Stream<T>;
 ```
-
+---
 
 
 **Intermediate Operation:**
@@ -334,7 +334,7 @@ Returns a stream consisting of the results of applying the given function to the
 ```typescript
 map<U>(transformer: Transformer<T, U>): Stream<U>;
 ```
-
+---
 
 
 **Terminal Operation:**
@@ -345,7 +345,7 @@ comparator is supplied, a default comparator using the > and < operators is used
 ```typescript
 max(comparator?: Comparator<T>): Optional<T>;
 ```
-
+---
 
 
 **Terminal Operation:**
@@ -356,7 +356,7 @@ comparator is supplied, a default comparator using the > and < operators is used
 ```typescript
 min(comparator?: Comparator<T>): Optional<T>;
 ```
-
+---
 
 
 **Terminal Operation - Short Circuting:**
@@ -366,7 +366,7 @@ if the stream is empty, return true, the predicate is never evaluated
 ```typescript
 noneMatch(predicate: Predicate<T>): boolean;
 ```
-
+---
 
 
 **Intermediate Operation:**
@@ -378,7 +378,7 @@ and non altering function otherwise problems can be caused down the pipeline
 ```typescript
 peek(consumer: Consumer<T>): Stream<T>;
 ```
-
+---
 
 
 **Terminal Operation:**
@@ -390,7 +390,7 @@ be returned.
 ```typescript
 reduce(accumulator: BiFunction<T>, initialValue?: T): Optional<T>;
 ```
-
+---
 
 
 returns a StreamIterator of the current stream, allowing easier
@@ -399,7 +399,7 @@ step by step data retrieval from the stream
 ```typescript
 streamIterator(): StreamIterator<T>;
 ```
-
+---
 
 
 **Intermediate Operation:** 
@@ -409,7 +409,7 @@ values. If a negative number is passed in, no values are skipped.
 ```typescript
 skip(n: number): Stream<T>;
 ```
-
+---
 
 
 Intermediate Operation - Stateful:
@@ -419,7 +419,7 @@ the default Comparator.default() comparator is used. and values are sorted in as
 ```typescript
 sorted(comparator?: Comparator<T>): Stream<T>;
 ```
-
+---
 
 
 **Terminal Operation:** 
@@ -428,7 +428,7 @@ returns the Stream as an array of elements.
 ```typescript
 toArray(): T[];
 ```
-
+---
 ## Optional
 
 A container object which may or may not contain a non-null value. If a value is present, `isPresent()` will return true and `get()` will return the value.
@@ -441,67 +441,67 @@ Use ofNullable when the value might not be present;
 ```typescript
 static of<U>(value: U): Optional<U>;
 ```
-
+---
 Returns an Optional describing the specified value, if non-null, otherwise returns an empty Optional.
  
 ```typescript
 static ofNullable = <U>(value?: U): Optional<U> => new Optional(value);
 ```
-
+---
 returns an empty Optional instance.
  
 ```typescript
 static empty<U>(): Optional<U>;
 ```
-
+---
 Return true if there is a value present, otherwise false.
 
 ```typescript
 isPresent(): boolean;
 ```
-
+---
 
 If a value is present in this Optional, returns the value, otherwise throws "NoSuchElementException".
  
 ```typescript
 get(): T;
 ```
-
+---
 
 If a value is present, and the value matches the given predicate, return an Optional describing the value, otherwise return an empty Optional.
  
 ```typescript
 filter(predicate: Predicate<T>): Optional<T>;
 ```
-
+---
 
 If a value is present, invoke the specified consumer with the value, otherwise do nothing.
  
 ```typescript
 ifPresent(consumer: Consumer<T>): void;
 ```
-
+---
 
 If a value is present, apply the provided transformer function to it, and if the result is non-null, return an Optional describing the result. Otherwise return an empty Optional.
  
 ```typescript
 map<V>(transformer: Transformer<T, V>): Optional<V>;
 ```
-
+---
 
 If a value is present, apply the provided Optional-bearing mapping function to it, return that result, otherwise return an empty Optional.
  
 ```typescript
 flatMap<V>(transformer: Transformer<T, Optional<V>>): Optional<V>;
 ```
-
+---
 
 Return the value if present, otherwise return other.
  
 ```typescript
 orElse(other: T): T;
 ```
-
+---
 
 Return the value if present, otherwise invoke other and return the result of that invocation.
 if result of supplier is null, throw "NullPointerException"
@@ -509,14 +509,14 @@ if result of supplier is null, throw "NullPointerException"
 ```typescript
 orElseGet(supplier: Supplier<T>): T;
 ```
-
+---
 
 Return the contained value, if present, otherwise throw an error to be created by the provided supplier.
  
 ```typescript
 orElseThrow(exceptionSupplier: Supplier<Error>): T;
 ```
-
+---
 ## Functions Types and Default methods
 There are several core function types that are referenced throughout the documentation as well as used within the code itself, some of these functional types have useful static methods attached to them 
 
@@ -530,7 +530,7 @@ Returns a Bi predicate function uses `===` to test if the inputs are equivelant
 ```typescript
 BiPredicate.defaultEquality()
 ```
-
+---
 #### Consumer
 A function that takes in a value of type I, but does not return anything. 
 
@@ -538,12 +538,12 @@ Returns a Consumer that logs the input to the console and nothing else.
 ```typescript
 Consumer.logger()
 ```
-
+---
 Returns a Consumer takes in an input and does nothing with it.
 ```typescript
 Consumer.sink()
 ```
-
+---
 #### BiConsumer
 A function that takes two inputs of type I and U, but does not return any value.
 
@@ -554,12 +554,12 @@ Returns a Transformer that simply returns the input value
 ```typescript
 Tranformer.identity()
 ```
-
+---
 Returns a Tranformer takes in an input and logs the value, returning the same value;
 ```typescript
 Transformer.logger()
 ```
-
+---
 #### Supplier
 A function that takes no inputs, but returns a value of type O.
       
@@ -575,6 +575,6 @@ Returns a Comparator that compares the given values with the < and > operators, 
 ```typescript
 Comparator.default()
 ```
-      
+---      
       
 
