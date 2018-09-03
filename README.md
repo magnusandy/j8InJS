@@ -3,6 +3,9 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/magnusandy/java8script/badge.svg?branch=master)](https://coveralls.io/github/magnusandy/java8script?branch=master)
 
+install through npm
+https://www.npmjs.com/package/java8script
+
 Implementation of a Java 8 style Stream library in Javascript/Typescript.
 the implementation tries to follow as closely to the Stream interface in Java 8 as possible. 
 
