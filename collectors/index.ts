@@ -124,6 +124,15 @@ class Collectors {
         return Collector.of(downStream.supplier(),  downStream.accumulator(), downStream.combiner(), newFinisher)
     }
 
+    public static counting<Input>(): Collector<Input, MutableNumber, number> {
+        const supplier: Supplier<MutableNumber> = MutableNumber.empty;
+        const accumulator: BiConsumer<MutableNumber, Input> = (mutable, item) => mutable.add(1);
+        const combiner: BiFunction<MutableNumber> = (mNum1, mNum2) => mNum1.addTogether(mNum2);
+        const finisher: Transformer<MutableNumber, number> = (mutable: MutableNumber) => mutable.getInputCount();
+      
+        return Collector.of(supplier, accumulator, combiner, finisher);
+    }
+
     //v2 
     //countingBy(keyMapper: Transfromer<T, string>) counts values based on the keys returned by the mapper when feeding elements through
     //countingBy(equalityFn?) groups elements and counts them based on equality function

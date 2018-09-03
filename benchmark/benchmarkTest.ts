@@ -23,7 +23,7 @@ describe('Benchmark', () => {
             const items = itemSource();
             suite.add('lodash', () => lodash.each(lodash.map(items, Transformer.identity()), Consumer.sink()))
             .add('java8script', () => Stream.of(items).map(Transformer.identity()).forEach(Consumer.sink()))
-            .add('lodash', () => Lazy(items).map(Transformer.identity()).each(Consumer.sink()))
+            .add('lazy', () => Lazy(items).map(Transformer.identity()).each(Consumer.sink()))
             .on('cycle', function (event: any) {
                 console.log(event.target.name + " " + event.target.hz);
             })
@@ -35,7 +35,7 @@ describe('Benchmark', () => {
             const items = itemSource();
             suite.add('lodash', () => lodash.first(lodash.filter(lodash.map(items, Transformer.identity()), i => i < 5)))
             .add('java8script', () => Stream.of(items).map(Transformer.identity()).filter(i => i < 5).findFirst())
-            .add('lodash', () => Lazy(items).map(Transformer.identity()).filter(i => i < 5).first())
+            .add('lazy', () => Lazy(items).map(Transformer.identity()).filter(i => i < 5).first())
             .on('cycle', function (event: any) {
                 console.log(event.target.name + " " + event.target.hz);
             })

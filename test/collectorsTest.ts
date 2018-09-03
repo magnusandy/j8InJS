@@ -111,4 +111,19 @@ describe('Collectors', () => {
             expect(average).eq("20");
         });
     });
+
+    describe('counting', () => {
+        it('it should return collector counts elements, given there is elements', () => {
+            const source = ["10", "20", "30"];
+            const count = Stream.of(source)
+                .collect(Collectors.counting());
+            expect(count).eq(source.length);
+        });
+
+        it('it should return collector counts elements, given there is no elements', () => {
+            const count = Stream.empty()
+                .collect(Collectors.counting());
+            expect(count).eq(0);
+        });
+    });
 });
