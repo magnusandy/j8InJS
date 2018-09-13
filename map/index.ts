@@ -83,6 +83,10 @@ class HashMap<K, V> implements Map<K, V> {
         }
     }
 
+    public putAll(map: Map<K, V>): void {
+        return map.forEach((key, value) => this.put(key, value))
+    }
+
     public get(key: K): V | null {
         const keyHash = hash(key);
         const foundVal = this.map[keyHash];
