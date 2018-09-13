@@ -1,10 +1,27 @@
 import * as hash from 'js-hash-code';
+import Stream from '../stream';
+import { BiPredicate, BiConsumer } from '../functions';
+import Optional from '../optional';
 
 export interface Map<K, V> {
+    clear(): void;
     get(key: K): V | null;
+    getOrDefault(key: K, defaultVal: V): V;
+    getOptional(key: K): Optional<V>;
     put(key: K, value: V): V | null;
+    putIfAbsent(key: K, value: V): V | null;
+    putAll(map: Map<K, V>): void;
+    containsKey(key: K): boolean;
+    containsValue(value: V, equalityTest?: BiPredicate<V, V>): boolean;
     keySet(): K[];
     values(): V[];
+    entrySet(): Entry<K, V>[];
+    keyStream(): Stream<K>;
+    valueStream(): Stream<V>;
+    entryStream(): Stream<Entry<K, V>>;
+    forEach(consumer: BiConsumer<K, V>): void;
+    isEmpty(): boolean;
+    remove(key: K): V | null;
 }
 
 export const Map = {
@@ -13,6 +30,8 @@ export const Map = {
     }
 }
 export interface Entry<K, V> {
+    readonly key: K;
+    readonly value: V;
     getValue(): V;
     getKey(): K;
 }
@@ -24,10 +43,20 @@ export const Entry = {
 }
 
 class HashMap<K, V> implements Map<K, V> {
-    private map: { [idx: string]: Entry<K, V> };
+    private map: {
+        [idx: string]: Entry<K, V>
+    };
 
     public constructor() {
         this.map = {};
+    }
+
+    public clear(): void {
+        this.map = {};
+    }
+
+    public isEmpty(): boolean {
+        return this.keySet().length === 0;
     }
 
     public put(key: K, value: V): V | null {
@@ -42,30 +71,89 @@ class HashMap<K, V> implements Map<K, V> {
         }
     }
 
+    public putIfAbsent(key: K, value: V): V | null {
+        const keyHash = hash(key);
+        const entry = Entry.of(key, value);
+        const previous = this.map[keyHash];
+        if (previous) {
+            return previous.getValue();
+        } else {
+            this.map[keyHash] = entry;
+            return null;
+        }
+    }
+
     public get(key: K): V | null {
         const keyHash = hash(key);
         const foundVal = this.map[keyHash];
         return foundVal ? foundVal.getValue() : null;
     }
 
+    public getOptional(key: K): Optional<V> {
+        const value = this.get(key);
+        return value 
+            ? Optional.of(value) 
+            : Optional.empty();
+    }
+
+    public getOrDefault(key: K, defaultVal: V): V {
+        return this.getOptional(key)
+                   .orElse(defaultVal); 
+    }
+
     public values(): V[] {
-        return Object.keys(this.map)
-            .map(key => this.map[key])
+        return this.entrySet()
             .map(e => e.getValue());
     }
 
     public keySet(): K[] {
-        return Object.keys(this.map)
-            .map(key => this.map[key])
+        return this.entrySet()
             .map(e => e.getKey());
     }
 
+    public entrySet(): Entry<K, V>[] {
+        return Object.keys(this.map)
+            .map(key => this.map[key]);
+    }
 
+    public keyStream(): Stream<K> {
+        return Stream.of(this.keySet());
+    }
+
+    public valueStream(): Stream<V> {
+        return Stream.of(this.values());
+    }
+
+    public entryStream(): Stream<Entry<K, V>> {
+        return Stream.of(this.entrySet());
+    }
+
+    public containsKey(key: K): boolean {
+        return this.map.hasOwnProperty(hash(key));
+    }
+
+    public containsValue(value: V, equalityTest?: BiPredicate<V, V>): boolean {
+        const equalityTestToUse = equalityTest ? equalityTest : BiPredicate.defaultEquality();
+        return this.valueStream()
+                   .anyMatch(v => equalityTestToUse(v, value));
+    }
+
+    public forEach(consumer: BiConsumer<K, V>): void {
+        this.entrySet()
+            .forEach(({key, value}) => consumer(key, value));
+    }
+
+    public remove(key: K): V | null {
+        const keyHash = hash(key);
+        const previous = this.map[keyHash];
+        delete this.map[keyHash];
+        return previous.getValue();
+    } 
 }
 
 class MapEntry<K, V> implements Entry<K, V> {
-    private key: K;
-    private value: V;
+    public readonly key: K;
+    public readonly value: V;
 
     public constructor(key: K, value: V) {
         this.key = key;

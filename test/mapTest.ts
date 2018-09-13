@@ -52,7 +52,6 @@ describe('Map tests', () => {
             map.put(key, val);
             map.put(key2, val2);
             const getResult = map.get(key);
-
             expect(getResult).to.be.equal(val2);
         });
     });
