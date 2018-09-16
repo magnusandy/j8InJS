@@ -1,6 +1,6 @@
 import * as hash from 'js-hash-code';
 import Stream from '../stream';
-import { BiPredicate, BiConsumer } from '../functions';
+import { BiPredicate, BiConsumer, BiFunction, BiTransformer } from '../functions';
 import Optional from '../optional';
 
 export interface Map<K, V> {
@@ -22,6 +22,7 @@ export interface Map<K, V> {
     forEach(consumer: BiConsumer<K, V>): void;
     isEmpty(): boolean;
     remove(key: K): V | null;
+    merge(key: K, value: V, remappingFunction: BiFunction<V>): V | null;
 }
 
 export const Map = {
@@ -153,6 +154,19 @@ class HashMap<K, V> implements Map<K, V> {
         delete this.map[keyHash];
         return previous.getValue();
     } 
+
+    merge(key: K, value: V, remappingFunction: BiFunction<V>): V | null {
+        const oldValue: Optional<V> = this.getOptional(hash(key)); 
+        const newValue: V = oldValue.isPresent()
+            ? remappingFunction(oldValue.get(), value)
+            : value;
+        if (newValue === null) {
+            this.remove(key);
+        } else {
+            this.put(key, newValue);
+        }
+        return newValue;
+    }
 }
 
 class MapEntry<K, V> implements Entry<K, V> {

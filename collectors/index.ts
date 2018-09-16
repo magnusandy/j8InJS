@@ -1,5 +1,6 @@
 import { Transformer, Supplier, BiConsumer, BiFunction } from "../functions";
 import { MutableString, MutableNumber } from './mutableCollections';
+import { Map } from '../map'
 
 /**
  * A mutable reduction operation that accumulates input elements into a mutable result container, 
@@ -121,7 +122,7 @@ class Collectors {
 
     public static collectingAndThen<Input, Mutable, Intermediate, Output>(downStream: Collector<Input, Mutable, Intermediate>, finisher: Transformer<Intermediate, Output>): Collector<Input, Mutable, Output> {
         const newFinisher = (input: Mutable) => finisher(downStream.finisher()(input))
-        return Collector.of(downStream.supplier(),  downStream.accumulator(), downStream.combiner(), newFinisher)
+        return Collector.of(downStream.supplier(), downStream.accumulator(), downStream.combiner(), newFinisher)
     }
 
     public static counting<Input>(): Collector<Input, MutableNumber, number> {
@@ -129,8 +130,22 @@ class Collectors {
         const accumulator: BiConsumer<MutableNumber, Input> = (mutable, item) => mutable.add(1);
         const combiner: BiFunction<MutableNumber> = (mNum1, mNum2) => mNum1.addTogether(mNum2);
         const finisher: Transformer<MutableNumber, number> = (mutable: MutableNumber) => mutable.getInputCount();
-      
+
         return Collector.of(supplier, accumulator, combiner, finisher);
+    }
+
+    public static groupingBy<Input, Key>(classifier: Transformer<Input, Key>): Collector<Input, Map<Key, Input[]>, Map<Key, Input[]>> {
+        const supplier: Supplier<Map<Key, Input[]>> = () => Map.empty<Key, Input[]>();
+        const accumulator: BiConsumer<Map<Key, Input[]>, Input> = (map, item) => map.merge(
+            classifier(item), 
+            [item], 
+            (l1, l2) => l1.concat(l2),
+        );
+        const combiner: BiFunction<Map<Key, Input[]>> = (map1, map2) => {
+            map1.putAll(map2);
+            return map1;
+        }
+        return Collector.of(supplier, accumulator, combiner, Transformer.identity());
     }
 
     //v2 

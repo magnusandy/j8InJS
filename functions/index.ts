@@ -24,6 +24,13 @@ export type Consumer<T> = (value: T) => void;
  */
 export type Transformer<T, U> = (value: T) => U;
 
+
+/**
+ * Functional Type: 
+ * Defines a function that takes a two argument of type T and R, and returns a value of a different type U
+ */
+export type BiTransformer<T, R, U> = (v1: T, v2: R) => U;
+
 /**
  * Functional Type: 
  * Defines a function that takes no arguments but when called, returns a value of type T
