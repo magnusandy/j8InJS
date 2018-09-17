@@ -4,13 +4,13 @@ import { BiPredicate, BiConsumer, BiFunction, BiTransformer } from '../functions
 import Optional from '../optional';
 
 export interface Map<K, V> {
-    clear(): void;
-    get(key: K): V | null;
-    getOrDefault(key: K, defaultVal: V): V;
-    getOptional(key: K): Optional<V>;
-    put(key: K, value: V): V | null;
-    putIfAbsent(key: K, value: V): V | null;
-    putAll(map: Map<K, V>): void;
+    clear(): void; //TESTED
+    get(key: K): V | null; //TESTED
+    getOrDefault(key: K, defaultVal: V): V; //TESTED
+    getOptional(key: K): Optional<V>; //TESTED
+    put(key: K, value: V): V | null; //TESTED
+    putIfAbsent(key: K, value: V): V | null; //TESTED
+    putAll(map: Map<K, V>): void; //TESTED
     containsKey(key: K): boolean;
     containsValue(value: V, equalityTest?: BiPredicate<V, V>): boolean;
     keySet(): K[];
@@ -22,12 +22,28 @@ export interface Map<K, V> {
     forEach(consumer: BiConsumer<K, V>): void;
     isEmpty(): boolean;
     remove(key: K): V | null;
-    merge(key: K, value: V, remappingFunction: BiFunction<V>): V | null;
+    merge(key: K, value: V, remappingFunction: BiFunction<V>): V | null; //TESTED
 }
 
 export const Map = {
+
     empty<K, V>(): Map<K, V> {
         return new HashMap();
+    },
+
+    of<K, V>(k1?: K, v1?: V, k2?: K, v2?: V, k3?: K, v3?: V, k4?: K, v4?: V, k5?: K, v5?: V): Map<K, V> {
+        const map: Map<K, V> = Map.empty();
+        const putIfBothPresent = (k?: K, v?:V) => {
+            if(k && v) {
+                map.put(k, v);
+            }
+        }
+        putIfBothPresent(k1, v1); 
+        putIfBothPresent(k2, v2); 
+        putIfBothPresent(k3, v3); 
+        putIfBothPresent(k4, v4); 
+        putIfBothPresent(k5, v5);
+        return map; 
     }
 }
 export interface Entry<K, V> {
@@ -85,7 +101,7 @@ class HashMap<K, V> implements Map<K, V> {
     }
 
     public putAll(map: Map<K, V>): void {
-        return map.forEach((key, value) => this.put(key, value))
+        map.forEach((key, value) => this.put(key, value))
     }
 
     public get(key: K): V | null {
@@ -156,7 +172,7 @@ class HashMap<K, V> implements Map<K, V> {
     } 
 
     merge(key: K, value: V, remappingFunction: BiFunction<V>): V | null {
-        const oldValue: Optional<V> = this.getOptional(hash(key)); 
+        const oldValue: Optional<V> = this.getOptional(key); 
         const newValue: V = oldValue.isPresent()
             ? remappingFunction(oldValue.get(), value)
             : value;

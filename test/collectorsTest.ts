@@ -2,6 +2,7 @@ import { use, spy, expect } from "chai";
 import * as spies from "chai-spies";
 import Stream from "../stream";
 import Collectors, { Collector } from "../collectors";
+import { Map } from '../map';
 use(spies);
 
 describe('Collectors', () => {
@@ -124,6 +125,19 @@ describe('Collectors', () => {
             const count = Stream.empty()
                 .collect(Collectors.counting());
             expect(count).eq(0);
+        });
+    });
+
+    describe('groupingBy', () => {
+        it('it should return collector that groups elements by classifier', () => {
+            const source = ["cat", "dog", "ant", "dat", "car", "cut"];
+            const mapByFirstLetter: Map<string, string[]> = Stream.of(source)
+                .collect(Collectors.groupingBy(word => word.charAt(0)));
+
+            expect(mapByFirstLetter.keySet().length).eq(3);
+            expect(mapByFirstLetter.getOptional('c').get()).to.contain.members(['cat', 'car', 'cut']);
+            expect(mapByFirstLetter.getOptional('d').get()).to.contain.members(['dog']);
+            expect(mapByFirstLetter.getOptional('a').get()).to.contain.members(['ant']);     
         });
     });
 });

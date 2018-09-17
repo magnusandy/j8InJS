@@ -76,7 +76,7 @@ describe('Function tests', () => {
             expect(result).to.eq(false);
         });
 
-        it('defaultEquality returns a function that returns true if two items === each other', () => {
+        it('defaultEquality returns a function that returns false if two items !=== each other', () => {
             const value1 = { i: '1' };
             const value2 = { i: '1' };
             const result = BiPredicate.defaultEquality()(value1, value2);
@@ -90,4 +90,39 @@ describe('Function tests', () => {
             expect(result).to.eq(true);
         });
     });
+
+    describe('hashEquality', () => {
+        it('it returns a function that returns true if two objects has the same keys and values', () => {
+            const value1 = { i: '1' };
+            const value2 = value1;
+            const result = BiPredicate.hashEquality()(value1, value2);
+            expect(result).to.eq(true);
+        });
+
+        it('it returns a function that returns true if two objects has the same keys and values', () => {
+            const value1 = { i: '1' };
+            const value2 = { i: '1' };
+            const result = BiPredicate.hashEquality()(value1, value2);
+            expect(result).to.eq(true);
+        });  
+
+        it('it returns a function that returns true where defaultEquality fails', () => {
+            const value1 = { i: '1', 2: 1};
+            const value2 = { i: '1', 2: 1};
+            const hashResult = BiPredicate.hashEquality()(value1, value2);
+            const defaultResult = BiPredicate.defaultEquality()(value1, value2);
+            expect(defaultResult).to.eq(false);
+            expect(hashResult).to.eq(true);
+        });  
+
+        it('it returns a function that returns true where defaultEquality fails', () => {
+            const value1 = new Date('December 17, 1995 03:24:00');
+            const value2 = new Date('December 17, 1995 03:24:00');
+            const hashResult = BiPredicate.hashEquality()(value1, value2);
+            const defaultResult = BiPredicate.defaultEquality()(value1, value2);
+            expect(defaultResult).to.eq(false);
+            expect(hashResult).to.eq(true);
+        });  
+    });
+
 });

@@ -1,3 +1,4 @@
+import * as hash from 'js-hash-code';
 
 /**
  * Functional Type: 
@@ -108,6 +109,17 @@ export const BiPredicate = {
      */
     defaultEquality<T>(): BiPredicate<T, T> {
         return (i1: T, i2: T): boolean => i1 === i2
+    },
+
+    /**
+     * utilizes a object hashing function to compare equality, more accurate object equality
+     * as compared to === when a more value based equality is desired. That is objects with the 
+     * same fields and values will have the same hash, and thus be equal.
+     * 
+     * Note: this method of equality will be slower, especially for large objects
+     */
+    hashEquality<T>(): BiPredicate<T, T> {
+        return (i1:T, i2:T) => hash(i1) === hash(i2);
     },
 }
 
