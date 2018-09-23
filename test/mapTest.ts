@@ -1,5 +1,9 @@
-import { expect } from "chai";
 import { Map } from "../map";
+import { Errors } from "../errors";
+import { BiPredicate, BiConsumer } from "../functions";
+import { use, spy, expect } from "chai";
+import * as spies from "chai-spies";
+use(spies);
 
 const testObj = (v1: string, v2: number) => {
     return { a: v1, b: { x: v2 } };
@@ -73,7 +77,7 @@ describe('Map tests', () => {
             const map: Map<string, number> = Map.of(key, value);
 
             expect(map.getOptional(key).isPresent()).to.be.true;
-            expect(map.getOptional(key).get()).to.be.eq(value); 
+            expect(map.getOptional(key).get()).to.be.eq(value);
         });
 
         it('it returns optional describing the value for a given key', () => {
@@ -94,7 +98,7 @@ describe('Map tests', () => {
 
             expect(map.getOrDefault(key, def)).to.be.eq(value);
         });
-        
+
         it('it returns default if value was not there', () => {
             const key = 'one';
             const value = 100;
@@ -114,6 +118,22 @@ describe('Map tests', () => {
             const getResult = map.get(key);
 
             expect(getResult).to.be.equal(val);
+        });
+
+        it('throw error if key is null', () => {
+            const key = null;
+            const val = "val";
+            const map: Map<any, string> = Map.empty();
+
+            expect(() => map.put(key, val)).to.throw(Errors.NullPointerException);
+        });
+
+        it('throw error if key is undefined', () => {
+            const key = undefined;
+            const val = "val";
+            const map: Map<any, string> = Map.empty();
+
+            expect(() => map.put(key, val)).to.throw(Errors.NullPointerException);
         });
 
         it('add replace entry with basic types', () => {
@@ -150,9 +170,28 @@ describe('Map tests', () => {
             const getResult = map.get(key);
             expect(getResult).to.be.equal(val2);
         });
+
+
     });
 
     describe('putIfAbsent', () => {
+
+        it('throw error if key is null', () => {
+            const key = null;
+            const val = "val";
+            const map: Map<any, string> = Map.empty();
+
+            expect(() => map.putIfAbsent(key, val)).to.throw(Errors.NullPointerException);
+        });
+
+        it('throw error if key is undefined', () => {
+            const key = undefined;
+            const val = "val";
+            const map: Map<any, string> = Map.empty();
+
+            expect(() => map.putIfAbsent(key, val)).to.throw(Errors.NullPointerException);
+        });
+
         it('it adds a new mapping if the specified key is not already in use', () => {
             const key = "key";
             const val = "val";
@@ -273,6 +312,248 @@ describe('Map tests', () => {
 
             expect(result.isPresent()).to.be.false;
             expect(map.containsKey(key)).to.be.false;
+        });
+    });
+
+    describe('containsKey', () => {
+        it('it returns true when a key exists', () => {
+            const key = "key";
+            const map = Map.of(key, 'val');
+
+            expect(map.containsKey(key)).to.be.true;
+        });
+
+        it('it returns true when a key exists', () => {
+            const key = new Date();
+            const map = Map.of(key, 'val');
+
+            expect(map.containsKey(key)).to.be.true;
+        });
+
+        it('it returns false when a key doesnt exists', () => {
+            const key = new Date(1);
+            const keyOther = new Date(100000000);
+            const map = Map.of(key, 'val');
+
+            expect(map.containsKey(keyOther)).to.be.false;
+        });
+
+        it('it returns false when a key given is null', () => {
+            const key = new Date(1);
+            const keyOther: any = null;
+            const map = Map.of(key, 'val');
+
+            expect(map.containsKey(keyOther)).to.be.false;
+        });
+    });
+
+    describe('containsValue', () => {
+        it('it returns true if value exists', () => {
+            const value = "100";
+            const map = Map.of(1, value, 2, value);
+
+            expect(map.containsValue(value)).to.be.true;
+        });
+
+        it('it returns false if value doesnt xists', () => {
+            const value = "100";
+            const map = Map.of(1, value, 2, value);
+
+            expect(map.containsValue('notValue')).to.be.false;
+        });
+
+        it('it returns true if value exists based on equality function', () => {
+            const value = new Date(1000);
+            const value2 = new Date(1000);
+            const map = Map.of(1, value, 2, value);
+
+            expect(map.containsValue(value2)).to.be.false; //fail default equality
+            expect(map.containsValue(value2, BiPredicate.hashEquality())).to.be.true;
+        });
+
+        it('it returns false if value doesnt exists based on equality function', () => {
+            const value = new Date(1000);
+            const value2 = new Date(200000);
+            const map = Map.of(1, value, 2, value);
+
+            expect(map.containsValue(value2, BiPredicate.hashEquality())).to.be.false;
+        });
+    });
+
+    describe('keySet', () => {
+        it('returns an array of all the keys in the map', () => {
+            const keys = [1, 2, 3];
+            const map = Map.of(keys[0], "1", keys[1], "2", keys[2], "3");
+            const result = map.keySet();
+
+            expect(result).to.have.members(keys);
+        });
+
+        it('returns an empty array if map is empty', () => {
+            const map = Map.empty();
+            const result = map.keySet();
+
+            expect(result.length).to.be.eq(0);
+        });
+    });
+
+    describe('values', () => {
+        it('returns an array of all the values in the map', () => {
+            const values = [1, 2, 3];
+            const map = Map.of(1, values[0], 2, values[1], 3, values[2]);
+            const result = map.values();
+
+            expect(result).to.have.members(values);
+        });
+
+        it('returns an empty array if map is empty', () => {
+            const map = Map.empty();
+            const result = map.values();
+
+            expect(result.length).to.be.eq(0);
+        });
+    });
+
+    describe('keyStream', () => {
+        it('returns an array of all the keys in the map', () => {
+            const keys = [1, 2, 3];
+            const map = Map.of(keys[0], "1", keys[1], "2", keys[2], "3");
+            const result = map.keyStream().toArray();
+
+            expect(result).to.have.members(keys);
+        });
+
+        it('returns an empty array if map is empty', () => {
+            const map = Map.empty();
+            const result = map.keyStream().toArray();
+
+            expect(result.length).to.be.eq(0);
+        });
+    });
+
+    describe('valueStream', () => {
+        it('returns an array of all the values in the map', () => {
+            const values = [1, 2, 3];
+            const map = Map.of(1, values[0], 2, values[1], 3, values[2]);
+            const result = map.valueStream().toArray();
+
+            expect(result).to.have.members(values);
+        });
+
+        it('returns an empty array if map is empty', () => {
+            const map = Map.empty();
+            const result = map.valueStream().toArray();
+
+            expect(result.length).to.be.eq(0);
+        });
+    });
+
+    describe('entrySet', () => {
+        it('returns an array of all the entrys in the map', () => {
+            const values = [1, 2, 3];
+            const keys = [4, 5, 6];
+            const map = Map.of(keys[0], values[0], keys[1], values[1], keys[2], values[2]);
+            const result = map.entrySet();
+
+            expect(result.length).to.eq(3);
+            expect(result[0].key).to.be.eq(keys[0])
+            expect(result[0].value).to.be.eq(values[0])
+            expect(result[1].key).to.be.eq(keys[1])
+            expect(result[1].value).to.be.eq(values[1])
+            expect(result[2].key).to.be.eq(keys[2])
+            expect(result[2].value).to.be.eq(values[2])
+
+        });
+
+        it('returns an empty array if map is empty', () => {
+            const map = Map.empty();
+            const result = map.entrySet();
+
+            expect(result.length).to.be.eq(0);
+        });
+    });
+
+    describe('entryStream', () => {
+        it('returns an stream of all the entrys in the map', () => {
+            const values = [1, 2, 3];
+            const keys = [4, 5, 6];
+            const map = Map.of(keys[0], values[0], keys[1], values[1], keys[2], values[2]);
+            const result = map.entryStream().toArray();
+
+            expect(result.length).to.eq(3);
+            expect(result[0].key).to.be.eq(keys[0])
+            expect(result[0].value).to.be.eq(values[0])
+            expect(result[1].key).to.be.eq(keys[1])
+            expect(result[1].value).to.be.eq(values[1])
+            expect(result[2].key).to.be.eq(keys[2])
+            expect(result[2].value).to.be.eq(values[2])
+
+        });
+
+        it('returns an empty array if map is empty', () => {
+            const map = Map.empty();
+            const result = map.entryStream().toArray();
+
+            expect(result.length).to.be.eq(0);
+        });
+    });
+
+    describe('forEach', () => {
+        it('calls function for each entry in the map', () => {
+            const map = Map.of(1, 1, 2, 2, 3, 3);
+            const consumer: BiConsumer<number, number> = (x, y) => x + y;
+            const spyConsumer = spy(consumer);
+            map.forEach(spyConsumer);
+
+            expect(spyConsumer).to.be.called.with(1, 1);
+            expect(spyConsumer).to.be.called.with(2, 2);
+            expect(spyConsumer).to.be.called.with(3, 3);
+        });
+    });
+
+    describe('isEmpty', () => {
+        it('returns true when empty', () => {
+            const map = Map.empty();
+            expect(map.isEmpty()).to.be.true;
+        });
+
+        it('returns true when empty by removal', () => {
+            const map = Map.of(1, 1);
+            map.remove(1);
+            expect(map.isEmpty()).to.be.true;
+        });
+
+        it('returns false when has values', () => {
+            const map = Map.of(1, 1);
+            expect(map.isEmpty()).to.be.false;
+        });
+    });
+
+    describe('remove', () => {
+        it('removes the given key from the map, if it existed', () => {
+            const key = 1;
+            const map = Map.of(key, 1);
+            map.remove(key);
+
+            expect(map.containsKey(key)).to.be.false;
+        });
+
+        it('returns previous value if one existed', () => {
+            const key = 1;
+            const val = '1';
+            const map = Map.of(key, val);
+            const result = map.remove(key);
+
+            expect(result).to.be.eq(val);
+        });
+
+        it('returns null value if one no key existed', () => {
+            const key = 1;
+            const val = '1';
+            const map = Map.of(key, val);
+            const result = map.remove(2);
+
+            expect(result).to.be.null;
         });
     });
 });
