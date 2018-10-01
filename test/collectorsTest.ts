@@ -212,4 +212,58 @@ describe('Collectors', () => {
             expect(min.isPresent()).eq(false);
         });
     });
+
+    describe('partitioningBy', () => {
+        it('it should return collector partitions by predicate without downstream', () => {
+            const source = ["cat", "dogs", "ants", "dat", "car", "cut"];
+            const map: Map<boolean, string[]> = Stream.of(source)
+                .collect(Collectors.partitioningBy((i) => i.length === 4));
+
+            expect(map.containsKey(true)).eq(true);
+            expect(map.containsKey(false)).eq(true);
+            expect(map.get(true)).to.include.members(["dogs", "ants"])
+            expect(map.get(false)).to.include.members(["cat","dat", "car", "cut"])
+        });
+
+        it('it should return empty lists for when nothing in partition', () => {
+            const source = ["cat", "dat", "car", "cut"];
+            const map: Map<boolean, string[]> = Stream.of(source)
+                .collect(Collectors.partitioningBy((i) => i.length === 4));
+
+            expect(map.containsKey(true)).eq(true);
+            expect(map.containsKey(false)).eq(true);
+            expect(map.getOptional(true).get().length).to.eq(0);
+            expect(map.get(false)).to.include.members(["cat","dat", "car", "cut"])
+        });
+
+        it('it should return collector partitions by predicate with downstream', () => {
+            const source = ["cat", "dogs", "ants", "dat", "car", "cut"];
+            const map = Stream.of(source)
+                .collect(Collectors.partitioningBy(
+                    (i) => i.length === 4, 
+                    Collectors.joining(""))
+                );
+
+            expect(map.containsKey(true)).eq(true);
+            expect(map.containsKey(false)).eq(true);
+            expect(map.get(true)).to.eq("dogsants")
+            expect(map.get(false)).to.eq("catdatcarcut")
+        });
+
+        it('it should return collector partitions by predicate with downstream, if empty returns collector default', () => {
+            const source = ["cat", "dat", "car", "cut"];
+            const map = Stream.of(source)
+                .map(i => i.length)
+                .collect(Collectors.partitioningBy(
+                    (i) => i === 4, 
+                    Collectors.averaging())
+                );
+
+            expect(map.containsKey(true)).eq(true);
+            expect(map.containsKey(false)).eq(true);
+            expect(map.get(true)).to.eq(0)
+            expect(map.get(false)).to.eq(3)
+        });
+    });
+    
 });

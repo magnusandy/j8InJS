@@ -39,7 +39,7 @@ export const Map = {
     of<K, V>(k1?: K, v1?: V, k2?: K, v2?: V, k3?: K, v3?: V, k4?: K, v4?: V, k5?: K, v5?: V): Map<K, V> {
         const map: Map<K, V> = Map.empty();
         const putIfBothPresent = (k?: K, v?: V) => {
-            if (k && v) {
+            if (k !== undefined && v !== undefined) {
                 map.put(k, v);
             }
         }

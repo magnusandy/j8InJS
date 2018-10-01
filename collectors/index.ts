@@ -220,8 +220,8 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
-    public static partitioningBy<T, D>(predicate: Predicate<T>, downStream?: Collector<T, D, D> = Collectors.toList()): Collector<T, Map<boolean, T[]>, Map<boolean, D>>  {
-        const supplier: Supplier<Map<boolean, T[]>> = () => Map.empty();
+    public static partitioningBy<T, A, D>(predicate: Predicate<T>, downStream?: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D> | Map<boolean, T[]>>  {
+        const supplier: Supplier<Map<boolean, T[]>> = () => Map.of<boolean, T[]>(true, [], false, []);
         const accumulator: BiConsumer<Map<boolean, T[]>, T> = (map, item) => map.merge(
             predicate(item),
             [item],
@@ -232,17 +232,24 @@ class Collectors {
             return map1;
         }
 
-        const transformer: Transformer<Map<boolean, T[]>, Map<boolean, D>> = (map) => {
-            return Map.of(
-                true, Stream.of(map.getOptional(true).orElse([]))
-                            .collect(downStream),
-                false, Stream.of(map.getOptional(false).orElse([]))
-                             .collect(downStream),
-                         
-            )
-        }
-        return Collector.of<T, Map<boolean, T[]>, Map<boolean, D>>(supplier, accumulator, combiner, transformer); 
+if (downStream) {
+    const transformer: Transformer<Map<boolean, T[]>, Map<boolean, D>> = (map) => {
+        const maps = Map.of(
+            true,
+            Stream.of(map.getOptional(true).orElse([]))
+                  .collect(downStream),
+            false, 
+            Stream.of(map.getOptional(false).orElse([]))
+                  .collect(downStream)    
+        );
+        return maps;
     }
+    return Collector.of<T, Map<boolean, T[]>, Map<boolean, D>>(supplier, accumulator, combiner, transformer); 
+} else {
+    return Collector.of<T, Map<boolean, T[]>, Map<boolean, T[]>>(supplier, accumulator, combiner, Transformer.identity()); 
+}
+
+}
 
     
 
