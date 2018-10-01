@@ -219,6 +219,8 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
+    public static partitioningBy<T, A, D>(predicate: Predicate<T>): Collector<T, Map<boolean, T[]>, Map<boolean, T[]>>;
+    public static partitioningBy<T, A, D>(predicate: Predicate<T>, downStream: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D>>;
     public static partitioningBy<T, A, D>(predicate: Predicate<T>, downStream?: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D> | Map<boolean, T[]>> {
         const supplier: Supplier<Map<boolean, T[]>> = () => Map.of<boolean, T[]>(true, [], false, []);
         const accumulator: BiConsumer<Map<boolean, T[]>, T> = (map, item) => map.merge(

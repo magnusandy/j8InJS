@@ -46,14 +46,14 @@ interface Stream<T> {
      * if the stream is empty, return true, the predicate is never evaluated;
      * @param predicate 
      */
-    allMatch(predicate: Predicate<T>): boolean; 
+    allMatch(predicate: Predicate<T>): boolean;
 
     /**
      * Terminal Operation - Short Circuting:
      * returns true if any 1 item in the stream match the given predicate, if any item returns true, return true, else false;
      * @param predicate 
      */
-    anyMatch(predicate: Predicate<T>): boolean; 
+    anyMatch(predicate: Predicate<T>): boolean;
 
     /**
      * Terminal Operation:
@@ -62,6 +62,7 @@ interface Stream<T> {
     count(): number;
 
     /**
+     * @deprecated: use collect instead:
      * Terminal Operation:
      * applies a mutable reduction operation to the elements in the collection using the given items,
      * use of the combiner is not garenteed
@@ -69,7 +70,18 @@ interface Stream<T> {
      * @param accumulator adds an element T to a given collection of type R
      * @param combiner combines all the values in the second collection into the first
      */
-    customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R; 
+    customCollect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
+
+    /**
+     * Added in V2
+     * Terminal Operation:
+     * applies a mutable reduction operation to the elements in the collection using the given items,
+     * use of the combiner is not garenteed
+     * @param supplier: supplies a mutable collection of type R
+     * @param accumulator adds an element T to a given collection of type R
+     * @param combiner combines all the values in the second collection into the first
+     */
+    collect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
 
     /**
      * Terminal Operation:
@@ -77,7 +89,6 @@ interface Stream<T> {
      * @param collector a Collector used to apply the mutable reduction.
      */
     collect<R, A>(collector: Collector<T, A, R>): R;
-
     /**
      * Intermediate Operation - Stateful:
      * return a distinct stream of elements according to the given equality function, if an equality function 
@@ -85,7 +96,7 @@ interface Stream<T> {
      * it needs to keep track of previous elements, but does not need access to the full stream before proceeding
      * @param equalsFunction function that takes two parameters, returns true if they are equal, false otherwise
      */
-    distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>; 
+    distinct(equalsFunction?: BiPredicate<T, T>): Stream<T>;
 
     /**
      * Intermediate Operation:
@@ -93,21 +104,21 @@ interface Stream<T> {
      * function. Keep all elements who match the given predicate.
      * @param predicate
      */
-    filter(predicate: Predicate<T>): Stream<T>; 
+    filter(predicate: Predicate<T>): Stream<T>;
 
     /**
      * Terminal Operation: Short Circuiting:
      * Returns an optional describing the first element of the stream, if the stream is empty,
      * return an empty Optional.
      */
-    findFirst(): Optional<T>; 
+    findFirst(): Optional<T>;
 
     /**
      * Terminal Operation: Short Circuiting:
      * Returns an optional describing the an element of the stream, if the stream is empty,
      * return an empty Optional.
      */
-    findAny(): Optional<T>; 
+    findAny(): Optional<T>;
 
     /**
      * Intermediate Operation:
@@ -125,7 +136,7 @@ interface Stream<T> {
      * @param transformer 
      */
     flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>;
-     
+
     /**
      * Intermediate Operation:
      * similar idea to flatMap or flatMapList, takes in a transformer function that
@@ -142,7 +153,7 @@ interface Stream<T> {
      * applies a given consumer to each entity in the stream. elements are processed in sequental order;
      * @param consumer: applies the consuming function to all elements in the stream;
      */
-    forEachOrdered(consumer: Consumer<T>): void; 
+    forEachOrdered(consumer: Consumer<T>): void;
 
     /**
      * Terminal Operation:
@@ -182,7 +193,7 @@ interface Stream<T> {
      * comparator is supplied, a default comparator using the > and < operators is used.
      * @param comparator function to compare elements in the stream, 
      */
-    min(comparator?: Comparator<T>): Optional<T>; 
+    min(comparator?: Comparator<T>): Optional<T>;
 
     /**
      * Terminal Operation - Short Circuting:
@@ -223,7 +234,7 @@ interface Stream<T> {
      * values. If a negative number is passed in, no values are skipped. 
      * @param n number of elements to skip
      */
-    skip(n: number): Stream<T>; 
+    skip(n: number): Stream<T>;
 
     /**
      * Intermediate Operation - Stateful:
@@ -232,12 +243,12 @@ interface Stream<T> {
      * @param comparator optional comparator to use to sort the objects
      */
     sorted(comparator?: Comparator<T>): Stream<T>;
-    
+
     /**
      * Terminal Operation: 
      * returns the Stream as an array of elements.
      */
-    toArray(): T[]; 
+    toArray(): T[];
 
     //V2 //todo
     //reverse() //intermediate stateful
@@ -287,7 +298,7 @@ const Stream = {
      * Creates a new stream from the given source array
      * @param source 
      */
-    of<T>(source: T[]): Stream<T> { 
+    of<T>(source: T[]): Stream<T> {
         return PipelineStream.of(source);
     },
 
@@ -295,7 +306,7 @@ const Stream = {
      * Creates a new stream from the given source values
      * @param source 
      */
-    ofValues<T>(...values: T[]): Stream<T> { 
+    ofValues<T>(...values: T[]): Stream<T> {
         return PipelineStream.of(values);
     },
 
@@ -303,7 +314,7 @@ const Stream = {
      * creates a stream of a single element with the given source value;
      * @param value 
      */
-    ofValue<T>(value: T): Stream<T> { 
+    ofValue<T>(value: T): Stream<T> {
         return PipelineStream.of([value]);
     },
 
@@ -311,7 +322,7 @@ const Stream = {
     /**
      * creates an empty Stream
      */
-    empty<T>(): Stream<T> { 
+    empty<T>(): Stream<T> {
         return PipelineStream.of<T>([]);
     },
 
@@ -320,7 +331,7 @@ const Stream = {
      * by the given supplier.
      * @param supplier 
      */
-    generate<T>(supplier: Supplier<T>): Stream<T> { 
+    generate<T>(supplier: Supplier<T>): Stream<T> {
         return PipelineStream.ofSupplier(supplier);
     },
 
@@ -331,7 +342,7 @@ const Stream = {
      * @param seed initial value of the stream
      * @param getNext transforming function applied at each step
      */
-    iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> { 
+    iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {
         return PipelineStream.ofSource(Source.iterateSource(seed, getNext))
     },
 
@@ -340,9 +351,9 @@ const Stream = {
      * @param s1 first stream
      * @param s2 second stream
      */
-    concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> { 
+    concat<T>(s1: Stream<T>, s2: Stream<T>): Stream<T> {
         return PipelineStream.concat(s1, s2);
-    }, 
+    },
 
     /**
      * returns a stream of numbers starting at startInclusive, and going to up 
@@ -359,7 +370,7 @@ const Stream = {
      * @param endExclusive end of the range, not included
      * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
      */
-    range(startInclusive: number, endExclusive: number, step?: number): Stream<number> { 
+    range(startInclusive: number, endExclusive: number, step?: number): Stream<number> {
         return PipelineStream.ofSource(Source.rangeSource(startInclusive, endExclusive, step));
     },
 
@@ -375,7 +386,7 @@ const Stream = {
      * @param endInclusive end of the range
      * @param step an optional param to define the step size, defaults to 1 if nothing is supplied
      */
-    rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number> { 
+    rangeClosed(startInclusive: number, endInclusive: number, step?: number): Stream<number> {
         return startInclusive < endInclusive
             ? Stream.range(startInclusive, endInclusive + 1, step)
             : Stream.range(startInclusive, endInclusive - 1, step);
@@ -440,7 +451,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
 
     public static concat<S>(stream1: Stream<S>, stream2: Stream<S>): Stream<S> {
         return PipelineStream.ofSource<Optional<S>>(Source.concatSource(stream1, stream2))
-                             .flatMapOptional(Transformer.identity());
+            .flatMapOptional(Transformer.identity());
     }
 
     private getNextProcessedItem(): Optional<any> {
@@ -510,15 +521,22 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return container;
     }
 
-    public collect<R, A>(collector: Collector<T, A, R>): R {
-        let container = collector.supplier()();
-        let nextItem: Optional<T> = this.getNextProcessedItem();
-        while (nextItem.isPresent()) {
-            collector.accumulator()(container, nextItem.get())
-            nextItem = this.getNextProcessedItem();
-        }
+    public collect<R>(supplier: Supplier<R>, accumulator: BiConsumer<R, T>, combiner: BiConsumer<R, R>): R;
+    public collect<R, A>(collector: Collector<T, A, R>): R;
+    public collect<R, A>(firstArg: Collector<T, A, R> | Supplier<R>, accumulator?: BiConsumer<R, T>, combiner?: BiConsumer<R, R>): R | undefined {
+        if (firstArg instanceof Collector) {
+            const collector: Collector<T, A, R> = firstArg;
+            let container = collector.supplier()();
+            let nextItem: Optional<T> = this.getNextProcessedItem();
+            while (nextItem.isPresent()) {
+                collector.accumulator()(container, nextItem.get())
+                nextItem = this.getNextProcessedItem();
+            }
 
-        return collector.finisher()(container);
+            return collector.finisher()(container);
+        } else if (accumulator && combiner) {
+            this.customCollect(firstArg, accumulator, combiner)
+        }
     }
 
     public map<U>(transformer: Transformer<T, U>): Stream<U> {
@@ -581,7 +599,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         }
     }
 
-    public forEach(consumer: Consumer<T>): void { 
+    public forEach(consumer: Consumer<T>): void {
         this.forEachOrdered(consumer);
     }
 
