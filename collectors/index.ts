@@ -1,8 +1,7 @@
-import { Transformer, Supplier, BiConsumer, BiFunction, Comparator } from "../functions";
+import { Transformer, Supplier, BiConsumer, BiFunction, Comparator, Predicate } from "../functions";
 import { MutableString, MutableNumber, Holder } from './mutableCollections';
 import { Map } from '../map'
 import Optional from "../optional";
-import { Predicate } from "../functions";
 import Stream from "../stream";
 
 /**
@@ -220,7 +219,7 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
-    public static partitioningBy<T, A, D>(predicate: Predicate<T>, downStream?: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D> | Map<boolean, T[]>>  {
+    public static partitioningBy<T, A, D>(predicate: Predicate<T>, downStream?: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D> | Map<boolean, T[]>> {
         const supplier: Supplier<Map<boolean, T[]>> = () => Map.of<boolean, T[]>(true, [], false, []);
         const accumulator: BiConsumer<Map<boolean, T[]>, T> = (map, item) => map.merge(
             predicate(item),
@@ -232,26 +231,44 @@ class Collectors {
             return map1;
         }
 
-if (downStream) {
-    const transformer: Transformer<Map<boolean, T[]>, Map<boolean, D>> = (map) => {
-        const maps = Map.of(
-            true,
-            Stream.of(map.getOptional(true).orElse([]))
-                  .collect(downStream),
-            false, 
-            Stream.of(map.getOptional(false).orElse([]))
-                  .collect(downStream)    
-        );
-        return maps;
+        if (downStream) {
+            const transformer: Transformer<Map<boolean, T[]>, Map<boolean, D>> = (map) => {
+                const maps = Map.of(
+                    true,
+                    Stream.of(map.getOptional(true).orElse([]))
+                        .collect(downStream),
+                    false,
+                    Stream.of(map.getOptional(false).orElse([]))
+                        .collect(downStream)
+                );
+                return maps;
+            }
+            return Collector.of<T, Map<boolean, T[]>, Map<boolean, D>>(supplier, accumulator, combiner, transformer);
+        } else {
+            return Collector.of<T, Map<boolean, T[]>, Map<boolean, T[]>>(supplier, accumulator, combiner, Transformer.identity());
+        }
     }
-    return Collector.of<T, Map<boolean, T[]>, Map<boolean, D>>(supplier, accumulator, combiner, transformer); 
-} else {
-    return Collector.of<T, Map<boolean, T[]>, Map<boolean, T[]>>(supplier, accumulator, combiner, Transformer.identity()); 
-}
+    public static reducing<I>(reducer: BiFunction<I>): Collector<I, I[], Optional<I>>;
+    public static reducing<I>(reducer: BiFunction<I>, identity: I): Collector<I, I[], Optional<I>>;
+    public static reducing<I, U>(reducer: BiFunction<U>, identity: U, mapper: Transformer<I, U>): Collector<I, I[], Optional<U>>;
+    public static reducing<I, U>(reducer: BiFunction<I | U>, identity?: I | U, mapper?: Transformer<I, I | U>): Collector<I, I[], Optional<I | U>> {
+        const supplier: Supplier<I[]> = () => [];
+        const accumulator: BiConsumer<I[], I> = (list, item) => list.push(item);
+        const combiner: BiFunction<I[]> = (list1, list2) => list1.concat(list2);
 
-}
+        if (mapper) {
+            const finisher: Transformer<I[], Optional<U | I>> = (iList) => Stream.of(iList)
+                .map(mapper)
+                .reduce(reducer, identity);
+            return Collector.of(supplier, accumulator, combiner, finisher);
+        } else {
+            const finisher: Transformer<I[], Optional<U | I>> = (iList) => Stream.of<I | U>(iList)
+                .reduce(reducer, identity);
+            return Collector.of(supplier, accumulator, combiner, finisher);
+        }
+    }
 
-    
+
 
     //v2 
     //countingBy(keyMapper: Transfromer<T, string>) counts values based on the keys returned by the mapper when feeding elements through
@@ -260,14 +277,14 @@ if (downStream) {
 
 //return the largest of two values based on the comparator, first if they are equal
 function returnLargest<I>(first: I, second: I, comparator: Comparator<I>): I {
-    return comparator(first, second) < 0 
+    return comparator(first, second) < 0
         ? second
         : first;
 }
 
 //return the smallest of two values based on the comparator, first if they are equal
 function returnSmallest<I>(first: I, second: I, comparator: Comparator<I>): I {
-    return comparator(first, second) <= 0 
+    return comparator(first, second) <= 0
         ? first
         : second;
 }

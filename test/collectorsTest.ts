@@ -265,5 +265,52 @@ describe('Collectors', () => {
             expect(map.get(false)).to.eq(3)
         });
     });
+
+    describe('reducing', () => {
+        it('it should work if just given a reducing function', () => {
+            const source = [1,2,3,4];
+            const result: Optional<number> = Stream.of(source)
+                .collect(Collectors.reducing((i,i2)=>i+i2));
+
+            expect(result.isPresent()).eq(true);
+            expect(result.get()).eq(10);
+        });
+
+        it('it should work if just given a reducing function, empty inputs', () => {
+            const result: Optional<number> = Stream.empty<number>()
+                .collect(Collectors.reducing((i,i2)=>i+i2));
+
+            expect(result.isPresent()).eq(false);
+        });
+
+        it('it should work if just given a reducing function and identity, empty inputs return identity', () => {
+            const id = 5;
+            const result: Optional<number> = Stream.empty<number>()
+                .collect(Collectors.reducing((i,i2)=>i+i2, id));
+
+            expect(result.isPresent()).eq(true);
+            expect(result.get()).eq(id);
+        });
+
+        it('it should work if just given a reducing function and identty includes identity', () => {
+            const id = 1;
+            const source = [1,2,3,4];
+            const result: Optional<number> = Stream.of(source)
+                .collect(Collectors.reducing((i,i2)=>i+i2, id));
+
+            expect(result.isPresent()).eq(true);
+            expect(result.get()).eq(10+id);
+        });
+
+        it('it should work if just given a reducing function and identty includes identity', () => {
+            const id = 1;
+            const source = ['1', '2', '3', '4'];
+            const result: Optional<number> = Stream.of(source)
+                .collect(Collectors.reducing((i,i2)=>i+i2, id, (s) => parseInt(s)));
+
+            expect(result.isPresent()).eq(true);
+            expect(result.get()).eq(10+id);
+        });
+    });
     
 });
