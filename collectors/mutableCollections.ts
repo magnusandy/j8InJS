@@ -1,3 +1,5 @@
+import Optional from "../optional";
+
 export class MutableString {
     private value: string;
 
@@ -49,7 +51,7 @@ export class MutableNumber {
         this.inputs.push(value);
     }
 
-    public addTogether(other: MutableNumber): MutableNumber { 
+    public addTogether(other: MutableNumber): MutableNumber {
         const newInputs = this.inputs.concat(other.getInputs());
         const newTotal = this.total + this.getTotal();
         return new MutableNumber(newInputs, newTotal);
@@ -64,6 +66,21 @@ export class MutableNumber {
     }
 
     public getInputCount(): number {
-       return this.inputs.length;
+        return this.inputs.length;
+    }
+}
+
+export class Holder<T> {
+    public item?: T;
+
+    constructor(item?: T) {
+        this.item = item;
+    }
+    public get(): Optional<T> {
+        return Optional.ofNullable(this.item);
+    }
+
+    public set(item: T): void {
+        this.item = item;
     }
 }

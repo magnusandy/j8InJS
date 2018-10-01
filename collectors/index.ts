@@ -1,6 +1,9 @@
-import { Transformer, Supplier, BiConsumer, BiFunction } from "../functions";
-import { MutableString, MutableNumber } from './mutableCollections';
+import { Transformer, Supplier, BiConsumer, BiFunction, Comparator } from "../functions";
+import { MutableString, MutableNumber, Holder } from './mutableCollections';
 import { Map } from '../map'
+import Optional from "../optional";
+import { Predicate } from "../dist";
+import Stream from "../stream";
 
 /**
  * A mutable reduction operation that accumulates input elements into a mutable result container, 
@@ -137,8 +140,8 @@ class Collectors {
     public static groupingBy<Input, Key>(classifier: Transformer<Input, Key>): Collector<Input, Map<Key, Input[]>, Map<Key, Input[]>> {
         const supplier: Supplier<Map<Key, Input[]>> = () => Map.empty<Key, Input[]>();
         const accumulator: BiConsumer<Map<Key, Input[]>, Input> = (map, item) => map.merge(
-            classifier(item), 
-            [item], 
+            classifier(item),
+            [item],
             (l1, l2) => l1.concat(l2),
         );
         const combiner: BiFunction<Map<Key, Input[]>> = (map1, map2) => {
@@ -148,9 +151,118 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, Transformer.identity());
     }
 
+    public static mapping<I, II, A, R>(mapper: Transformer<I, II>, downstream: Collector<II, A, R>): Collector<I, A, R> {
+        return Collector.of(
+            downstream.supplier(),
+            (mutable: A, item: I) => downstream.accumulator()(mutable, mapper(item)),
+            downstream.combiner(),
+            downstream.finisher()
+        );
+    }
+
+    public static maxBy<I>(comparator?: Comparator<I>): Collector<I, Holder<I>, Optional<I>> {
+        const comparatorToUse = comparator ? comparator : Comparator.default();
+        const supplier: Supplier<Holder<I>> = () => new Holder();
+        const accumulator: BiConsumer<Holder<I>, I> = (mutable, item) => {
+            const currentMax = mutable.get();
+            if (currentMax.isPresent()) {
+                const newMax: I = currentMax
+                    .map(current => returnLargest(current, item, comparatorToUse))
+                    .get();
+                mutable.set(newMax);
+            } else {
+                mutable.set(item);
+            }
+        }
+        const combiner: BiFunction<Holder<I>> = (h1: Holder<I>, h2: Holder<I>) => {
+            const first = h1.get();
+            const second = h2.get();
+            if (first.isPresent() && second.isPresent()) {
+                return new Holder(returnLargest(first.get(), second.get(), comparatorToUse));
+            } else if (first.isPresent()) {
+                return h1;
+            } else {
+                return h2;
+            }
+        }
+        const finisher: Transformer<Holder<I>, Optional<I>> = (mutable: Holder<I>) => mutable.get();
+
+        return Collector.of(supplier, accumulator, combiner, finisher);
+    }
+
+    public static minBy<I>(comparator?: Comparator<I>): Collector<I, Holder<I>, Optional<I>> {
+        const comparatorToUse = comparator ? comparator : Comparator.default();
+        const supplier: Supplier<Holder<I>> = () => new Holder();
+        const accumulator: BiConsumer<Holder<I>, I> = (mutable, item) => {
+            const currentMin = mutable.get();
+            if (currentMin.isPresent()) {
+                const newMin: I = currentMin
+                    .map(current => returnSmallest(current, item, comparatorToUse))
+                    .get();
+                mutable.set(newMin);
+            } else {
+                mutable.set(item);
+            }
+        }
+        const combiner: BiFunction<Holder<I>> = (h1: Holder<I>, h2: Holder<I>) => {
+            const first = h1.get();
+            const second = h2.get();
+            if (first.isPresent() && second.isPresent()) {
+                return new Holder(returnSmallest(first.get(), second.get(), comparatorToUse));
+            } else if (first.isPresent()) {
+                return h1;
+            } else {
+                return h2;
+            }
+        }
+        const finisher: Transformer<Holder<I>, Optional<I>> = (mutable: Holder<I>) => mutable.get();
+
+        return Collector.of(supplier, accumulator, combiner, finisher);
+    }
+
+    public static partitioningBy<T, D>(predicate: Predicate<T>, downStream?: Collector<T, D, D> = Collectors.toList()): Collector<T, Map<boolean, T[]>, Map<boolean, D>>  {
+        const supplier: Supplier<Map<boolean, T[]>> = () => Map.empty();
+        const accumulator: BiConsumer<Map<boolean, T[]>, T> = (map, item) => map.merge(
+            predicate(item),
+            [item],
+            (l1, l2) => l1.concat(l2),
+        );
+        const combiner: BiFunction<Map<boolean, T[]>> = (map1, map2) => {
+            map1.putAll(map2);
+            return map1;
+        }
+
+        const transformer: Transformer<Map<boolean, T[]>, Map<boolean, D>> = (map) => {
+            return Map.of(
+                true, Stream.of(map.getOptional(true).orElse([]))
+                            .collect(downStream),
+                false, Stream.of(map.getOptional(false).orElse([]))
+                             .collect(downStream),
+                         
+            )
+        }
+        return Collector.of<T, Map<boolean, T[]>, Map<boolean, D>>(supplier, accumulator, combiner, transformer); 
+    }
+
+    
+
     //v2 
     //countingBy(keyMapper: Transfromer<T, string>) counts values based on the keys returned by the mapper when feeding elements through
     //countingBy(equalityFn?) groups elements and counts them based on equality function
 };
+
+//return the largest of two values based on the comparator, first if they are equal
+function returnLargest<I>(first: I, second: I, comparator: Comparator<I>): I {
+    return comparator(first, second) < 0 
+        ? second
+        : first;
+}
+
+//return the smallest of two values based on the comparator, first if they are equal
+function returnSmallest<I>(first: I, second: I, comparator: Comparator<I>): I {
+    return comparator(first, second) <= 0 
+        ? first
+        : second;
+}
 
 export default Collectors;
