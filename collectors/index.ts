@@ -2,7 +2,7 @@ import { Transformer, Supplier, BiConsumer, BiFunction, Comparator } from "../fu
 import { MutableString, MutableNumber, Holder } from './mutableCollections';
 import { Map } from '../map'
 import Optional from "../optional";
-import { Predicate } from "../dist";
+import { Predicate } from "../functions";
 import Stream from "../stream";
 
 /**
