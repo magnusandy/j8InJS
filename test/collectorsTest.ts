@@ -5,6 +5,7 @@ import Collectors, { Collector } from "../collectors";
 import { Map } from '../map';
 import Optional from "../optional";
 import { Comparator } from "..";
+import { Transformer } from "../functions";
 use(spies);
 
 describe('Collectors', () => {
@@ -313,4 +314,39 @@ describe('Collectors', () => {
         });
     });
     
+    describe('summarizingNumber', () => {
+        it('it should return collector applies to numbers if no mapper specified', () => {
+            const source = ["10", "20", "30"];
+            const average = Stream.of(source)
+                .map(parseInt)
+                .collect(Collectors.summarizingNumber());
+            expect(average.getAverage()).eq(20);
+            expect(average.getMax()).eq(30);
+            expect(average.getMin()).eq(10);
+            expect(average.getSum()).eq(60);
+            expect(average.getCount()).eq(3);
+        });
+
+        it('it should return collector applies to non numbers if mapper specified', () => {
+            const source = ["10", "20", "30"];
+            const average = Stream.of(source)
+                .collect(Collectors.summarizingNumber(parseInt));
+            expect(average.getAverage()).eq(20);
+            expect(average.getMax()).eq(30);
+            expect(average.getMin()).eq(10);
+            expect(average.getSum()).eq(60);
+            expect(average.getCount()).eq(3);
+        });
+
+        it('it should return collector applies to numbers if mapper specified', () => {
+            const source = [10, 20, 30];
+            const average = Stream.of(source)
+                .collect(Collectors.summarizingNumber(Transformer.identity()));
+            expect(average.getAverage()).eq(20);
+            expect(average.getMax()).eq(30);
+            expect(average.getMin()).eq(10);
+            expect(average.getSum()).eq(60);
+            expect(average.getCount()).eq(3);
+        });
+    });
 });

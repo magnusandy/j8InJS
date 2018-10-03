@@ -1,5 +1,62 @@
 import Optional from "../optional";
 
+export class NumberSummaryStatistics {
+
+    private average: number; 
+    private count: number;
+    private max: number;
+    private min: number;
+    private sum: number;
+
+    constructor() {
+        this.average = 0;
+        this.max = -Number.MAX_VALUE;
+        this.min = Number.MAX_VALUE;
+        this.count = 0;
+        this.sum = 0;
+    }
+
+    public static create() {
+        return new NumberSummaryStatistics();
+    }
+
+    public accept(n: number): void {
+        this.sum =  this.sum + n;
+        this.count++;
+        this.average = this.sum/this.count;
+        this.max = n > this.max ? n : this.max;
+        this.min = n < this.min ? n : this.min;
+    }
+
+    public combine(other: NumberSummaryStatistics): void {
+        this.sum = this.sum + other.getSum();
+        this.count = this.count + other.count;
+        this.average = this.sum / this.count;
+        this.min = this.min < other.getMin() ? this.min : other.getMin();
+        this.max = this.max > other.getMax() ? this.max : other.getMax();         
+    }
+
+    public getAverage(): number {
+        return this.average;
+    }
+
+    public getMin(): number {
+        return this.min;
+    }
+
+    public getMax(): number {
+        return this.max;
+    }
+
+    public getCount(): number {
+        return this.count;
+    }
+
+    public getSum(): number {
+        return this.sum;
+    }
+}
+
 export class MutableString {
     private value: string;
 
