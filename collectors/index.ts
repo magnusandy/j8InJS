@@ -3,6 +3,7 @@ import { MutableString, MutableNumber, Holder, NumberSummaryStatistics } from '.
 import { Map } from '../map'
 import Optional from "../optional";
 import Stream from "../stream";
+import { map } from "benchmark";
 
 /**
  * A mutable reduction operation that accumulates input elements into a mutable result container, 
@@ -273,30 +274,52 @@ class Collectors {
     public static summarizingNumber(): Collector<number, NumberSummaryStatistics, NumberSummaryStatistics>;
     public static summarizingNumber<T>(numberMapper: Transformer<T, number>): Collector<T, NumberSummaryStatistics, NumberSummaryStatistics>;
     public static summarizingNumber<T>(numberMapper?: Transformer<T, number>): Collector<T | number, NumberSummaryStatistics, NumberSummaryStatistics> {
-        const isT:(item: T | number) => item is T = (item: T | number): item is T => numberMapper ? true : false;
+        const isT: (item: T | number) => item is T = (item: T | number): item is T => numberMapper ? true : false;
         const mapper: Transformer<number | T, number> = (item: T | number): number => {
             if (isT(item)) {
                 const i: T = item;
-                if(numberMapper) {
+                if (numberMapper) {
                     return numberMapper(i);
                 }
             } else {
                 return item;
             }
             throw new Error("got an unexpected type");
-        }
+        };
 
         const supplier: Supplier<NumberSummaryStatistics> = NumberSummaryStatistics.create;
         const accumulator: BiConsumer<NumberSummaryStatistics, T | number> = (mutable, item) =>
             mutable.accept(mapper(item));
-        const combiner: BiFunction<NumberSummaryStatistics> = (mNum1, mNum2) =>{ 
+        const combiner: BiFunction<NumberSummaryStatistics> = (mNum1, mNum2) => {
             mNum1.combine(mNum2);
-            return mNum1; 
+            return mNum1;
         }
         return Collector.of(supplier, accumulator, combiner, Transformer.identity());
     }
 
+    public static summingNumber(): Collector<number, MutableNumber, number>;
+    public static summingNumber<T>(numberMapper: Transformer<T, number>): Collector<T, MutableNumber, number>;
+    public static summingNumber<T>(numberMapper?: Transformer<T, number>): Collector<T | number, MutableNumber, number> {
+        const isT: (item: T | number) => item is T = (item: T | number): item is T => numberMapper ? true : false;
+        const mapper: Transformer<number | T, number> = (item: T | number): number => {
+            if (isT(item)) {
+                const i: T = item;
+                if (numberMapper) {
+                    return numberMapper(i);
+                }
+            } else {
+                return item;
+            }
+            throw new Error("got an unexpected type");
+        };
 
+        const supplier: Supplier<MutableNumber> = MutableNumber.empty;
+        const accumulator: BiConsumer<MutableNumber, number | T> = (mutable, num) => mutable.add(mapper(num));
+        const combiner: BiFunction<MutableNumber> = (m1 , m2) => m1.addTogether(m2);
+        const finisher: Transformer<MutableNumber, number> = (mut) => mut.getTotal();
+
+        return Collector.of(supplier, accumulator, combiner, finisher);
+    }
 
     //v2 
     //countingBy(keyMapper: Transfromer<T, string>) counts values based on the keys returned by the mapper when feeding elements through

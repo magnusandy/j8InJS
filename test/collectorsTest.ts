@@ -140,7 +140,7 @@ describe('Collectors', () => {
             expect(mapByFirstLetter.keySet().length).eq(3);
             expect(mapByFirstLetter.getOptional('c').get()).to.contain.members(['cat', 'car', 'cut']);
             expect(mapByFirstLetter.getOptional('d').get()).to.contain.members(['dog']);
-            expect(mapByFirstLetter.getOptional('a').get()).to.contain.members(['ant']);     
+            expect(mapByFirstLetter.getOptional('a').get()).to.contain.members(['ant']);
         });
     });
 
@@ -154,13 +154,13 @@ describe('Collectors', () => {
                 ));
 
             expect(list.length).eq(6);
-            expect(list).to.contain.members([3,3,3,3,3,3])     
+            expect(list).to.contain.members([3, 3, 3, 3, 3, 3])
         });
     });
 
     describe('maxBy', () => {
         it('it should return collector that returns largest element by comparator, default comparator', () => {
-            const source = [6,12,5,1,3];
+            const source = [6, 12, 5, 1, 3];
             const max: Optional<number> = Stream.of(source)
                 .collect(Collectors.maxBy());
 
@@ -169,8 +169,8 @@ describe('Collectors', () => {
         });
 
         it('it should return collector that returns largest element by comparator, custom comparator', () => {
-            const reverseComparator = (x:any, y:any) => Comparator.default()(y,x);
-            const source = [6,12,5,1,3];
+            const reverseComparator = (x: any, y: any) => Comparator.default()(y, x);
+            const source = [6, 12, 5, 1, 3];
             const max: Optional<number> = Stream.of(source)
                 .collect(Collectors.maxBy(reverseComparator));
 
@@ -188,7 +188,7 @@ describe('Collectors', () => {
 
     describe('minBy', () => {
         it('it should return collector that returns smallest element by comparator, default comparator', () => {
-            const source = [6,12,5,1,3];
+            const source = [6, 12, 5, 1, 3];
             const min: Optional<number> = Stream.of(source)
                 .collect(Collectors.minBy());
 
@@ -197,8 +197,8 @@ describe('Collectors', () => {
         });
 
         it('it should return collector that returns largest element by comparator, custom comparator', () => {
-            const reverseComparator = (x:any, y:any) => Comparator.default()(y,x);
-            const source = [6,12,5,1,3];
+            const reverseComparator = (x: any, y: any) => Comparator.default()(y, x);
+            const source = [6, 12, 5, 1, 3];
             const min: Optional<number> = Stream.of(source)
                 .collect(Collectors.minBy(reverseComparator));
 
@@ -223,7 +223,7 @@ describe('Collectors', () => {
             expect(map.containsKey(true)).eq(true);
             expect(map.containsKey(false)).eq(true);
             expect(map.get(true)).to.include.members(["dogs", "ants"])
-            expect(map.get(false)).to.include.members(["cat","dat", "car", "cut"])
+            expect(map.get(false)).to.include.members(["cat", "dat", "car", "cut"])
         });
 
         it('it should return empty lists for when nothing in partition', () => {
@@ -234,14 +234,14 @@ describe('Collectors', () => {
             expect(map.containsKey(true)).eq(true);
             expect(map.containsKey(false)).eq(true);
             expect(map.getOptional(true).get().length).to.eq(0);
-            expect(map.get(false)).to.include.members(["cat","dat", "car", "cut"])
+            expect(map.get(false)).to.include.members(["cat", "dat", "car", "cut"])
         });
 
         it('it should return collector partitions by predicate with downstream', () => {
             const source = ["cat", "dogs", "ants", "dat", "car", "cut"];
             const map = Stream.of(source)
                 .collect(Collectors.partitioningBy(
-                    (i) => i.length === 4, 
+                    (i) => i.length === 4,
                     Collectors.joining(""))
                 );
 
@@ -256,7 +256,7 @@ describe('Collectors', () => {
             const map = Stream.of(source)
                 .map(i => i.length)
                 .collect(Collectors.partitioningBy(
-                    (i) => i === 4, 
+                    (i) => i === 4,
                     Collectors.averaging())
                 );
 
@@ -269,9 +269,9 @@ describe('Collectors', () => {
 
     describe('reducing', () => {
         it('it should work if just given a reducing function', () => {
-            const source = [1,2,3,4];
+            const source = [1, 2, 3, 4];
             const result: Optional<number> = Stream.of(source)
-                .collect(Collectors.reducing((i,i2)=>i+i2));
+                .collect(Collectors.reducing((i, i2) => i + i2));
 
             expect(result.isPresent()).eq(true);
             expect(result.get()).eq(10);
@@ -279,7 +279,7 @@ describe('Collectors', () => {
 
         it('it should work if just given a reducing function, empty inputs', () => {
             const result: Optional<number> = Stream.empty<number>()
-                .collect(Collectors.reducing((i,i2)=>i+i2));
+                .collect(Collectors.reducing((i, i2) => i + i2));
 
             expect(result.isPresent()).eq(false);
         });
@@ -287,7 +287,7 @@ describe('Collectors', () => {
         it('it should work if just given a reducing function and identity, empty inputs return identity', () => {
             const id = 5;
             const result: Optional<number> = Stream.empty<number>()
-                .collect(Collectors.reducing((i,i2)=>i+i2, id));
+                .collect(Collectors.reducing((i, i2) => i + i2, id));
 
             expect(result.isPresent()).eq(true);
             expect(result.get()).eq(id);
@@ -295,25 +295,25 @@ describe('Collectors', () => {
 
         it('it should work if just given a reducing function and identty includes identity', () => {
             const id = 1;
-            const source = [1,2,3,4];
+            const source = [1, 2, 3, 4];
             const result: Optional<number> = Stream.of(source)
-                .collect(Collectors.reducing((i,i2)=>i+i2, id));
+                .collect(Collectors.reducing((i, i2) => i + i2, id));
 
             expect(result.isPresent()).eq(true);
-            expect(result.get()).eq(10+id);
+            expect(result.get()).eq(10 + id);
         });
 
         it('it should work if just given a reducing function and identty includes identity', () => {
             const id = 1;
             const source = ['1', '2', '3', '4'];
             const result: Optional<number> = Stream.of(source)
-                .collect(Collectors.reducing((i,i2)=>i+i2, id, (s) => parseInt(s)));
+                .collect(Collectors.reducing((i, i2) => i + i2, id, (s) => parseInt(s)));
 
             expect(result.isPresent()).eq(true);
-            expect(result.get()).eq(10+id);
+            expect(result.get()).eq(10 + id);
         });
     });
-    
+
     describe('summarizingNumber', () => {
         it('it should return collector applies to numbers if no mapper specified', () => {
             const source = ["10", "20", "30"];
@@ -347,6 +347,31 @@ describe('Collectors', () => {
             expect(average.getMin()).eq(10);
             expect(average.getSum()).eq(60);
             expect(average.getCount()).eq(3);
+        });
+    });
+
+    describe('summingNumber', () => {
+        it('it should return collector that sums numbers without a mapper', () => {
+            const source = ["10", "20", "30"];
+            const sum = Stream.of(source)
+                .map(parseInt)
+                .collect(Collectors.summingNumber());
+            expect(sum).eq(60);
+        });
+
+        it('it should return collector that sums with a mapper ', () => {
+            const source = ["10", "20", "30"];
+            const sum = Stream.of(source)
+                .collect(Collectors.summingNumber(parseInt));
+            expect(sum).eq(60);
+        });
+
+        it('it should return collector applies to numbers with mapper and number stream', () => {
+            const source = ["10", "20", "30"];
+            const sum = Stream.of(source)
+                .map(parseInt)
+                .collect(Collectors.summingNumber((i) => i + 1));
+            expect(sum).eq(63);
         });
     });
 });
