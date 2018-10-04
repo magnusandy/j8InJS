@@ -4,6 +4,7 @@ import { Map } from '../map'
 import Optional from "../optional";
 import Stream from "../stream";
 import { map } from "benchmark";
+import Errors from "../errors";
 
 /**
  * A mutable reduction operation that accumulates input elements into a mutable result container, 
@@ -315,11 +316,38 @@ class Collectors {
 
         const supplier: Supplier<MutableNumber> = MutableNumber.empty;
         const accumulator: BiConsumer<MutableNumber, number | T> = (mutable, num) => mutable.add(mapper(num));
-        const combiner: BiFunction<MutableNumber> = (m1 , m2) => m1.addTogether(m2);
+        const combiner: BiFunction<MutableNumber> = (m1, m2) => m1.addTogether(m2);
         const finisher: Transformer<MutableNumber, number> = (mut) => mut.getTotal();
 
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
+    
+    public static toMap<I, K, V>(keyMapper: Transformer<I, K>, valueMapper: Transformer<I, V>): Collector<I, Map<K, V>, Map<K, V>>;
+    public static toMap<I, K, V>(keyMapper: Transformer<I, K>, valueMapper: Transformer<I, V>, merger: BiFunction<V>): Collector<I, Map<K, V>, Map<K, V>>;
+    public static toMap<I, K, V>(keyMapper: Transformer<I, K>, valueMapper: Transformer<I, V>, merger?: BiFunction<V>): Collector<I, Map<K, V>, Map<K, V>> {
+        const supplier: Supplier<Map<K, V>> = Map.empty;
+        const accumulator: BiConsumer<Map<K, V>, I> = (map, input) => {
+            const key = keyMapper(input);
+            const value = valueMapper(input);
+            if (map.containsKey(key)) {
+                if (merger) {
+                    map.merge(key, value, merger);
+                } else {
+                    throw new Error(Errors.IllegalStateException);
+                }
+            } else {
+                map.put(key, value);
+            }
+        }
+        const combiner: BiFunction<Map<K, V>> = (m1, m2) => {
+            m1.putAll(m2);
+            return m1;
+        }
+
+        return Collector.of(supplier, accumulator, combiner, Transformer.identity());
+    }
+
+
 
     //v2 
     //countingBy(keyMapper: Transfromer<T, string>) counts values based on the keys returned by the mapper when feeding elements through

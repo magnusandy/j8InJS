@@ -6,6 +6,7 @@ import { Map } from '../map';
 import Optional from "../optional";
 import { Comparator } from "..";
 import { Transformer } from "../functions";
+import Errors from "../errors";
 use(spies);
 
 describe('Collectors', () => {
@@ -372,6 +373,46 @@ describe('Collectors', () => {
                 .map(parseInt)
                 .collect(Collectors.summingNumber((i) => i + 1));
             expect(sum).eq(63);
+        });
+    });
+
+    describe('toMap', () => {
+        it('saves all items with the mapped keys and values', () => {
+            const source = ["1", "2", "3"];
+            const stream = Stream.of(source);
+            const result: Map<string, number> = stream.collect(Collectors.toMap(
+                (str) => `key:${str}`,
+                parseInt
+            ));
+
+            expect(result.get("key:1")).to.eq(1);
+            expect(result.get("key:2")).to.eq(2);
+            expect(result.get("key:3")).to.eq(3);
+        });
+
+        it('saves all items throws error without mapper and dupe keys', () => {
+            const source = ["1", "2", "2"];
+            const stream = Stream.of(source);
+            const action = () => stream.collect(Collectors.toMap(
+                (str) => `key:${str}`,
+                parseInt
+            ));
+
+            expect(action).to.throw(Errors.IllegalStateException);
+        });
+
+        it('saves all items and merges with merger when there is dupes', () => {
+            const source = ["1", "2", "2"];
+            const stream = Stream.of(source);
+            const resultMap = stream.collect(Collectors.toMap(
+                (str) => `key:${str}`,
+                parseInt,
+                (i, i2) => i + i2,
+            ));
+
+            expect(resultMap.get(`key:1`)).to.eq(1);
+            expect(resultMap.get(`key:2`)).to.eq(4);
+
         });
     });
 });
