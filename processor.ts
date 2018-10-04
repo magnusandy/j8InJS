@@ -1,4 +1,4 @@
-import { Transformer, Predicate, BiPredicate, Consumer, Comparator } from "./functions";
+import { Function, Predicate, BiPredicate, Consumer, Comparator } from "./functions";
 import Optional from "./optional";
 import Stream, { StreamIterator } from "./stream";
 
@@ -51,14 +51,14 @@ export interface Processor<Input, Output> {
 }
 
 export const Processor = {
-    mapProcessor: <I, O>(transformer: Transformer<I, O>): Processor<I, O> => new MapProcessor<I, O>(transformer),
+    mapProcessor: <I, O>(Function: Function<I, O>): Processor<I, O> => new MapProcessor<I, O>(Function),
     filterProcessor: <I>(predicate: Predicate<I>): Processor<I, I> => new FilterProcessor<I>(predicate),
-    listFlatMapProcessor: <I, O>(transformer: Transformer<I, O[]>): Processor<I, O> => new ListFlatMapProcessor(transformer),
+    listFlatMapProcessor: <I, O>(Function: Function<I, O[]>): Processor<I, O> => new ListFlatMapProcessor(Function),
     distinctProcessor: <I>(comparator: BiPredicate<I, I>): Processor<I, I> => new DistinctProcessor<I>(comparator),
     limitProcessor: <I>(limit: number): Processor<I, I> => new LimitProcessor<I>(limit),//todo test
-    streamFlatMapProcessor: <I, O>(transformer: Transformer<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(transformer),
+    streamFlatMapProcessor: <I, O>(Function: Function<I, Stream<O>>): Processor<I, O> => new StreamFlatMapProcessor(Function),
     peekProcessor: <I>(consumer: Consumer<I>): Processor<I, I> => new PeekProcessor(consumer),
-    optionalFlatMapProcessor: <I, O>(transformer: Transformer<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(transformer),
+    optionalFlatMapProcessor: <I, O>(Function: Function<I, Optional<O>>): Processor<I, O> => new OptionalFlatMapProcessor(Function),
     skipProcessor: <I>(numberToSkip: number): Processor<I, I> => new SkipProcessor(numberToSkip),
     sortProcessor: <I>(comparator: Comparator<I>): Processor<I, I> => new SortProcessor(comparator),
 }
@@ -235,16 +235,16 @@ class SortProcessor<Input> extends AbstractProcessor<Input, Input> {
  */
 class MapProcessor<Input, Output> extends PureStatelessProcessor<Input, Output> {
 
-    private transformer: Transformer<Input, Output>;
+    private Function: Function<Input, Output>;
 
-    public constructor(transformer: Transformer<Input, Output>) {
+    public constructor(Function: Function<Input, Output>) {
         super();
-        this.transformer = transformer;
+        this.Function = Function;
     }
 
     //pull values off the start
     public processAndGetNext(): Optional<Output> {
-        return this.takeNextInput().map(this.transformer);
+        return this.takeNextInput().map(this.Function);
     }
 }
 
@@ -315,11 +315,11 @@ class SkipProcessor<Input> extends PureStatelessProcessor<Input, Input> {
  */
 class ListFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, Output> {
     private outputList: Output[];
-    private transformer: Transformer<Input, Output[]>;
+    private Function: Function<Input, Output[]>;
 
-    constructor(transformer: Transformer<Input, Output[]>) {
+    constructor(Function: Function<Input, Output[]>) {
         super();
-        this.transformer = transformer;
+        this.Function = Function;
         this.outputList = [];
     }
 
@@ -333,7 +333,7 @@ class ListFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, 
         } else if (this.inputs.length > 0) {
             const nextSource: Optional<Input> = this.takeNextInput();
             if (nextSource.isPresent()) {
-                this.outputList = this.transformer(nextSource.get());
+                this.outputList = this.Function(nextSource.get());
                 return this.processAndGetNext();
             }
         }
@@ -348,11 +348,11 @@ class ListFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, 
  */
 class StreamFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, Output> {
     private outputSpliterator?: StreamIterator<Output>;
-    private transformer: Transformer<Input, Stream<Output>>;
+    private Function: Function<Input, Stream<Output>>;
 
-    constructor(transformer: Transformer<Input, Stream<Output>>) {
+    constructor(Function: Function<Input, Stream<Output>>) {
         super();
-        this.transformer = transformer;
+        this.Function = Function;
     }
 
     public hasNext(): boolean {
@@ -365,7 +365,7 @@ class StreamFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input
         } else if (this.inputs.length > 0) {
             const nextSource: Optional<Input> = this.takeNextInput();
             if (nextSource.isPresent()) {
-                this.outputSpliterator = this.transformer(nextSource.get()).streamIterator();
+                this.outputSpliterator = this.Function(nextSource.get()).streamIterator();
                 return this.processAndGetNext();
             }
         }
@@ -375,17 +375,17 @@ class StreamFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input
 
 /**
  * Processor that takes in source values, and transforms them through an optional bearing
- * transformer, and returns the values in a flattened optional state
+ * Function, and returns the values in a flattened optional state
  */
 class OptionalFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, Output> {
-    private transformer: Transformer<Input, Optional<Output>>;
+    private Function: Function<Input, Optional<Output>>;
 
-    constructor(transformer: Transformer<Input, Optional<Output>>) {
+    constructor(Function: Function<Input, Optional<Output>>) {
         super();
-        this.transformer = transformer;
+        this.Function = Function;
     }
 
     public processAndGetNext(): Optional<Output> {
-        return this.takeNextInput().flatMap(this.transformer);
+        return this.takeNextInput().flatMap(this.Function);
     }
 }

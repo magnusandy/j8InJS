@@ -1,6 +1,6 @@
 import * as hash from 'js-hash-code';
 import Stream from '../stream';
-import { BiPredicate, BiConsumer, BiFunction, BiTransformer } from '../functions';
+import { BiPredicate, BiConsumer, BiFunction } from '../functions';
 import Optional from '../optional';
 import { Errors } from '../errors';
 
@@ -215,4 +215,4 @@ class MapEntry<K, V> implements Entry<K, V> {
     public getKey(): K {
         return this.key;
     }
-}
+} 

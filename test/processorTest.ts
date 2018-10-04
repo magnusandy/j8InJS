@@ -1,4 +1,4 @@
-import { Predicate, Transformer, BiPredicate, Consumer, Comparator } from "../functions";
+import { Predicate, Function, BiPredicate, Consumer, Comparator } from "../functions";
 import Optional from "../optional";
 import { Processor } from "../processor";
 import { expect } from "chai";
@@ -9,30 +9,30 @@ describe('Processor tests', () => {
 
     describe('MapProcessor tests', () => {
         it('should be a stateless processor', () => {
-            const transformer: Transformer<number, string> = (n: number) => `${n}`;
-            const processor: Processor<number, string> = Processor.mapProcessor(transformer);
+            const Function: Function<number, string> = (n: number) => `${n}`;
+            const processor: Processor<number, string> = Processor.mapProcessor(Function);
 
             expect(processor.isStateless()).to.equal(true);
         })
 
         it('should not have next with no values', () => {
-            const transformer: Transformer<number, string> = (n: number) => `${n}`;
-            const processor: Processor<number, string> = Processor.mapProcessor(transformer);
+            const Function: Function<number, string> = (n: number) => `${n}`;
+            const processor: Processor<number, string> = Processor.mapProcessor(Function);
 
             expect(processor.hasNext()).to.equal(false);
         })
 
         it('should have next when a value as been added', () => {
-            const transformer: Transformer<number, string> = (n: number) => `${n}`;
-            const processor: Processor<number, string> = Processor.mapProcessor(transformer);
+            const Function: Function<number, string> = (n: number) => `${n}`;
+            const processor: Processor<number, string> = Processor.mapProcessor(Function);
             processor.add(1);
 
             expect(processor.hasNext()).to.equal(true);
         });
 
-        it('should run values through transformer when retrieved', () => {
-            const transformer: Transformer<number, string> = (n: number) => `${n}`;
-            const processor: Processor<number, string> = Processor.mapProcessor(transformer);
+        it('should run values through Function when retrieved', () => {
+            const Function: Function<number, string> = (n: number) => `${n}`;
+            const processor: Processor<number, string> = Processor.mapProcessor(Function);
             processor.add(1);
             const processedVal: Optional<string> = processor.processAndGetNext();
             expect(processedVal.isPresent()).to.equal(true);
@@ -40,23 +40,23 @@ describe('Processor tests', () => {
         })
 
         it('should should return empty when has no values', () => {
-            const transformer: Transformer<number, string> = (n: number) => `${n}`;
-            const processor: Processor<number, string> = Processor.mapProcessor(transformer);
+            const Function: Function<number, string> = (n: number) => `${n}`;
+            const processor: Processor<number, string> = Processor.mapProcessor(Function);
             const processedVal: Optional<string> = processor.processAndGetNext();
             expect(processedVal.isPresent()).to.equal(false);
         })
 
         it('should not have next after getting all values', () => {
-            const transformer: Transformer<number, string> = (n: number) => `${n}`;
-            const processor: Processor<number, string> = Processor.mapProcessor(transformer);
+            const Function: Function<number, string> = (n: number) => `${n}`;
+            const processor: Processor<number, string> = Processor.mapProcessor(Function);
             processor.add(1);
             processor.processAndGetNext();
             expect(processor.hasNext()).to.equal(false);
         });
 
         it('should process in order of additions', () => {
-            const transformer: Transformer<number, string> = (n: number) => `${n}`;
-            const processor: Processor<number, string> = Processor.mapProcessor(transformer);
+            const Function: Function<number, string> = (n: number) => `${n}`;
+            const processor: Processor<number, string> = Processor.mapProcessor(Function);
             processor.add(1);
             processor.add(2);
             const val1: Optional<string> = processor.processAndGetNext();
@@ -67,11 +67,11 @@ describe('Processor tests', () => {
             expect(val2.get()).to.equal('2');
         });
 
-        it('should process transformer lazily on value fetch', () => {
+        it('should process Function lazily on value fetch', () => {
             let count = 0;
 
-            const transformer: Transformer<number, string> = (n: number) => { count++; return `${n}` };
-            const processor: Processor<number, string> = Processor.mapProcessor(transformer);
+            const Function: Function<number, string> = (n: number) => { count++; return `${n}` };
+            const processor: Processor<number, string> = Processor.mapProcessor(Function);
             processor.add(1);
             processor.add(2);
             expect(count).to.equal(0);
@@ -154,29 +154,29 @@ describe('Processor tests', () => {
 
     describe('ListFlatmapProcessor tests', () => {
         it('should be a stateless processor', () => {
-            const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+            const Function: Function<string, string[]> = (s: string) => s.split('');
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
 
             expect(processor.isStateless()).to.equal(true);
         });
 
         it('should not have next with no values', () => {
-            const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+            const Function: Function<string, string[]> = (s: string) => s.split('');
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
 
             expect(processor.hasNext()).to.equal(false);
         })
 
         it('should have next when a value as been added', () => {
-            const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+            const Function: Function<string, string[]> = (s: string) => s.split('');
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
             processor.add('cat');
             expect(processor.hasNext()).to.equal(true);
         });
 
-        it('should run values through transformer when retrieved', () => {
-            const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+        it('should run values through Function when retrieved', () => {
+            const Function: Function<string, string[]> = (s: string) => s.split('');
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
             processor.add('cat');
             const val: Optional<string> = processor.processAndGetNext();
             expect(val.isPresent()).to.equal(true);
@@ -184,8 +184,8 @@ describe('Processor tests', () => {
         });
 
         it('should hasNext be true if in the middle of a processing', () => {
-            const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+            const Function: Function<string, string[]> = (s: string) => s.split('');
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
             processor.add('cat');
             expect(processor.hasNext()).to.equal(true);
             processor.processAndGetNext();
@@ -195,16 +195,16 @@ describe('Processor tests', () => {
         })
 
         it('should should return empty when has no values', () => {
-            const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+            const Function: Function<string, string[]> = (s: string) => s.split('');
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
             const val: Optional<string> = processor.processAndGetNext();
             expect(val.isPresent()).to.equal(false);
         })
 
         it('should not have next after getting all values', () => {
             it('should hasNext be true if in the middle of a processing', () => {
-                const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-                const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+                const Function: Function<string, string[]> = (s: string) => s.split('');
+                const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
                 processor.add('cat');
                 processor.processAndGetNext();
                 processor.processAndGetNext();
@@ -214,8 +214,8 @@ describe('Processor tests', () => {
         });
 
         it('should process in order of additions', () => {
-            const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+            const Function: Function<string, string[]> = (s: string) => s.split('');
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
             processor.add('ca');
             processor.add('do');
             expect(processor.processAndGetNext().get()).to.equal('c');
@@ -224,10 +224,10 @@ describe('Processor tests', () => {
             expect(processor.processAndGetNext().get()).to.equal('o');
         });
 
-        it('should process transformer lazily on value fetch', () => {
+        it('should process Function lazily on value fetch', () => {
             let count = 0;
-            const transformer: Transformer<string, string[]> = (s: string) => { count++; return s.split(''); }
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+            const Function: Function<string, string[]> = (s: string) => { count++; return s.split(''); }
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
             processor.add('ca');
             processor.add('do');
             expect(count).to.equal(0);
@@ -236,8 +236,8 @@ describe('Processor tests', () => {
         });
 
         it('should try process and return optionalEmpty if input list has null', () => {
-            const transformer: Transformer<string, string[]> = (s: string) => s.split('');
-            const processor: Processor<string, string> = Processor.listFlatMapProcessor(transformer);
+            const Function: Function<string, string[]> = (s: string) => s.split('');
+            const processor: Processor<string, string> = Processor.listFlatMapProcessor(Function);
             processor.add(<any>null);
             expect(processor.processAndGetNext().isPresent()).to.equal(false);
         });
@@ -274,7 +274,7 @@ describe('Processor tests', () => {
             expect(processor.hasNext()).to.equal(true);
         });
 
-        it('should run values through transformer when retrieved', () => {
+        it('should run values through Function when retrieved', () => {
             const comparator: BiPredicate<number, number> = (n1, n2) => n1 === n2;
             const processor: Processor<number, number> = Processor.distinctProcessor(comparator);
             [1, 1].forEach(i => processor.add(i));
@@ -321,7 +321,7 @@ describe('Processor tests', () => {
             expect(val3.isPresent()).to.equal(false);
         });
 
-        it('should process transformer lazily on value fetch', () => {
+        it('should process Function lazily on value fetch', () => {
             let count = 0;
             const comparator: BiPredicate<number, number> = (n1, n2) => { count++; return n1 === n2 };
             const processor: Processor<number, number> = Processor.distinctProcessor(comparator);
@@ -334,29 +334,29 @@ describe('Processor tests', () => {
     });
     describe('StreamFlatMapProcessor tests', () => {
         it('should be a stateless processor', () => {
-            const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+            const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
 
             expect(processor.isStateless()).to.equal(true);
         });
 
         it('should not have next with no values', () => {
-            const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+            const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
 
             expect(processor.hasNext()).to.equal(false);
         })
 
         it('should have next when a value as been added', () => {
-            const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+            const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
             processor.add('cat');
             expect(processor.hasNext()).to.equal(true);
         });
 
-        it('should run values through transformer when retrieved', () => {
-            const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+        it('should run values through Function when retrieved', () => {
+            const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
             processor.add('cat');
             const val: Optional<string> = processor.processAndGetNext();
             expect(val.isPresent()).to.equal(true);
@@ -364,8 +364,8 @@ describe('Processor tests', () => {
         });
 
         it('should hasNext be true if in the middle of a processing', () => {
-            const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+            const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
             processor.add('cat');
             expect(processor.hasNext()).to.equal(true);
             processor.processAndGetNext();
@@ -375,16 +375,16 @@ describe('Processor tests', () => {
         })
 
         it('should should return empty when has no values', () => {
-            const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+            const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
             const val: Optional<string> = processor.processAndGetNext();
             expect(val.isPresent()).to.equal(false);
         })
 
         it('should not have next after getting all values', () => {
             it('should hasNext be true if in the middle of a processing', () => {
-                const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-                const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+                const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+                const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
                 processor.add('cat');
                 processor.processAndGetNext();
                 processor.processAndGetNext();
@@ -394,8 +394,8 @@ describe('Processor tests', () => {
         });
 
         it('should process in order of additions', () => {
-            const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+            const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
             processor.add('ca');
             processor.add('do');
             expect(processor.processAndGetNext().get()).to.equal('c');
@@ -404,10 +404,10 @@ describe('Processor tests', () => {
             expect(processor.processAndGetNext().get()).to.equal('o');
         });
 
-        it('should process transformer lazily on value fetch', () => {
+        it('should process Function lazily on value fetch', () => {
             let count = 0;
-            const transformer: Transformer<string, Stream<string>> = (s: string) => { count++; return Stream.of(s.split('')); }
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+            const Function: Function<string, Stream<string>> = (s: string) => { count++; return Stream.of(s.split('')); }
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
             processor.add('ca');
             processor.add('do');
             expect(count).to.equal(0);
@@ -416,8 +416,8 @@ describe('Processor tests', () => {
         });
 
         it('should try process and return optionalEmpty if input list has null', () => {
-            const transformer: Transformer<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
-            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(transformer);
+            const Function: Function<string, Stream<string>> = (s: string) => Stream.of(s.split(''));
+            const processor: Processor<string, string> = Processor.streamFlatMapProcessor(Function);
             processor.add(<any>null);
             expect(processor.processAndGetNext().isPresent()).to.equal(false);
         });
@@ -496,7 +496,7 @@ describe('Processor tests', () => {
             expect(v2.get()).to.eq(2);
         });
 
-        it('should process transformer lazily on value fetch', () => {
+        it('should process Function lazily on value fetch', () => {
             let sum = 0;
             const consumer: Consumer<number> = (n: number) => sum = sum + n;
             const processor: Processor<number, number> = Processor.peekProcessor(consumer);
@@ -510,30 +510,30 @@ describe('Processor tests', () => {
 
     describe('OptionalFlatMapProcessor tests', () => {
         it('should be a stateless processor', () => {
-            const transformer: Transformer<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+            const Function: Function<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
 
             expect(processor.isStateless()).to.equal(true);
         });
 
         it('should not have next with no values', () => {
-            const transformer: Transformer<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+            const Function: Function<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
 
             expect(processor.hasNext()).to.equal(false);
         })
 
         it('should have next when a value as been added', () => {
-            const transformer: Transformer<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+            const Function: Function<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
             processor.add(1);
 
             expect(processor.hasNext()).to.equal(true);
         });
 
-        it('should run values through transformer when retrieved', () => {
-            const transformer: Transformer<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+        it('should run values through Function when retrieved', () => {
+            const Function: Function<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
             processor.add(11);
             const v1 = processor.processAndGetNext()
 
@@ -541,16 +541,16 @@ describe('Processor tests', () => {
         })
 
         it('should should return empty when has no values', () => {
-            const transformer: Transformer<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+            const Function: Function<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
             const v1 = processor.processAndGetNext()
 
             expect(v1.isPresent()).to.equal(false);
         })
 
         it('should not have next after getting all values', () => {
-            const transformer: Transformer<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+            const Function: Function<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
             processor.add(11);
             const v1 = processor.processAndGetNext()
 
@@ -558,8 +558,8 @@ describe('Processor tests', () => {
         });
 
         it('should process in order of additions', () => {
-            const transformer: Transformer<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+            const Function: Function<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
             processor.add(1);
             processor.add(11);
             const v1 = processor.processAndGetNext()
@@ -570,9 +570,9 @@ describe('Processor tests', () => {
             expect(v2.isPresent()).to.equal(false);
         });
 
-        it('should get only present values from transformer', () => {
-            const transformer: Transformer<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+        it('should get only present values from Function', () => {
+            const Function: Function<number, Optional<number>> = (n: number) => Optional.of(n).filter(i => i < 10);
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
             processor.add(1);
             processor.add(11);
             const v1 = processor.processAndGetNext()
@@ -583,10 +583,10 @@ describe('Processor tests', () => {
             expect(v2.isPresent()).to.equal(false);
         });
 
-        it('should process transformer lazily on value fetch', () => {
+        it('should process Function lazily on value fetch', () => {
             let count = 0;
-            const transformer: Transformer<number, Optional<number>> = (n: number) => { count++; return Optional.of(n).filter(i => i < 10); }
-            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(transformer);
+            const Function: Function<number, Optional<number>> = (n: number) => { count++; return Optional.of(n).filter(i => i < 10); }
+            const processor: Processor<number, number> = Processor.optionalFlatMapProcessor(Function);
             processor.add(11);
             expect(count).to.eq(0);
             const v1 = processor.processAndGetNext()
@@ -742,7 +742,7 @@ describe('Processor tests', () => {
             expect(processor.hasNext()).to.equal(false);
         });
 
-        it('should process transformer lazily on value fetch', () => {
+        it('should process Function lazily on value fetch', () => {
             let count = 0;
             const comparator: Comparator<number> = (n: number, n2: number) => { count++; return 0 }
             const processor: Processor<number, number> = Processor.sortProcessor(comparator);
@@ -792,7 +792,7 @@ describe('Processor tests', () => {
             expect(processor.hasNext()).to.equal(true);
         });
 
-        it('should run values through transformer when retrieved', () => {
+        it('should run values through Function when retrieved', () => {
             const processor: Processor<number, number> = Processor.limitProcessor(1);
             processor.add(1);
             processor.add(2);
@@ -801,7 +801,7 @@ describe('Processor tests', () => {
             expect(processor.processAndGetNext().isPresent()).to.equal(false);
         })
 
-        it('should run values through transformer when retrieved', () => {
+        it('should run values through Function when retrieved', () => {
             const processor: Processor<number, number> = Processor.limitProcessor(1);
             processor.add(1);
             processor.add(1);

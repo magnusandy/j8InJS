@@ -1,4 +1,4 @@
-import { Transformer, Supplier, BiConsumer, BiFunction, Comparator, Predicate } from "../functions";
+import { Function, Supplier, BiConsumer, BiFunction, Comparator, Predicate } from "../functions";
 import { MutableString, MutableNumber, Holder, NumberSummaryStatistics } from './mutableCollections';
 import { Map } from '../map'
 import Optional from "../optional";
@@ -27,9 +27,9 @@ export class Collector<T, A, R> {
     private supp: Supplier<A>;
     private accu: BiConsumer<A, T>;
     private comb: BiFunction<A>;
-    private fini: Transformer<A, R>;
+    private fini: Function<A, R>;
 
-    private constructor(supp: Supplier<A>, accu: BiConsumer<A, T>, comb: BiFunction<A>, fini: Transformer<A, R>) {
+    private constructor(supp: Supplier<A>, accu: BiConsumer<A, T>, comb: BiFunction<A>, fini: Function<A, R>) {
         this.supp = supp;
         this.accu = accu;
         this.comb = comb;
@@ -39,7 +39,7 @@ export class Collector<T, A, R> {
     public supplier = (): Supplier<A> => this.supp;
     public accumulator = (): BiConsumer<A, T> => this.accu;
     public combiner = (): BiFunction<A> => this.comb;
-    public finisher = (): Transformer<A, R> => this.fini;
+    public finisher = (): Function<A, R> => this.fini;
 
     /**
     * A Collector is specified by four functions that work together to accumulate entries into a mutable result container,
@@ -49,7 +49,7 @@ export class Collector<T, A, R> {
     * @param combiner function for combining two result containers into one
     * @param finisher function for performing an optional final transform on the container
     */
-    public static of<T, A, R>(supplier: Supplier<A>, accumulator: BiConsumer<A, T>, combiner: BiFunction<A>, finisher: Transformer<A, R>): Collector<T, A, R> {
+    public static of<T, A, R>(supplier: Supplier<A>, accumulator: BiConsumer<A, T>, combiner: BiFunction<A>, finisher: Function<A, R>): Collector<T, A, R> {
         return new Collector(supplier, accumulator, combiner, finisher);
     }
 };
@@ -66,7 +66,7 @@ class Collectors {
         const supplier: Supplier<T[]> = () => [];
         const accumulator: BiConsumer<T[], T> = (list, item) => list.push(item);
         const combiner: BiFunction<T[]> = (list1, list2) => list1.concat(list2);
-        const finisher: Transformer<T[], T[]> = Transformer.identity();
+        const finisher: Function<T[], T[]> = Function.identity();
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
@@ -91,7 +91,7 @@ class Collectors {
         const supplier: Supplier<MutableString> = () => MutableString.empty();
         const accumulator: BiConsumer<MutableString, string> = (mutable, str) => mutable.append(str + delimiterToUse);
         const combiner: BiFunction<MutableString> = (mutable1, mutable2) => mutable1.concat(mutable2);
-        const finisher: Transformer<MutableString, string> = (mutable) => {
+        const finisher: Function<MutableString, string> = (mutable) => {
             const valueWithExtraDelimiter = mutable.getValue();
             const valueWithOutExtraDelimiter = delimiterToUse.length === 0
                 ? valueWithExtraDelimiter
@@ -104,13 +104,13 @@ class Collectors {
 
     /**
      * Returns a Collector that produces the arithmetic mean of a number-valued function applied to the input elements.
-     * @param mapper Transformer function to transform input elements into a number
+     * @param mapper Function function to transform input elements into a number
      */
-    public static averagingNumber<I>(mapper: Transformer<I, number>): Collector<I, MutableNumber, number> {
+    public static averagingNumber<I>(mapper: Function<I, number>): Collector<I, MutableNumber, number> {
         const supplier: Supplier<MutableNumber> = MutableNumber.empty;
         const accumulator: BiConsumer<MutableNumber, I> = (mutable, item) => mutable.add(mapper(item));
         const combiner: BiFunction<MutableNumber> = (mNum1, mNum2) => mNum1.addTogether(mNum2);
-        const finisher: Transformer<MutableNumber, number> = (mutable: MutableNumber) =>
+        const finisher: Function<MutableNumber, number> = (mutable: MutableNumber) =>
             mutable.getInputCount() > 0
                 ? mutable.getTotal() / mutable.getInputCount()
                 : 0;
@@ -121,10 +121,10 @@ class Collectors {
      * returns a Collector that produces the arithmetic mean of input numbers
      */
     public static averaging(): Collector<number, MutableNumber, number> {
-        return Collectors.averagingNumber(Transformer.identity());
+        return Collectors.averagingNumber(Function.identity());
     }
 
-    public static collectingAndThen<Input, Mutable, Intermediate, Output>(downStream: Collector<Input, Mutable, Intermediate>, finisher: Transformer<Intermediate, Output>): Collector<Input, Mutable, Output> {
+    public static collectingAndThen<Input, Mutable, Intermediate, Output>(downStream: Collector<Input, Mutable, Intermediate>, finisher: Function<Intermediate, Output>): Collector<Input, Mutable, Output> {
         const newFinisher = (input: Mutable) => finisher(downStream.finisher()(input))
         return Collector.of(downStream.supplier(), downStream.accumulator(), downStream.combiner(), newFinisher)
     }
@@ -133,12 +133,12 @@ class Collectors {
         const supplier: Supplier<MutableNumber> = MutableNumber.empty;
         const accumulator: BiConsumer<MutableNumber, Input> = (mutable, item) => mutable.add(1);
         const combiner: BiFunction<MutableNumber> = (mNum1, mNum2) => mNum1.addTogether(mNum2);
-        const finisher: Transformer<MutableNumber, number> = (mutable: MutableNumber) => mutable.getInputCount();
+        const finisher: Function<MutableNumber, number> = (mutable: MutableNumber) => mutable.getInputCount();
 
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
-    public static groupingBy<Input, Key>(classifier: Transformer<Input, Key>): Collector<Input, Map<Key, Input[]>, Map<Key, Input[]>> {
+    public static groupingBy<Input, Key>(classifier: Function<Input, Key>): Collector<Input, Map<Key, Input[]>, Map<Key, Input[]>> {
         const supplier: Supplier<Map<Key, Input[]>> = () => Map.empty<Key, Input[]>();
         const accumulator: BiConsumer<Map<Key, Input[]>, Input> = (map, item) => map.merge(
             classifier(item),
@@ -149,10 +149,10 @@ class Collectors {
             map1.putAll(map2);
             return map1;
         }
-        return Collector.of(supplier, accumulator, combiner, Transformer.identity());
+        return Collector.of(supplier, accumulator, combiner, Function.identity());
     }
 
-    public static mapping<I, II, A, R>(mapper: Transformer<I, II>, downstream: Collector<II, A, R>): Collector<I, A, R> {
+    public static mapping<I, II, A, R>(mapper: Function<I, II>, downstream: Collector<II, A, R>): Collector<I, A, R> {
         return Collector.of(
             downstream.supplier(),
             (mutable: A, item: I) => downstream.accumulator()(mutable, mapper(item)),
@@ -186,7 +186,7 @@ class Collectors {
                 return h2;
             }
         }
-        const finisher: Transformer<Holder<I>, Optional<I>> = (mutable: Holder<I>) => mutable.get();
+        const finisher: Function<Holder<I>, Optional<I>> = (mutable: Holder<I>) => mutable.get();
 
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
@@ -216,7 +216,7 @@ class Collectors {
                 return h2;
             }
         }
-        const finisher: Transformer<Holder<I>, Optional<I>> = (mutable: Holder<I>) => mutable.get();
+        const finisher: Function<Holder<I>, Optional<I>> = (mutable: Holder<I>) => mutable.get();
 
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
@@ -236,7 +236,7 @@ class Collectors {
         }
 
         if (downStream) {
-            const transformer: Transformer<Map<boolean, T[]>, Map<boolean, D>> = (map) => {
+            const Function: Function<Map<boolean, T[]>, Map<boolean, D>> = (map) => {
                 const maps = Map.of(
                     true,
                     Stream.of(map.getOptional(true).orElse([]))
@@ -247,36 +247,36 @@ class Collectors {
                 );
                 return maps;
             }
-            return Collector.of<T, Map<boolean, T[]>, Map<boolean, D>>(supplier, accumulator, combiner, transformer);
+            return Collector.of<T, Map<boolean, T[]>, Map<boolean, D>>(supplier, accumulator, combiner, Function);
         } else {
-            return Collector.of<T, Map<boolean, T[]>, Map<boolean, T[]>>(supplier, accumulator, combiner, Transformer.identity());
+            return Collector.of<T, Map<boolean, T[]>, Map<boolean, T[]>>(supplier, accumulator, combiner, Function.identity());
         }
     }
     public static reducing<I>(reducer: BiFunction<I>): Collector<I, I[], Optional<I>>;
     public static reducing<I>(reducer: BiFunction<I>, identity: I): Collector<I, I[], Optional<I>>;
-    public static reducing<I, U>(reducer: BiFunction<U>, identity: U, mapper: Transformer<I, U>): Collector<I, I[], Optional<U>>;
-    public static reducing<I, U>(reducer: BiFunction<I | U>, identity?: I | U, mapper?: Transformer<I, I | U>): Collector<I, I[], Optional<I | U>> {
+    public static reducing<I, U>(reducer: BiFunction<U>, identity: U, mapper: Function<I, U>): Collector<I, I[], Optional<U>>;
+    public static reducing<I, U>(reducer: BiFunction<I | U>, identity?: I | U, mapper?: Function<I, I | U>): Collector<I, I[], Optional<I | U>> {
         const supplier: Supplier<I[]> = () => [];
         const accumulator: BiConsumer<I[], I> = (list, item) => list.push(item);
         const combiner: BiFunction<I[]> = (list1, list2) => list1.concat(list2);
 
         if (mapper) {
-            const finisher: Transformer<I[], Optional<U | I>> = (iList) => Stream.of(iList)
+            const finisher: Function<I[], Optional<U | I>> = (iList) => Stream.of(iList)
                 .map(mapper)
                 .reduce(reducer, identity);
             return Collector.of(supplier, accumulator, combiner, finisher);
         } else {
-            const finisher: Transformer<I[], Optional<U | I>> = (iList) => Stream.of<I | U>(iList)
+            const finisher: Function<I[], Optional<U | I>> = (iList) => Stream.of<I | U>(iList)
                 .reduce(reducer, identity);
             return Collector.of(supplier, accumulator, combiner, finisher);
         }
     }
 
     public static summarizingNumber(): Collector<number, NumberSummaryStatistics, NumberSummaryStatistics>;
-    public static summarizingNumber<T>(numberMapper: Transformer<T, number>): Collector<T, NumberSummaryStatistics, NumberSummaryStatistics>;
-    public static summarizingNumber<T>(numberMapper?: Transformer<T, number>): Collector<T | number, NumberSummaryStatistics, NumberSummaryStatistics> {
+    public static summarizingNumber<T>(numberMapper: Function<T, number>): Collector<T, NumberSummaryStatistics, NumberSummaryStatistics>;
+    public static summarizingNumber<T>(numberMapper?: Function<T, number>): Collector<T | number, NumberSummaryStatistics, NumberSummaryStatistics> {
         const isT: (item: T | number) => item is T = (item: T | number): item is T => numberMapper ? true : false;
-        const mapper: Transformer<number | T, number> = (item: T | number): number => {
+        const mapper: Function<number | T, number> = (item: T | number): number => {
             if (isT(item)) {
                 const i: T = item;
                 if (numberMapper) {
@@ -295,14 +295,14 @@ class Collectors {
             mNum1.combine(mNum2);
             return mNum1;
         }
-        return Collector.of(supplier, accumulator, combiner, Transformer.identity());
+        return Collector.of(supplier, accumulator, combiner, Function.identity());
     }
 
     public static summingNumber(): Collector<number, MutableNumber, number>;
-    public static summingNumber<T>(numberMapper: Transformer<T, number>): Collector<T, MutableNumber, number>;
-    public static summingNumber<T>(numberMapper?: Transformer<T, number>): Collector<T | number, MutableNumber, number> {
+    public static summingNumber<T>(numberMapper: Function<T, number>): Collector<T, MutableNumber, number>;
+    public static summingNumber<T>(numberMapper?: Function<T, number>): Collector<T | number, MutableNumber, number> {
         const isT: (item: T | number) => item is T = (item: T | number): item is T => numberMapper ? true : false;
-        const mapper: Transformer<number | T, number> = (item: T | number): number => {
+        const mapper: Function<number | T, number> = (item: T | number): number => {
             if (isT(item)) {
                 const i: T = item;
                 if (numberMapper) {
@@ -317,14 +317,14 @@ class Collectors {
         const supplier: Supplier<MutableNumber> = MutableNumber.empty;
         const accumulator: BiConsumer<MutableNumber, number | T> = (mutable, num) => mutable.add(mapper(num));
         const combiner: BiFunction<MutableNumber> = (m1, m2) => m1.addTogether(m2);
-        const finisher: Transformer<MutableNumber, number> = (mut) => mut.getTotal();
+        const finisher: Function<MutableNumber, number> = (mut) => mut.getTotal();
 
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
-    
-    public static toMap<I, K, V>(keyMapper: Transformer<I, K>, valueMapper: Transformer<I, V>): Collector<I, Map<K, V>, Map<K, V>>;
-    public static toMap<I, K, V>(keyMapper: Transformer<I, K>, valueMapper: Transformer<I, V>, merger: BiFunction<V>): Collector<I, Map<K, V>, Map<K, V>>;
-    public static toMap<I, K, V>(keyMapper: Transformer<I, K>, valueMapper: Transformer<I, V>, merger?: BiFunction<V>): Collector<I, Map<K, V>, Map<K, V>> {
+
+    public static toMap<I, K, V>(keyMapper: Function<I, K>, valueMapper: Function<I, V>): Collector<I, Map<K, V>, Map<K, V>>;
+    public static toMap<I, K, V>(keyMapper: Function<I, K>, valueMapper: Function<I, V>, merger: BiFunction<V>): Collector<I, Map<K, V>, Map<K, V>>;
+    public static toMap<I, K, V>(keyMapper: Function<I, K>, valueMapper: Function<I, V>, merger?: BiFunction<V>): Collector<I, Map<K, V>, Map<K, V>> {
         const supplier: Supplier<Map<K, V>> = Map.empty;
         const accumulator: BiConsumer<Map<K, V>, I> = (map, input) => {
             const key = keyMapper(input);
@@ -344,7 +344,7 @@ class Collectors {
             return m1;
         }
 
-        return Collector.of(supplier, accumulator, combiner, Transformer.identity());
+        return Collector.of(supplier, accumulator, combiner, Function.identity());
     }
 
 

@@ -151,7 +151,7 @@ the last item in the stream, so you have a stream like:
 seed, getNext(seed), getNext(getNext(seed)), etc
 
 ```typescript 
-Stream.iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T>;
+Stream.iterate<T>(seed: T, getNext: Function<T, T>): Stream<T>;
 ```
 ---
 creates a new stream consisting of all the values of s1, followed by all the values of s2
@@ -278,32 +278,32 @@ findAny(): Optional<T>;
 
 
 **Intermediate Operation:**
-A one to many mapping transformer, returns a stream whos elements consist of the 
-elements of all the output streams of the transformer function.
+A one to many mapping Function, returns a stream whos elements consist of the 
+elements of all the output streams of the Function function.
  
 ```typescript
-flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>;
+flatMap<U>(Function: Function<T, Stream<U>>): Stream<U>;
 ```
 ---
 
 
 **Intermediate Operation:**
-A one to many mapping transformer, returns a stream whos elements consist of the 
-elements of all the output lists of the transformer function. same idea as flatMap but
+A one to many mapping Function, returns a stream whos elements consist of the 
+elements of all the output lists of the Function function. same idea as flatMap but
 with standard arrays
  
 ```typescript
-flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>;
+flatMapList<U>(Function: Function<T, U[]>): Stream<U>;
 ``` 
 
 **Intermediate Operation:**
-similar idea to flatMap or flatMapList, takes in a transformer function that
+similar idea to flatMap or flatMapList, takes in a Function function that
 returns a optional, and returns a stream of actual values of the optional 
 results that include a value, functionally equivelant to 
-stream.map(transformer).filter(o => o.isPresent()).map(o => o.get())
+stream.map(Function).filter(o => o.isPresent()).map(o => o.get())
  
 ```typescript
-flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;
+flatMapOptional<U>(Function: Function<T, Optional<U>>): Stream<U>;
 ```
 ---
 
@@ -341,7 +341,7 @@ limit(maxSize: number): Stream<T>;
 Returns a stream consisting of the results of applying the given function to the elements of this stream.
  
 ```typescript
-map<U>(transformer: Transformer<T, U>): Stream<U>;
+map<U>(Function: Function<T, U>): Stream<U>;
 ```
 ---
 
@@ -520,17 +520,17 @@ ifPresent(consumer: Consumer<T>): void;
 ```
 ---
 
-If a value is present, apply the provided transformer function to it, and if the result is non-null, return an Optional describing the result. Otherwise return an empty Optional.
+If a value is present, apply the provided Function function to it, and if the result is non-null, return an Optional describing the result. Otherwise return an empty Optional.
  
 ```typescript
-map<V>(transformer: Transformer<T, V>): Optional<V>;
+map<V>(Function: Function<T, V>): Optional<V>;
 ```
 ---
 
 If a value is present, apply the provided Optional-bearing mapping function to it, return that result, otherwise return an empty Optional.
  
 ```typescript
-flatMap<V>(transformer: Transformer<T, Optional<V>>): Optional<V>;
+flatMap<V>(Function: Function<T, Optional<V>>): Optional<V>;
 ```
 ---
 
@@ -573,7 +573,7 @@ A Collector contains four types of of methods to do its job:
 
 `combiner()`: provides a `BiFunction`, that takes two mutable result containers and returns a the combined result.
 
-`finisher()`: provides a `Transformer` that takes in a mutable result container and provides the final value. 
+`finisher()`: provides a `Function` that takes in a mutable result container and provides the final value. 
 
 NOTE: Performing a reduction operation with a Collector should produce a result equivalent to:
 ```typescript
@@ -616,9 +616,9 @@ Collectors.joining(delimiter?: string, prefix?: string, suffix?: string): Collec
 
 
 Returns a `Collector` that produces the arithmetic mean of a number-valued function applied to the input elements.
-mapper: Transformer function to transform input elements into a number
+mapper: Function function to transform input elements into a number
 ```typescript
-Collectors.averagingNumber<I>(mapper: Transformer<I, number>): Collector<I, _, number>;
+Collectors.averagingNumber<I>(mapper: Function<I, number>): Collector<I, _, number>;
 ```
 ---
 
@@ -658,17 +658,17 @@ Consumer.sink()
 #### BiConsumer
 A function that takes two inputs of type I and U, but does not return any value.
 
-#### Transformer
+#### Function
 the most generic or basic function type, simply a function that takes in an input of type I and returns an output of type O.
 
-Returns a Transformer that simply returns the input value
+Returns a Function that simply returns the input value
 ```typescript
 Tranformer.identity()
 ```
 ---
 Returns a Tranformer takes in an input and logs the value, returning the same value;
 ```typescript
-Transformer.logger()
+Function.logger()
 ```
 ---
 #### Supplier

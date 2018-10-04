@@ -1,4 +1,4 @@
-import { Transformer, Supplier, BiConsumer, Consumer, Predicate, BiPredicate, Comparator, BiFunction } from "../functions";
+import { Function, Supplier, BiConsumer, Consumer, Predicate, BiPredicate, Comparator, BiFunction } from "../functions";
 import Collectors, { Collector } from "../collectors";
 import Optional from "../optional";
 import { ProcessorPipeline } from "../processorPipeline";
@@ -122,30 +122,30 @@ interface Stream<T> {
 
     /**
      * Intermediate Operation:
-     * A one to many mapping transformer, returns a stream whos elements consist of the 
-     * elements of all the output streams of the transformer function.
-     * @param transformer 
+     * A one to many mapping Function, returns a stream whos elements consist of the 
+     * elements of all the output streams of the Function function.
+     * @param Function 
      */
-    flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U>;
+    flatMap<U>(Function: Function<T, Stream<U>>): Stream<U>;
 
     /**
      * Intermediate Operation:
-     * A one to many mapping transformer, returns a stream whos elements consist of the 
-     * elements of all the output lists of the transformer function. same idea as flatMap but
+     * A one to many mapping Function, returns a stream whos elements consist of the 
+     * elements of all the output lists of the Function function. same idea as flatMap but
      * with standard arrays
-     * @param transformer 
+     * @param Function 
      */
-    flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U>;
+    flatMapList<U>(Function: Function<T, U[]>): Stream<U>;
 
     /**
      * Intermediate Operation:
-     * similar idea to flatMap or flatMapList, takes in a transformer function that
+     * similar idea to flatMap or flatMapList, takes in a Function function that
      * returns a optional, and returns a stream of actual values of the optional 
      * results that include a value, functionally equivelant to 
-     * stream.map(transformer).filter(o => o.isPresent()).map(o => o.get())
-     * @param transformer 
+     * stream.map(Function).filter(o => o.isPresent()).map(o => o.get())
+     * @param Function 
      */
-    flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U>;
+    flatMapOptional<U>(Function: Function<T, Optional<U>>): Stream<U>;
 
 
     /**
@@ -173,9 +173,9 @@ interface Stream<T> {
     /**
      * Intermediate Operation:
      * Returns a stream consisting of the results of applying the given function to the elements of this stream.
-     * @param transformer: function that transforms a value in the stream to a new value;
+     * @param Function: function that transforms a value in the stream to a new value;
      */
-    map<U>(transformer: Transformer<T, U>): Stream<U>;
+    map<U>(Function: Function<T, U>): Stream<U>;
 
     /**
      * Terminal Operation:
@@ -342,7 +342,7 @@ const Stream = {
      * @param seed initial value of the stream
      * @param getNext transforming function applied at each step
      */
-    iterate<T>(seed: T, getNext: Transformer<T, T>): Stream<T> {
+    iterate<T>(seed: T, getNext: Function<T, T>): Stream<T> {
         return PipelineStream.ofSource(Source.iterateSource(seed, getNext))
     },
 
@@ -451,7 +451,7 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
 
     public static concat<S>(stream1: Stream<S>, stream2: Stream<S>): Stream<S> {
         return PipelineStream.ofSource<Optional<S>>(Source.concatSource(stream1, stream2))
-            .flatMapOptional(Transformer.identity());
+            .flatMapOptional(Function.identity());
     }
 
     private getNextProcessedItem(): Optional<any> {
@@ -539,8 +539,8 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         }
     }
 
-    public map<U>(transformer: Transformer<T, U>): Stream<U> {
-        const newPipeline = this.newPipeline(Processor.mapProcessor(transformer));
+    public map<U>(Function: Function<T, U>): Stream<U> {
+        const newPipeline = this.newPipeline(Processor.mapProcessor(Function));
         return new PipelineStream<S, U>(newPipeline);
     }
 
@@ -549,18 +549,18 @@ class PipelineStream<S, T> implements Stream<T>, StreamIterator<T> {
         return new PipelineStream<S, T>(newPipeline);
     }
 
-    public flatMap<U>(transformer: Transformer<T, Stream<U>>): Stream<U> {
-        const newPipeline = this.newPipeline<U>(Processor.streamFlatMapProcessor(transformer));
+    public flatMap<U>(Function: Function<T, Stream<U>>): Stream<U> {
+        const newPipeline = this.newPipeline<U>(Processor.streamFlatMapProcessor(Function));
         return new PipelineStream<S, U>(newPipeline);
     }
 
-    public flatMapList<U>(transformer: Transformer<T, U[]>): Stream<U> {
-        const newPipeline = this.newPipeline(Processor.listFlatMapProcessor(transformer));
+    public flatMapList<U>(Function: Function<T, U[]>): Stream<U> {
+        const newPipeline = this.newPipeline(Processor.listFlatMapProcessor(Function));
         return new PipelineStream<S, U>(newPipeline);
     }
 
-    public flatMapOptional<U>(transformer: Transformer<T, Optional<U>>): Stream<U> {
-        const newPipeline = this.newPipeline(Processor.optionalFlatMapProcessor(transformer));
+    public flatMapOptional<U>(Function: Function<T, Optional<U>>): Stream<U> {
+        const newPipeline = this.newPipeline(Processor.optionalFlatMapProcessor(Function));
         return new PipelineStream<S, U>(newPipeline);
     }
 

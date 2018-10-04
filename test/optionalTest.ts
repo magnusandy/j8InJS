@@ -1,7 +1,7 @@
 import Optional from "../optional";
 import { expect } from "chai";
 import Errors from "../errors";
-import { Predicate, Consumer, Transformer } from "../functions";
+import { Predicate, Consumer, Function } from "../functions";
 
 describe('Optional tests', () => {
     describe('Optional.of()', () => {
@@ -145,78 +145,78 @@ describe('Optional tests', () => {
         });
     });
 
-    describe('map(transformer: Transformer<T, V>)', () => {
+    describe('map(Function: Function<T, V>)', () => {
         it('should return Optional with new value, if value is present', () => {
             const stringVal = 'string';
-            const transformer: Transformer<number, string> = (n: number) => stringVal;
+            const Function: Function<number, string> = (n: number) => stringVal;
             const o: Optional<number> = Optional.of(1);
-            const s: Optional<string> = o.map(transformer);
+            const s: Optional<string> = o.map(Function);
             expect(s.isPresent()).to.equal(true);
             expect(s.get()).to.equal(stringVal);
         });
 
         it('should return empty, if value is not present', () => {
             const stringVal = 'string';
-            const transformer: Transformer<number, string> = (n: number) => stringVal;
+            const Function: Function<number, string> = (n: number) => stringVal;
             const o: Optional<number> = Optional.empty();
-            const s: Optional<string> = o.map(transformer);
+            const s: Optional<string> = o.map(Function);
             expect(s.isPresent()).to.equal(false);
         });
 
-        it('should return empty if transformer returns null', () => {
-            const transformer: Transformer<number, any> = (n: number) => null;
+        it('should return empty if Function returns null', () => {
+            const Function: Function<number, any> = (n: number) => null;
             const o: Optional<number> = Optional.of(1);
-            const s: Optional<string> = o.map(transformer);
+            const s: Optional<string> = o.map(Function);
             expect(s.isPresent()).to.equal(false);
         });
 
-        it('should return empty if transformer returns undefined', () => {
-            const transformer: Transformer<number, any> = (n: number) => undefined;
+        it('should return empty if Function returns undefined', () => {
+            const Function: Function<number, any> = (n: number) => undefined;
             const o: Optional<number> = Optional.of(1);
-            const s: Optional<string> = o.map(transformer);
+            const s: Optional<string> = o.map(Function);
             expect(s.isPresent()).to.equal(false);
         });
 
-        it('should lazily apply transformer', () => {
+        it('should lazily apply Function', () => {
             let activated = false;
             const stringVal = 'string';
-            const transformer: Transformer<number, string> = (n: number) => { activated = true; return stringVal; };
+            const Function: Function<number, string> = (n: number) => { activated = true; return stringVal; };
             const o: Optional<number> = Optional.empty();
-            const s: Optional<string> = o.map(transformer);
+            const s: Optional<string> = o.map(Function);
             expect(activated).to.equal(false);
         });
     });
 
-    describe('flatMap(transformer: Transformer<T, Optional<V>>)', () => {
+    describe('flatMap(Function: Function<T, Optional<V>>)', () => {
 
         it('should return transformed result if value is present', () => {
             const retVal = Optional.of(2);
-            const transformer: Transformer<number, Optional<number>> = (n: number) => retVal;
+            const Function: Function<number, Optional<number>> = (n: number) => retVal;
             const o: Optional<number> = Optional.of(1);
-            const s: Optional<number> = o.flatMap(transformer);
+            const s: Optional<number> = o.flatMap(Function);
             expect(s).to.equal(retVal);
         });
 
-        it('should return empty if transformer returns undefined', () => {
-            const transformer: Transformer<number, any> = (n: number) => undefined;
+        it('should return empty if Function returns undefined', () => {
+            const Function: Function<number, any> = (n: number) => undefined;
             const o: Optional<number> = Optional.of(1);
-            const s: Optional<string> = o.flatMap(transformer);
+            const s: Optional<string> = o.flatMap(Function);
             expect(s.isPresent()).to.equal(false);
         });
 
-        it('should return empty if transformer returns null', () => {
-            const transformer: Transformer<number, any> = (n: number) => null;
+        it('should return empty if Function returns null', () => {
+            const Function: Function<number, any> = (n: number) => null;
             const o: Optional<number> = Optional.of(1);
-            const s: Optional<string> = o.flatMap(transformer);
+            const s: Optional<string> = o.flatMap(Function);
             expect(s.isPresent()).to.equal(false);
         });
 
         it('should return transformed result if value is present', () => {
             let applied = false;
             const retVal = Optional.of(2);
-            const transformer: Transformer<number, Optional<number>> = (n: number) => { applied = true; return retVal; }
+            const Function: Function<number, Optional<number>> = (n: number) => { applied = true; return retVal; }
             const o: Optional<number> = Optional.empty();
-            const s: Optional<number> = o.flatMap(transformer);
+            const s: Optional<number> = o.flatMap(Function);
             expect(applied).to.equal(false);
         });
     });

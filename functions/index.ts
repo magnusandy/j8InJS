@@ -23,14 +23,14 @@ export type Consumer<T> = (value: T) => void;
  * Functional Type: 
  * Defines a function that takes a single argument of type T, and returns a value of a different type U
  */
-export type Transformer<T, U> = (value: T) => U;
-
+export type Function<T, U> = (value: T) => U;
 
 /**
  * Functional Type: 
- * Defines a function that takes a two argument of type T and R, and returns a value of a different type U
+ * Alias of Function
+ * Defines a function that takes a single argument of type T, and returns a value of a different type U
  */
-export type BiTransformer<T, R, U> = (v1: T, v2: R) => U;
+export type Transformer<T, U> = Function<T, U>;
 
 /**
  * Functional Type: 
@@ -52,6 +52,16 @@ export type BiConsumer<T, U> = (t: T, u: U) => void;
  * also of type T.
  */
 export type BiFunction<T> = (t1: T, t2: T) => T;
+
+/**
+ * Functional Type: 
+ * Alias of BiFunction
+ * Defines a function that takes two arguments, both of type T, and returns a value
+ * also of type T.
+ */
+export type BiTransformer<T> = BiFunction<T>;
+
+
 
 /**
  * Function that: Compares its two arguments for order. Returns a negative integer, zero,
@@ -81,25 +91,27 @@ export const Consumer = {
     }
 }
 
-export const Transformer = {
+export const Function = {
 
     /**
-     * returns Transformer that when passed an argument, will return the given argument
+     * returns Function that when passed an argument, will return the given argument
      */
-    identity<T>(): Transformer<T, T> {
+    identity<T>(): Function<T, T> {
         return i => i;
     },
 
     /**
-     * returns a Transformer logs the given value to the console and then returns the value
+     * returns a Function logs the given value to the console and then returns the value
      */
-    logger<T>(): Transformer<T, T> {
+    logger<T>(): Function<T, T> {
         return (i: T) => {
             console.log(i);
             return i;
         }
     }
 }
+
+export const Transformer = Function;
 
 export const BiPredicate = {
 

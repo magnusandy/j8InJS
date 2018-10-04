@@ -1,4 +1,4 @@
-import { Predicate, Consumer, Transformer, Supplier } from "../functions";
+import { Predicate, Consumer, Function, Supplier } from "../functions";
 import Errors from '../errors';
 
 const isNull = (x: any): boolean => (x === null || x === undefined)
@@ -49,11 +49,11 @@ class Optional<T> {
 	};
 
 	/**
-	 * If a value is present, apply the provided transformer function to it, and if the result is non-null, return an Optional describing the result. Otherwise return an empty Optional.
+	 * If a value is present, apply the provided Function function to it, and if the result is non-null, return an Optional describing the result. Otherwise return an empty Optional.
 	 */
-	public map = <V>(transformer: Transformer<T, V>): Optional<V> => {
+	public map = <V>(Function: Function<T, V>): Optional<V> => {
 		if (this.isPresent()) {
-			return Optional.ofNullable(transformer(this.get()));
+			return Optional.ofNullable(Function(this.get()));
 		} else {
 			return Optional.empty();
 		}
@@ -62,8 +62,8 @@ class Optional<T> {
 	/**
 	 * If a value is present, apply the provided Optional-bearing mapping function to it, return that result, otherwise return an empty Optional.
 	 */
-	public flatMap = <V>(transformer: Transformer<T, Optional<V>>): Optional<V> => {
-		const optionalOptional: Optional<Optional<V>> = this.map(transformer);
+	public flatMap = <V>(Function: Function<T, Optional<V>>): Optional<V> => {
+		const optionalOptional: Optional<Optional<V>> = this.map(Function);
 		return optionalOptional.isPresent() ? optionalOptional.get() : Optional.empty();
 	}
 

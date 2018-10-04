@@ -1,4 +1,4 @@
-import { Transformer, Supplier, BiPredicate } from "./functions";
+import { Function, Supplier, BiPredicate } from "./functions";
 import Optional from "./optional";
 import Stream, { StreamIterator } from "./stream";
 
@@ -23,11 +23,11 @@ export const Source = {
     /**
      * An infinite source that continually applies a function to a previous result, starting with the seed value
      * 
-     * seed, transformer(seed), transformer(transformer(seed)), etc
+     * seed, Function(seed), Function(Function(seed)), etc
      * @param seed initial starting value
-     * @param transformer function to be continually applied to the previous result, starting with the seed
+     * @param Function function to be continually applied to the previous result, starting with the seed
      */
-    iterateSource: <S>(seed: S, transformer: Transformer<S, S>): Source<S> => new IterateSource(seed, transformer),
+    iterateSource: <S>(seed: S, Function: Function<S, S>): Source<S> => new IterateSource(seed, Function),
     
     /**
     * basic infinite Source coming from a Supplier function
@@ -69,19 +69,19 @@ abstract class InfiniteSource<S> implements Source<S> {
 class IterateSource<S> extends InfiniteSource<S> {
     private seed: S;
     private currentValue: Optional<S>;
-    private transformer: Transformer<S, S>;
+    private Function: Function<S, S>;
 
-    constructor(seed: S, transformer: Transformer<S, S>) {
+    constructor(seed: S, Function: Function<S, S>) {
         super();
         this.seed = seed;
         this.currentValue = Optional.empty();
-        this.transformer = transformer;
+        this.Function = Function;
     }
 
     public get(): S {
         let nextValue;
         if (this.currentValue.isPresent()) {
-            nextValue = this.transformer(this.currentValue.get());
+            nextValue = this.Function(this.currentValue.get());
         } else {
             nextValue = this.seed;
         }

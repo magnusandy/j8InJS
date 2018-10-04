@@ -1,6 +1,6 @@
 import { Processor } from "./processor";
 import Optional from "./optional";
-import { Transformer } from "./functions";
+import { Function } from "./functions";
 import { Source } from "./source";
 
 /**
@@ -37,7 +37,7 @@ export class ProcessorPipeline<S, F> {
      */
     public static create<S>(source: Source<S>): ProcessorPipeline<S, S> {
         const initialNode = new InitialFeedProcessorNode<S>(source);
-        const node = new ProcessorNode<S, S>(Processor.mapProcessor(Transformer.identity()));
+        const node = new ProcessorNode<S, S>(Processor.mapProcessor(Function.identity()));
         return new ProcessorPipeline(initialNode, node, node);
     }
 
@@ -185,7 +185,7 @@ class InitialFeedProcessorNode<I> extends ProcessorNode<I, I> {
     private source: Source<I>;
 
     constructor(supplier: Source<I>) {
-        super(Processor.mapProcessor(Transformer.identity()));
+        super(Processor.mapProcessor(Function.identity()));
         this.source = supplier;
     }   
 

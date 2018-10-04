@@ -2,7 +2,7 @@ import { use, spy } from "chai";
 import * as spies from "chai-spies";
 import * as lodash from 'lodash';
 import * as Lazy from 'lazy.js';
-import { Consumer, Transformer } from "../functions";
+import { Consumer, Function } from "../functions";
 import Stream from "../stream";
 import * as Benchmark from 'benchmark';
 use(spies);
@@ -21,9 +21,9 @@ describe('Benchmark', () => {
         it('map', () => {
             let suite: Benchmark.Suite = new Benchmark.Suite;
             const items = itemSource();
-            suite.add('lodash', () => lodash.each(lodash.map(items, Transformer.identity()), Consumer.sink()))
-            .add('java8script', () => Stream.of(items).map(Transformer.identity()).forEach(Consumer.sink()))
-            .add('lazy', () => Lazy(items).map(Transformer.identity()).each(Consumer.sink()))
+            suite.add('lodash', () => lodash.each(lodash.map(items, Function.identity()), Consumer.sink()))
+            .add('java8script', () => Stream.of(items).map(Function.identity()).forEach(Consumer.sink()))
+            .add('lazy', () => Lazy(items).map(Function.identity()).each(Consumer.sink()))
             .on('cycle', function (event: any) {
                 console.log(event.target.name + " " + event.target.hz);
             })
@@ -33,9 +33,9 @@ describe('Benchmark', () => {
         it('map->filter->first', () => {
             let suite: Benchmark.Suite = new Benchmark.Suite;
             const items = itemSource();
-            suite.add('lodash', () => lodash.first(lodash.filter(lodash.map(items, Transformer.identity()), i => i < 5)))
-            .add('java8script', () => Stream.of(items).map(Transformer.identity()).filter(i => i < 5).findFirst())
-            .add('lazy', () => Lazy(items).map(Transformer.identity()).filter(i => i < 5).first())
+            suite.add('lodash', () => lodash.first(lodash.filter(lodash.map(items, Function.identity()), i => i < 5)))
+            .add('java8script', () => Stream.of(items).map(Function.identity()).filter(i => i < 5).findFirst())
+            .add('lazy', () => Lazy(items).map(Function.identity()).filter(i => i < 5).first())
             .on('cycle', function (event: any) {
                 console.log(event.target.name + " " + event.target.hz);
             })

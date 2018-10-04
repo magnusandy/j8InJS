@@ -1,4 +1,4 @@
-import { Consumer, Transformer, BiPredicate, Comparator } from "../functions";
+import { Consumer, Function, BiPredicate, Comparator } from "../functions";
 import { use, spy, expect } from "chai";
 import * as spies from "chai-spies";
 use(spies);
@@ -21,17 +21,17 @@ describe('Function tests', () => {
         });
     });
 
-    describe('Transformer', () => {
+    describe('Function', () => {
         it('identity function returns the value passed in', () => {
             const valueStruct = { i: 1, o: 'value' };
-            const identity = Transformer.identity();
+            const identity = Function.identity();
             const returned = identity(valueStruct);
             expect(returned).to.equal(valueStruct);
         });
 
         it('logger function returns the value passed in, and logs to console', () => {
             const valueStruct = { i: 1, o: 'LOG ME PLZ' };
-            const logger = Transformer.logger();
+            const logger = Function.logger();
             const returned = logger(valueStruct);
             expect(returned).to.equal(valueStruct);
             expect(consoleSpy).to.have.been.called.with(valueStruct);

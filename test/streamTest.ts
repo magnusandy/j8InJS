@@ -3,7 +3,7 @@ import Collectors from "../collectors";
 import { use, spy, expect } from "chai";
 import * as spies from "chai-spies";
 import Optional from '../optional';
-import { Supplier, Transformer, Comparator, Consumer } from '../functions';
+import { Supplier, Function, Comparator, Consumer } from '../functions';
 use(spies);
 
 type TestItem = { i: number };
@@ -338,7 +338,7 @@ describe('Stream tests', () => {
             const source = [1, 2, 3, 11, 12, 13];
             const stream = Stream.of(source);
 
-            const spyTransformer = spy(Transformer.identity());
+            const spyTransformer = spy(Function.identity());
             stream.map(spyTransformer).findFirst();
 
             expect(spyTransformer).to.be.called.exactly(1);
@@ -363,7 +363,7 @@ describe('Stream tests', () => {
             const source = [1, 2, 3, 11, 12, 13];
             const stream = Stream.of(source);
 
-            const spyTransformer = spy(Transformer.identity());
+            const spyTransformer = spy(Function.identity());
             stream.map(spyTransformer).findFirst();
 
             expect(spyTransformer).to.be.called.exactly(1);
@@ -389,7 +389,7 @@ describe('Stream tests', () => {
             const source = [1, 2, 3, 11, 12, 13];
             const stream = Stream.of(source);
 
-            const spyTransformer = spy(Transformer.identity());
+            const spyTransformer = spy(Function.identity());
             stream.map(spyTransformer).findAny();
 
             expect(spyTransformer).to.be.called.exactly(1);
@@ -411,8 +411,8 @@ describe('Stream tests', () => {
 
         it('it should lazily pull from input streams', () => {
 
-            const s1Spy = spy(Transformer.identity());
-            const s2Spy = spy(Transformer.identity());
+            const s1Spy = spy(Function.identity());
+            const s2Spy = spy(Function.identity());
 
             const stream1 = Stream.ofValues(1, 2, 3).map(s1Spy);
             const stream2 = Stream.ofValues(1, 2, 3).map(s2Spy);
@@ -476,7 +476,7 @@ describe('Stream tests', () => {
     });
 
     describe('map', () => {
-        it('it should transform all values in the stream with the given transformer', () => {
+        it('it should transform all values in the stream with the given Function', () => {
             const source = [1, 2, 3];
             const expectedValues = [2, 4, 6]
             const stream = Stream.of(source);
@@ -489,7 +489,7 @@ describe('Stream tests', () => {
         it('it should lazily transform', () => {
             const source = [1, 2, 3];
             const stream = Stream.of(source);
-            const spyTransfomer = spy(Transformer.identity())
+            const spyTransfomer = spy(Function.identity())
 
             stream.map(spyTransfomer).findFirst();
 

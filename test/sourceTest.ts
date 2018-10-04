@@ -1,6 +1,6 @@
 import { expect, use, spy } from "chai";
 import * as spies from "chai-spies";
-import { Transformer, Supplier } from "../functions";
+import { Function, Supplier } from "../functions";
 import { Source } from "../source";
 import Stream from "../stream";
 import Optional from "../optional";
@@ -10,8 +10,8 @@ describe('Source tests', () => {
     describe('Iterate Source', () => {
         it('should return seed first', () => {
             const seed = 0;
-            const transformer: Transformer<number, number> = (n: number) => n + 1;
-            const source: Source<number> = Source.iterateSource(seed, transformer);
+            const Function: Function<number, number> = (n: number) => n + 1;
+            const source: Source<number> = Source.iterateSource(seed, Function);
 
             const result = source.get();
             expect(result).to.equal(seed);
@@ -19,8 +19,8 @@ describe('Source tests', () => {
 
         it('should return seed first', () => {
             const seed = 0;
-            const transformer: Transformer<number, number> = (n: number) => n + 1;
-            const source: Source<number> = Source.iterateSource(seed, transformer);
+            const Function: Function<number, number> = (n: number) => n + 1;
+            const source: Source<number> = Source.iterateSource(seed, Function);
 
             const result = source.get();
             expect(result).to.equal(seed);
@@ -28,18 +28,18 @@ describe('Source tests', () => {
 
         it('should transform seed each call', () => {
             const seed = 0;
-            const transformer: Transformer<number, number> = (n: number) => n + 1;
-            const source: Source<number> = Source.iterateSource(seed, transformer);
+            const Function: Function<number, number> = (n: number) => n + 1;
+            const source: Source<number> = Source.iterateSource(seed, Function);
 
 
             expect(source.get()).to.equal(seed);
-            expect(source.get()).to.equal(transformer(seed));
-            expect(source.get()).to.equal(transformer(transformer(seed)));
+            expect(source.get()).to.equal(Function(seed));
+            expect(source.get()).to.equal(Function(Function(seed)));
         });
 
         it('should hasNext should be true', () => {
-            const transformer: Transformer<number, number> = (n: number) => n + 1;
-            const source: Source<number> = Source.iterateSource(0, transformer);
+            const Function: Function<number, number> = (n: number) => n + 1;
+            const source: Source<number> = Source.iterateSource(0, Function);
 
             expect(source.hasNext()).to.equal(true);
         });

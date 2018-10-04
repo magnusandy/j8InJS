@@ -5,7 +5,7 @@ import Collectors, { Collector } from "../collectors";
 import { Map } from '../map';
 import Optional from "../optional";
 import { Comparator } from "..";
-import { Transformer } from "../functions";
+import { Function } from "../functions";
 import Errors from "../errors";
 use(spies);
 
@@ -342,7 +342,7 @@ describe('Collectors', () => {
         it('it should return collector applies to numbers if mapper specified', () => {
             const source = [10, 20, 30];
             const average = Stream.of(source)
-                .collect(Collectors.summarizingNumber(Transformer.identity()));
+                .collect(Collectors.summarizingNumber(Function.identity()));
             expect(average.getAverage()).eq(20);
             expect(average.getMax()).eq(30);
             expect(average.getMin()).eq(10);
