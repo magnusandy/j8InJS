@@ -55,13 +55,11 @@ export type BiFunction<T> = (t1: T, t2: T) => T;
 
 /**
  * Functional Type: 
- * Alias of BiFunction
+ * Alias of BiFunction,
  * Defines a function that takes two arguments, both of type T, and returns a value
  * also of type T.
  */
 export type BiTransformer<T> = BiFunction<T>;
-
-
 
 /**
  * Function that: Compares its two arguments for order. Returns a negative integer, zero,
