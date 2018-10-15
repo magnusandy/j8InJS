@@ -1,5 +1,8 @@
 import Optional from "../optional";
 
+/**
+ * A state object for collecting statistics such as count, min, max, sum, and average.
+ */
 export class NumberSummaryStatistics {
 
     private average: number; 
@@ -20,6 +23,10 @@ export class NumberSummaryStatistics {
         return new NumberSummaryStatistics();
     }
 
+    /**
+     * Records a new value into the summary information
+     * @param n - number to record
+     */
     public accept(n: number): void {
         this.sum =  this.sum + n;
         this.count++;
@@ -28,6 +35,10 @@ export class NumberSummaryStatistics {
         this.min = n < this.min ? n : this.min;
     }
 
+    /**
+     * Combines the state of another NumberSummaryStatistics into this one
+     * @param other - other NumberSummaryStatistic to combine with
+     */
     public combine(other: NumberSummaryStatistics): void {
         this.sum = this.sum + other.getSum();
         this.count = this.count + other.count;
@@ -36,22 +47,37 @@ export class NumberSummaryStatistics {
         this.max = this.max > other.getMax() ? this.max : other.getMax();         
     }
 
+    /**
+     * Returns the arithmetic mean of values recorded, or zero if no values have been recorded.
+     */
     public getAverage(): number {
         return this.average;
     }
 
+    /**
+     * Returns the minimum value recorded, or Number.MAX_VALUE if no values have been recorded.
+     */
     public getMin(): number {
         return this.min;
     }
 
+    /**
+     * Returns the maximum value recorded, or -Number.MAX_VALUE if no values have been recorded.
+     */
     public getMax(): number {
         return this.max;
     }
 
+    /**
+     * Returns the count of values recorded.
+     */
     public getCount(): number {
         return this.count;
     }
 
+    /**
+     * Returns the sum of values recorded, or zero if no values have been recorded.
+     */
     public getSum(): number {
         return this.sum;
     }

@@ -295,7 +295,17 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
+    /**
+     * Returns a Collector which partitions the input elements according to a Predicate, and organizes them into a Map<Boolean, T[]>.
+     * @param predicate - a predicate used for classifying input elements
+     */
     public static partitioningBy<T, A, D>(predicate: Predicate<T>): Collector<T, Map<boolean, T[]>, Map<boolean, T[]>>;
+    /**
+     * Returns a Collector which partitions the input elements according to a Predicate, reduces the values in each partition according to another Collector, and organizes them into a Map<Boolean, D>
+     * whose values are the result of the downstream reduction.
+     * @param predicate - a predicate used for classifying input elements
+     * @param downstream - a Collector implementing the downstream reduction
+     */
     public static partitioningBy<T, A, D>(predicate: Predicate<T>, downStream: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D>>;
     public static partitioningBy<T, A, D>(predicate: Predicate<T>, downStream?: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D> | Map<boolean, T[]>> {
         const supplier: Supplier<Map<boolean, T[]>> = () => Map.of<boolean, T[]>(true, [], false, []);
@@ -326,8 +336,24 @@ class Collectors {
             return Collector.of<T, Map<boolean, T[]>, Map<boolean, T[]>>(supplier, accumulator, combiner, Function.identity());
         }
     }
+
+    /**
+    * Returns a Collector which performs a reduction of its input elements under a specified BinaryOperator. The result is described as an Optional<T>.
+    * @param reducer - a BinaryOperator<T> used to reduce the input elements
+    */
     public static reducing<I>(reducer: BiFunction<I>): Collector<I, I[], Optional<I>>;
+    /**
+     * Returns a Collector which performs a reduction of its input elements under a specified BinaryOperator using the provided identity.
+     * @param reducer - a BinaryOperator<T> used to reduce the input elements
+     * @param identity - the identity value for the reduction (also, the value that is returned when there are no input elements)
+     */
     public static reducing<I>(reducer: BiFunction<I>, identity: I): Collector<I, I[], Optional<I>>;
+    /**
+     * Returns a Collector which performs a reduction of its input elements under a specified BinaryOperator using the provided identity.
+     * @param identity - the identity value for the reduction (also, the value that is returned when there are no input elements)
+     * @param mapper - a mapping function to apply to each input value
+     * @param op - a BinaryOperator<U> used to reduce the mapped values
+     */
     public static reducing<I, U>(reducer: BiFunction<U>, identity: U, mapper: Function<I, U>): Collector<I, I[], Optional<U>>;
     public static reducing<I, U>(reducer: BiFunction<I | U>, identity?: I | U, mapper?: Function<I, I | U>): Collector<I, I[], Optional<I | U>> {
         const supplier: Supplier<I[]> = () => [];
@@ -346,7 +372,14 @@ class Collectors {
         }
     }
 
+    /**
+     * Returns a Collector that retuns summary statistics for the resulting values
+     */
     public static summarizingNumber(): Collector<number, NumberSummaryStatistics, NumberSummaryStatistics>;
+    /**
+     * Returns a Collector which applies an number- mapping function to each input element, and returns summary statistics for the resulting values.
+     * @param numberMapper - mapping function that returns a number value
+     */
     public static summarizingNumber<T>(numberMapper: Function<T, number>): Collector<T, NumberSummaryStatistics, NumberSummaryStatistics>;
     public static summarizingNumber<T>(numberMapper?: Function<T, number>): Collector<T | number, NumberSummaryStatistics, NumberSummaryStatistics> {
         const isT: (item: T | number) => item is T = (item: T | number): item is T => numberMapper ? true : false;
@@ -371,8 +404,14 @@ class Collectors {
         }
         return Collector.of(supplier, accumulator, combiner, Function.identity());
     }
-
+    /**
+     * Returns a Collector that produces the sum of numbers. If no elements are present, the result is 0.
+     */
     public static summingNumber(): Collector<number, MutableNumber, number>;
+    /**
+     * Returns a Collector that produces the sum of a number-valued function applied to the input elements. If no elements are present, the result is 0.
+     * @param numberMapper - a function to transform input elements to a number
+     */
     public static summingNumber<T>(numberMapper: Function<T, number>): Collector<T, MutableNumber, number>;
     public static summingNumber<T>(numberMapper?: Function<T, number>): Collector<T | number, MutableNumber, number> {
         const isT: (item: T | number) => item is T = (item: T | number): item is T => numberMapper ? true : false;
@@ -396,7 +435,24 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
+    /**
+     * Returns a Collector that accumulates elements into a Map whose keys and values are the result of
+     * applying the provided mapping functions to the input elements.
+     * If the mapped keys contains duplicates (according to Object.equals(Object)),
+     * an IllegalStateException is thrown when the collection operation is performed. 
+     * If the mapped keys may have duplicates, use toMap(Function, Function, BiFunction) instead
+     * @param keyMapper - a mapping function to produce keys
+     * @param valueMapper - a mapping function to produce values
+     */
     public static toMap<I, K, V>(keyMapper: Function<I, K>, valueMapper: Function<I, V>): Collector<I, Map<K, V>, Map<K, V>>;
+    /**
+     * Returns a Collector that accumulates elements into a Map whose keys and values are the result of applying 
+     * the provided mapping functions to the input elements. If the mapped keys contains duplicates,
+     * the value mapping function is applied to each equal element, and the results are merged using the provided merging function.
+     * @param keyMapper - a mapping function to produce keys
+     * @param valueMapper - a mapping function to produce values
+     * @param merger - a merge function, used to resolve collisions between values associated with the same key, as supplied to Map.merge(Object, Object, BiFunction)
+     */
     public static toMap<I, K, V>(keyMapper: Function<I, K>, valueMapper: Function<I, V>, merger: BiFunction<V>): Collector<I, Map<K, V>, Map<K, V>>;
     public static toMap<I, K, V>(keyMapper: Function<I, K>, valueMapper: Function<I, V>, merger?: BiFunction<V>): Collector<I, Map<K, V>, Map<K, V>> {
         const supplier: Supplier<Map<K, V>> = Map.empty;
