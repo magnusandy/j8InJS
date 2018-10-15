@@ -1,8 +1,9 @@
-import Collectors, {Collector} from './collectors';
+import Collectors, { Collector } from './collectors';
 import Optional from './optional';
 import Stream, { StreamIterator } from './stream';
 import Errors from './errors';
 import { Comparator, Consumer, BiConsumer, BiFunction, BiPredicate, Function, Supplier, Predicate } from './functions';
+import { Map, Entry } from './map';
 
 export {
     Collector,
@@ -15,12 +16,15 @@ export {
 
     Errors,
 
-    Comparator, 
-    Consumer, 
-    BiConsumer, 
-    BiFunction, 
-    BiPredicate, 
-    Function, 
-    Supplier, 
+    Comparator,
+    Consumer,
+    BiConsumer,
+    BiFunction,
+    BiPredicate,
+    Function,
+    Supplier,
     Predicate,
+
+    Map,
+    Entry,
 };

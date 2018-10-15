@@ -3,7 +3,6 @@ import { MutableString, MutableNumber, Holder, NumberSummaryStatistics } from '.
 import { Map } from '../map'
 import Optional from "../optional";
 import Stream from "../stream";
-import { map } from "benchmark";
 import Errors from "../errors";
 
 /**
@@ -78,12 +77,21 @@ class Collectors {
     }
 
     /**
-     * Returns a collector that combines strings into a single long string, a delimiter string can be specified
-     * to seperate individual items, the prefix and suffix are added to the resulting final string, each item.
-     * @param delimiter: optional. Seperator for items being joined
-     * @param prefix: optional. string added to the beginning of the joined result
-     * @param suffix: optional. string added to the end of the joined result 
+     * Returns a Collector that concatenates the input elements into a String, in encounter order.
      */
+    public static joining(): Collector<string, MutableString, string>;
+    /**
+     * Returns a Collector that concatenates the input elements, separated by the specified delimiter, in encounter order.
+     * @param delimiter - the delimiter to be used between each element
+     */
+    public static joining(delimiter: string): Collector<string, MutableString, string>;
+    /**
+     * Returns a Collector that concatenates the input elements, separated by the specified delimiter, with the specified prefix and suffix, in encounter order.
+     * @param delimiter - the delimiter to be used between each element
+     * @param prefix - the sequence of characters to be used at the beginning of the joined result
+     * @param suffix - the sequence of characters to be used at the end of the joined result
+     */
+    public static joining(delimiter: string, prefix: string, suffix: string): Collector<string, MutableString, string>;
     public static joining(delimiter?: string, prefix?: string, suffix?: string): Collector<string, MutableString, string> {
         const ifElseBlank = (val?: string): string => val ? val : "";
         const delimiterToUse = ifElseBlank(delimiter);
@@ -104,7 +112,7 @@ class Collectors {
 
     /**
      * Returns a Collector that produces the arithmetic mean of a number-valued function applied to the input elements.
-     * @param mapper Function function to transform input elements into a number
+     * @param mapper function to transform input elements into a number
      */
     public static averagingNumber<I>(mapper: Function<I, number>): Collector<I, MutableNumber, number> {
         const supplier: Supplier<MutableNumber> = MutableNumber.empty;
@@ -124,11 +132,19 @@ class Collectors {
         return Collectors.averagingNumber(Function.identity());
     }
 
+    /**
+     * Adapts a Collector to perform an additional finishing transformation.
+     * @param downstream - a collector
+     * @param finisher - a function to be applied to the final result of the downstream collector
+     */
     public static collectingAndThen<Input, Mutable, Intermediate, Output>(downStream: Collector<Input, Mutable, Intermediate>, finisher: Function<Intermediate, Output>): Collector<Input, Mutable, Output> {
         const newFinisher = (input: Mutable) => finisher(downStream.finisher()(input))
         return Collector.of(downStream.supplier(), downStream.accumulator(), downStream.combiner(), newFinisher)
     }
 
+    /**
+     * Returns a Collector accepting elements of type T that counts the number of input elements. If no elements are present, the result is 0.
+     */
     public static counting<Input>(): Collector<Input, MutableNumber, number> {
         const supplier: Supplier<MutableNumber> = MutableNumber.empty;
         const accumulator: BiConsumer<MutableNumber, Input> = (mutable, item) => mutable.add(1);
@@ -138,20 +154,54 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
-    public static groupingBy<Input, Key>(classifier: Function<Input, Key>): Collector<Input, Map<Key, Input[]>, Map<Key, Input[]>> {
-        const supplier: Supplier<Map<Key, Input[]>> = () => Map.empty<Key, Input[]>();
-        const accumulator: BiConsumer<Map<Key, Input[]>, Input> = (map, item) => map.merge(
+    /**
+     * Returns a Collector implementing a "group by" operation on input elements of type T,
+     *  grouping elements according to a classification function, and returning the results in a Map.
+     * The classification function maps elements to some key type K. The collector produces a 
+     * Map<K, T[]> whose keys are the values resulting from applying the classification function to the input elements, and whose corresponding values are Lists containing the input elements which map to the associated key under the classification function.
+     * @param classifier - the classifier function mapping input elements to keys
+     */
+    public static groupingBy<T, K>(classifier: Function<T, K>): Collector<T, Map<K, T[]>, Map<K, T[]>>;
+    /**
+     * Returns a Collector implementing a cascaded "group by" operation on input elements of type T,
+     * grouping elements according to a classification function, and then performing a reduction operation 
+     * on the values associated with a given key using the specified downstream Collector.
+     * The classification function maps elements to some key type K. The downstream collector operates
+     * on elements of type T and produces a result of type D. The resulting collector produces a Map<K, D>.
+     * @param classifier - a classifier function mapping input elements to keys
+     * @param downstream - a Collector implementing the downstream reduction
+     */
+    public static groupingBy<T, K, A, D>(classifier: Function<T, K>, downstream: Collector<T, A, D>): Collector<T, Map<K, T[]>, Map<K, D>>;
+    public static groupingBy<T, K, A, D>(classifier: Function<T, K>, downstream?: Collector<T, A, D>): Collector<T, Map<K, T[]>, Map<K, T[]>> | Collector<T, Map<K, T[]>, Map<K, D>> {
+        const supplier: Supplier<Map<K, T[]>> = () => Map.empty<K, T[]>();
+        const accumulator: BiConsumer<Map<K, T[]>, T> = (map, item) => map.merge(
             classifier(item),
             [item],
             (l1, l2) => l1.concat(l2),
         );
-        const combiner: BiFunction<Map<Key, Input[]>> = (map1, map2) => {
+        const combiner: BiFunction<Map<K, T[]>> = (map1, map2) => {
             map1.putAll(map2);
             return map1;
         }
-        return Collector.of(supplier, accumulator, combiner, Function.identity());
+        if (downstream) {
+            const finisher: Function<Map<K, T[]>, Map<K, D>> = (initial) => {
+                const newMap: Map<K, D> = Map.empty();
+                initial.forEach((key, valList) =>
+                    newMap.put(key, Stream.of(valList).collect(downstream))
+                );
+                return newMap;
+            }
+            return Collector.of<T, Map<K, T[]>, Map<K, D>>(supplier, accumulator, combiner, finisher);
+        } else {
+            return Collector.of<T, Map<K, T[]>, Map<K, T[]>>(supplier, accumulator, combiner, Function.identity());
+        }
     }
 
+    /**
+     * Adapts a Collector accepting elements of type U to one accepting elements of type T by applying a mapping function to each input element before accumulation.
+     * @param mapper - a function to be applied to the input elements
+     * @param downstream - a collector which will accept mapped values
+     */
     public static mapping<I, II, A, R>(mapper: Function<I, II>, downstream: Collector<II, A, R>): Collector<I, A, R> {
         return Collector.of(
             downstream.supplier(),
@@ -161,6 +211,18 @@ class Collectors {
         );
     }
 
+    /**
+     * Returns a Collector that will return the max value as determined by the default comparator
+     * See, Comparator.default(); the max value is returned in an optional, or empty if no value
+     * was found.
+     */
+    public static maxBy<I>(): Collector<I, Holder<I>, Optional<I>>
+    /**
+     * Returns a Collector that will return the max value as determined by the given comparator
+     * the max value is returned in an optional, or empty if no value was found.
+     * @param comparator - a Comparator for comparing elements
+     */
+    public static maxBy<I>(comparator: Comparator<I>): Collector<I, Holder<I>, Optional<I>>;
     public static maxBy<I>(comparator?: Comparator<I>): Collector<I, Holder<I>, Optional<I>> {
         const comparatorToUse = comparator ? comparator : Comparator.default();
         const supplier: Supplier<Holder<I>> = () => new Holder();
@@ -191,6 +253,18 @@ class Collectors {
         return Collector.of(supplier, accumulator, combiner, finisher);
     }
 
+    /**
+     * Returns a Collector that will return the min value as determined by the default comparator
+     * See, Comparator.default(); the min value is returned in an optional, or empty if no value
+     * was found.
+     */
+    public static minBy<I>(): Collector<I, Holder<I>, Optional<I>>;
+    /**
+     * Returns a Collector that will return the min value as determined by the given comparator
+     * the min value is returned in an optional, or empty if no value was found.
+     * @param comparator - a Comparator for comparing elements
+     */
+    public static minBy<I>(comparator: Comparator<I>): Collector<I, Holder<I>, Optional<I>>;
     public static minBy<I>(comparator?: Comparator<I>): Collector<I, Holder<I>, Optional<I>> {
         const comparatorToUse = comparator ? comparator : Comparator.default();
         const supplier: Supplier<Holder<I>> = () => new Holder();
