@@ -601,22 +601,35 @@ Collectors.toList(): Collector<T, T[], T[]>;
 ```
 ---
 
-Returns a `Collector` that combines strings into a single long string, a delimiter string can be specified
-to seperate individual items, the prefix and suffix are added to the resulting final string, not each item.
-
-`delimiter`: optional. Seperator for items being joined
-
-`prefix`: optional. string added to the beginning of the joined result
-
-`suffix`: optional. string added to the end of the joined result 
-```typescript 
-Collectors.joining(delimiter?: string, prefix?: string, suffix?: string): Collector<string, _, string>;
+Returns a Collector that concatenates the input elements into a String, in encounter order.
+```typescript
+Collectors.joining(): Collector<string, _, string>
 ```
 ---
 
+Returns a Collector that concatenates the input elements, separated by the specified delimiter, in encounter order.
+
+`delimiter` - the delimiter to be used between each element
+```typescript
+Collectors.joining(delimiter: string): Collector<string, _, string>;
+```
+---
+
+Returns a Collector that concatenates the input elements, separated by the specified delimiter, with the specified prefix and suffix, in encounter order.
+
+`delimiter` - the delimiter to be used between each element
+
+`prefix` - the sequence of characters to be used at the beginning of the joined result
+
+`suffix` - the sequence of characters to be used at the end of the joined result
+```typescript
+Collectors.joining(delimiter: string, prefix: string, suffix: string): Collector<string, MutableString, string>;
+```
+---
 
 Returns a `Collector` that produces the arithmetic mean of a number-valued function applied to the input elements.
-mapper: Function function to transform input elements into a number
+
+`mapper`: Function function to transform input elements into a number
 ```typescript
 Collectors.averagingNumber<I>(mapper: Function<I, number>): Collector<I, _, number>;
 ```
@@ -629,17 +642,19 @@ Collectors.averaging(): Collector<number, _, number>;
 ---
 
 Returns a new `Collector`, adapting the given downstream collector to incude an extra finishing transformation on the downstreams result.
-downstream: Initial collector to be applied, before applying the finisher
-finisher: function used to transform the results of the downstream collector
+
+`downstream`: Initial collector to be applied, before applying the finisher
+
+`finisher`: function used to transform the results of the downstream collector
 ```typescript
-collectingAndThen<I, M, A, O>(downStream: Collector<I, M, A>, finisher: Function<A, O>): Collector<I, M, O>
+Collectors.collectingAndThen<I, M, A, O>(downStream: Collector<I, M, A>, finisher: Function<A, O>): Collector<I, M, O>
 ```
 ---
 
 Returns a Collector accepting elements of type I that counts the number of input elements.
 If no elements are present, the result is 0.
 ```typescript
-counting<I>(): Collector<I, _, number>
+Collectors.counting<I>(): Collector<I, _, number>
 ```
 ---
 
@@ -648,9 +663,10 @@ grouping elements according to a classification function, and returning the resu
 The classification function maps elements to some key type K. The collector produces a 
 Map<K, T[]> whose keys are the values resulting from applying the classification function to the input elements,
 and whose corresponding values are arrays containing the input elements which map to the associated key under the classification function.
-classifier - the classifier function mapping input elements to keys
+
+`classifier` - the classifier function mapping input elements to keys
 ```typescript
-groupingBy<T, K>(classifier: Function<T, K>): Collector<T, _, Map<K, T[]>>
+Collectors.groupingBy<T, K>(classifier: Function<T, K>): Collector<T, _, Map<K, T[]>>
 ```
 ---
 
@@ -659,11 +675,12 @@ grouping elements according to a classification function, and then performing a 
 on the values associated with a given key using the specified downstream `Collector`.
 The classification function maps elements to some key type K. The downstream collector operates
 on elements of type T and produces a result of type D. The resulting collector produces a Map<K, D>.
-classifier - a classifier function mapping input elements to keys
-downstream - a `Collector` implementing the downstream reduction
 
+`classifier` - a classifier function mapping input elements to keys
+
+`downstream` - a `Collector` implementing the downstream reduction
 ```typescript
-groupingBy<T, K, A, D>(classifier: Function<T, K>, downstream: Collector<T, A, D>): Collector<T,_, Map<K, D>>;
+Collectors.groupingBy<T, K, A, D>(classifier: Function<T, K>, downstream: Collector<T, A, D>): Collector<T,_, Map<K, D>>;
 ```
 ---
 
