@@ -622,9 +622,48 @@ Collectors.averagingNumber<I>(mapper: Function<I, number>): Collector<I, _, numb
 ```
 ---
 
-Returns a Collector that produces the arithmetic mean of input numbers.
+Returns a `Collector` that produces the arithmetic mean of input numbers.
 ```typescript
 Collectors.averaging(): Collector<number, _, number>;
+```
+---
+
+Returns a new `Collector`, adapting the given downstream collector to incude an extra finishing transformation on the downstreams result.
+downstream: Initial collector to be applied, before applying the finisher
+finisher: function used to transform the results of the downstream collector
+```typescript
+collectingAndThen<I, M, A, O>(downStream: Collector<I, M, A>, finisher: Function<A, O>): Collector<I, M, O>
+```
+---
+
+Returns a Collector accepting elements of type I that counts the number of input elements.
+If no elements are present, the result is 0.
+```typescript
+counting<I>(): Collector<I, _, number>
+```
+---
+
+Returns a `Collector` implementing a "group by" operation on input elements of type T,
+grouping elements according to a classification function, and returning the results in a Map.
+The classification function maps elements to some key type K. The collector produces a 
+Map<K, T[]> whose keys are the values resulting from applying the classification function to the input elements,
+and whose corresponding values are arrays containing the input elements which map to the associated key under the classification function.
+classifier - the classifier function mapping input elements to keys
+```typescript
+groupingBy<T, K>(classifier: Function<T, K>): Collector<T, _, Map<K, T[]>>
+```
+---
+
+Returns a `Collector` implementing a cascaded "group by" operation on input elements of type T,
+grouping elements according to a classification function, and then performing a reduction operation 
+on the values associated with a given key using the specified downstream `Collector`.
+The classification function maps elements to some key type K. The downstream collector operates
+on elements of type T and produces a result of type D. The resulting collector produces a Map<K, D>.
+classifier - a classifier function mapping input elements to keys
+downstream - a `Collector` implementing the downstream reduction
+
+```typescript
+groupingBy<T, K, A, D>(classifier: Function<T, K>, downstream: Collector<T, A, D>): Collector<T,_, Map<K, D>>;
 ```
 ---
 
@@ -663,10 +702,10 @@ the most generic or basic function type, simply a function that takes in an inpu
 
 Returns a Function that simply returns the input value
 ```typescript
-Tranformer.identity()
+Function.identity()
 ```
 ---
-Returns a Tranformer takes in an input and logs the value, returning the same value;
+Returns a Function takes in an input and logs the value, returning the same value;
 ```typescript
 Function.logger()
 ```
