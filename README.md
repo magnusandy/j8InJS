@@ -623,7 +623,7 @@ Returns a Collector that concatenates the input elements, separated by the speci
 
 `suffix` - the sequence of characters to be used at the end of the joined result
 ```typescript
-Collectors.joining(delimiter: string, prefix: string, suffix: string): Collector<string, MutableString, string>;
+Collectors.joining(delimiter: string, prefix: string, suffix: string): Collector<string, _, string>;
 ```
 ---
 
@@ -683,6 +683,49 @@ on elements of type T and produces a result of type D. The resulting collector p
 Collectors.groupingBy<T, K, A, D>(classifier: Function<T, K>, downstream: Collector<T, A, D>): Collector<T,_, Map<K, D>>;
 ```
 ---
+
+Returns a Collector that will return the max value as determined by the default comparator
+See, `Comparator.default()`; the max value is returned in an optional, or empty if no value
+was found.
+```typescript
+Comparator.maxBy(): Collector<I, _, Optional<I>>
+```
+---
+
+Returns a Collector that will return the min value as determined by the given comparator
+the min value is returned in an `Optional` an empty `Optional` if no value was found.
+
+`comparator` - a `Comparator` for comparing elements of type I
+```typescript
+Collectrs.minBy<I>(comparator: Comparator<I>): Collector<I, _, Optional<I>>;
+```
+---
+
+Returns a Collector that will return the min value as determined by the default comparator
+See, `Comparator.default()`; the min value is returned in an `Optional`, or empty if no value
+was found.
+```typescript
+Comparator.minBy(): Collector<I, _, Optional<I>>
+```
+---
+
+Returns a Collector that will return the max value as determined by the given comparator
+the max value is returned in an `Optional` an empty `Optional` if no value was found.
+
+`comparator` - a `Comparator` for comparing elements of type I
+```typescript
+Collectrs.maxBy<I>(comparator: Comparator<I>): Collector<I, _, Optional<I>>;
+```
+---
+
+Adapts a Collector accepting elements of type II to one accepting elements of type I by applying a mapping function to each input element before accumulation.
+
+`mapper` - a function to be applied to the input elements
+
+`downstream` - a collector which will accept mapped values
+```typescript
+Collectors.mapping<I, II, A, R>(mapper: Function<I, II>, downstream: Collector<II, A, R>): Collector<I, A, R> 
+```
 
 ## Functions Types and Default methods
 There are several core function types that are referenced throughout the documentation as well as used within the code itself, some of these functional types have useful static methods attached to them 
