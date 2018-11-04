@@ -23,6 +23,12 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 [Optional](https://github.com/magnusandy/java8script#optional)
 * [Methods](https://github.com/magnusandy/java8script#methods-2)
 
+[Map](https://github.com/magnusandy/java8script#map)
+* [Methods](https://github.com/magnusandy/java8script#methods-3)
+
+[NumberSummaryStatistics](https://github.com/magnusandy/java8script#numbersummarystatistics)
+* [Methods](https://github.com/magnusandy/java8script#methods-4)
+
 [Collectors](https://github.com/magnusandy/java8script#collectors)
 * [Methods](https://github.com/magnusandy/java8script#methods-3) (more to come!)
 
@@ -556,6 +562,139 @@ orElseThrow(exceptionSupplier: Supplier<Error>): T;
 ```
 ---
 
+## Map
+Implementation of the java Map interface. 
+A Map is a object that maps keys to values, unlike regular JS objects, the keys of a Map can be any type of object or value (whereas JS objects can only have string on number keys). The implementation provided in this library is a `HashMap`. (See `Map.of`, or `Map.empty`)
+
+### Entry
+The `Entry<K, V>` object encapsulates a key value pair used within a `Map`. The interface contains 3 visible functions: 
+
+`getValue(): V`: which returns the value stored in the Entry 
+
+`getKey(): K`: returns the key stored in the entry
+
+`Entry.of(key: K, value: V): Entry<K, V>` creates a new entry with the given key and value
+
+### Methods
+```typescript
+Map.empty<K, V>(): Map<K, V>
+```
+```typescript
+Map.of<K, V>(k1?: K, v1?: V, k2?: K, v2?: V, k3?: K, v3?: V, k4?: K, v4?: V, k5?: K, v5?: V): Map<K, V>
+```
+```typescript
+clear(): void; 
+```
+---
+```typescript
+get(key: K): V | null; 
+```
+---
+```typescript
+getOrDefault(key: K, defaultVal: V): V; 
+```
+---
+```typescript
+getOptional(key: K): Optional<V>; 
+```
+---
+```typescript
+put(key: K, value: V): V | null; 
+```
+---
+```typescript
+putIfAbsent(key: K, value: V): V | null; 
+```
+---
+```typescript
+putAll(map: Map<K, V>): void; 
+```
+---
+```typescript
+containsKey(key: K): boolean; 
+```
+---
+```typescript
+containsValue(value: V, equalityTest?: BiPredicate<V, V>): boolean; 
+```
+---
+```typescript
+keySet(): K[]; 
+```
+---
+```typescript
+values(): V[]; 
+```
+---
+```typescript
+entrySet(): Entry<K, V>[];
+```
+---
+```typescript
+keyStream(): Stream<K>;
+```
+---
+```typescript
+valueStream(): Stream<V>; 
+```
+---
+```typescript
+entryStream(): Stream<Entry<K, V>>; 
+```
+---
+```typescript
+forEach(consumer: BiConsumer<K, V>): void; 
+```
+---
+```typescript
+isEmpty(): boolean;  
+```
+---
+```typescript
+remove(key: K): V | null; 
+```
+---
+```typescript
+merge(key: K, value: V, remappingFunction: BiFunction<V>): V | null; 
+```
+---
+
+## NumberSummaryStatistics
+A state object for collecting statistics such as count, min, max, sum, and average. about a list of numbers
+### Methods
+```typescript
+NumberSummaryStatistics.create(): NumberSummaryStatistics
+```
+---
+```typescript
+accept(n: number): void
+```
+---
+```typescript
+combine(other: NumberSummaryStatistics): void 
+```
+---
+```typescript
+getAverage(): number
+```
+---
+```typescript
+getMin(): number
+```
+---
+```typescript
+getMax(): number
+```
+---
+```typescript
+getCount(): number
+```
+---
+```typescript
+getSum(): number
+```
+---
+
 ## Collectors
 Firstly is the `Collector` interface. A Collector is an abstraction of all the pieces needed to perform a mutable reduction operation. A mutable reduction operation is similar in concept to a normal reduction like `Stream.reduce` above or `array.reduce`, except that a mutable reduction uses an intermediate mutable container to collect values into before optionally performing a final transformation in the intermediate result. This can provide numerious computational efficencies over a default reduction as there is less copying of results, rather a building up of a single mutable result container.
 
@@ -601,33 +740,181 @@ Collectors.toList(): Collector<T, T[], T[]>;
 ```
 ---
 
-Returns a `Collector` that combines strings into a single long string, a delimiter string can be specified
-to seperate individual items, the prefix and suffix are added to the resulting final string, not each item.
-
-`delimiter`: optional. Seperator for items being joined
-
-`prefix`: optional. string added to the beginning of the joined result
-
-`suffix`: optional. string added to the end of the joined result 
-```typescript 
-Collectors.joining(delimiter?: string, prefix?: string, suffix?: string): Collector<string, _, string>;
+Returns a Collector that concatenates the input elements into a String, in encounter order.
+```typescript
+Collectors.joining(): Collector<string, _, string>
 ```
 ---
 
+Returns a Collector that concatenates the input elements, separated by the specified delimiter, in encounter order.
+
+`delimiter` - the delimiter to be used between each element
+```typescript
+Collectors.joining(delimiter: string): Collector<string, _, string>;
+```
+---
+
+Returns a Collector that concatenates the input elements, separated by the specified delimiter, with the specified prefix and suffix, in encounter order.
+
+`delimiter` - the delimiter to be used between each element
+
+`prefix` - the sequence of characters to be used at the beginning of the joined result
+
+`suffix` - the sequence of characters to be used at the end of the joined result
+```typescript
+Collectors.joining(delimiter: string, prefix: string, suffix: string): Collector<string, _, string>;
+```
+---
 
 Returns a `Collector` that produces the arithmetic mean of a number-valued function applied to the input elements.
-mapper: Function function to transform input elements into a number
+
+`mapper`: Function function to transform input elements into a number
 ```typescript
 Collectors.averagingNumber<I>(mapper: Function<I, number>): Collector<I, _, number>;
 ```
 ---
 
-Returns a Collector that produces the arithmetic mean of input numbers.
+Returns a `Collector` that produces the arithmetic mean of input numbers.
 ```typescript
 Collectors.averaging(): Collector<number, _, number>;
 ```
 ---
 
+Returns a new `Collector`, adapting the given downstream collector to incude an extra finishing transformation on the downstreams result.
+
+`downstream`: Initial collector to be applied, before applying the finisher
+
+`finisher`: function used to transform the results of the downstream collector
+```typescript
+Collectors.collectingAndThen<I, M, A, O>(downStream: Collector<I, M, A>, finisher: Function<A, O>): Collector<I, M, O>
+```
+---
+
+Returns a Collector accepting elements of type I that counts the number of input elements.
+If no elements are present, the result is 0.
+```typescript
+Collectors.counting<I>(): Collector<I, _, number>
+```
+---
+
+Returns a `Collector` implementing a "group by" operation on input elements of type T,
+grouping elements according to a classification function, and returning the results in a Map.
+The classification function maps elements to some key type K. The collector produces a 
+Map<K, T[]> whose keys are the values resulting from applying the classification function to the input elements,
+and whose corresponding values are arrays containing the input elements which map to the associated key under the classification function.
+
+`classifier` - the classifier function mapping input elements to keys
+```typescript
+Collectors.groupingBy<T, K>(classifier: Function<T, K>): Collector<T, _, Map<K, T[]>>
+```
+---
+
+Returns a `Collector` implementing a cascaded "group by" operation on input elements of type T,
+grouping elements according to a classification function, and then performing a reduction operation 
+on the values associated with a given key using the specified downstream `Collector`.
+The classification function maps elements to some key type K. The downstream collector operates
+on elements of type T and produces a result of type D. The resulting collector produces a Map<K, D>.
+
+`classifier` - a classifier function mapping input elements to keys
+
+`downstream` - a `Collector` implementing the downstream reduction
+```typescript
+Collectors.groupingBy<T, K, A, D>(classifier: Function<T, K>, downstream: Collector<T, A, D>): Collector<T,_, Map<K, D>>;
+```
+---
+
+Returns a Collector that will return the max value as determined by the default comparator
+See, `Comparator.default()`; the max value is returned in an optional, or empty if no value
+was found.
+```typescript
+Comparator.maxBy(): Collector<I, _, Optional<I>>
+```
+---
+
+Returns a Collector that will return the max value as determined by the given comparator
+the max value is returned in an `Optional` an empty `Optional` if no value was found.
+
+`comparator` - a `Comparator` for comparing elements of type I
+```typescript
+Collectrs.maxBy<I>(comparator: Comparator<I>): Collector<I, _, Optional<I>>;
+```
+---
+
+Returns a Collector that will return the min value as determined by the given comparator
+the min value is returned in an `Optional` an empty `Optional` if no value was found.
+
+`comparator` - a `Comparator` for comparing elements of type I
+```typescript
+Collectrs.minBy<I>(comparator: Comparator<I>): Collector<I, _, Optional<I>>;
+```
+---
+
+Returns a Collector that will return the min value as determined by the default comparator
+See, `Comparator.default()`; the min value is returned in an `Optional`, or empty if no value
+was found.
+```typescript
+Comparator.minBy(): Collector<I, _, Optional<I>>
+```
+---
+
+Adapts a Collector accepting elements of type II to one accepting elements of type I by applying a mapping function to each input element before accumulation.
+
+`mapper` - a function to be applied to the input elements
+
+`downstream` - a collector which will accept mapped values
+```typescript
+Collectors.mapping<I, II, A, R>(mapper: Function<I, II>, downstream: Collector<II, A, R>): Collector<I, A, R> 
+```
+---
+
+Returns a `Collector` which partitions the input elements according to a `Predicate`, and organizes them into a Map<Boolean, T[]>.
+
+`predicate` - a `Predicate` used for classifying input elements    
+```typescript
+Collectors.partitioningBy<T, A, D>(predicate: Predicate<T>): Collector<T, _, Map<boolean, T[]>>
+```
+---
+
+Returns a `Collector` which partitions the input elements according to a `Predicate`, reduces the values in each partition according to another `Collector`, and organizes them into a Map<Boolean, D> whose values are the result of the downstream reduction.
+
+`predicate` - a `Predicate` used for classifying input elements
+
+`downstream` - a `Collector` implementing the downstream reduction
+```typescript
+Collectors.partitioningBy<T, A, D>(predicate: Predicate<T>, downStream: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D>>;
+```
+---
+
+Returns a `Collector` which performs a reduction of its input elements under a specified `BinaryOperator`. The result is described as an `Optional`.
+
+`reducer` - a BinaryOperator used to reduce the input elements
+```typescript
+Collectors.reducing<I>(reducer: BiFunction<I>): Collector<I, I[], Optional<I>>
+```
+---
+ 
+Returns a `Collector` which performs a reduction of its input elements under a specified `BinaryOperator` using the provided identity.
+
+`reducer` - a `BinaryOperator` used to reduce the input elements
+
+`identity` - the identity value for the reduction (also, the value that is returned when there are no input elements)
+```typescript
+Collectors.reducing<I>(reducer: BiFunction<I>, identity: I): Collector<I, I[], Optional<I>>
+```
+---
+
+Returns a `Collector` which performs a reduction of its input elements under a specified `BinaryOperator` using the provided identity.
+
+`identity` - the identity value for the reduction (also, the value that is returned when there are no input elements)
+
+`mapper` - a mapping function to apply to each input value
+
+`reducer` - a BinaryOperator used to reduce the mapped values
+```typescript
+reducing<I, U>(reducer: BiFunction<U>, identity: U, mapper: Function<I, U>): Collector<I, I[], Optional<U>>;
+` ``
+---
+      
 ## Functions Types and Default methods
 There are several core function types that are referenced throughout the documentation as well as used within the code itself, some of these functional types have useful static methods attached to them 
 
@@ -663,10 +950,10 @@ the most generic or basic function type, simply a function that takes in an inpu
 
 Returns a Function that simply returns the input value
 ```typescript
-Tranformer.identity()
+Function.identity()
 ```
 ---
-Returns a Tranformer takes in an input and logs the value, returning the same value;
+Returns a Function takes in an input and logs the value, returning the same value;
 ```typescript
 Function.logger()
 ```
@@ -687,5 +974,3 @@ Returns a Comparator that compares the given values with the < and > operators, 
 Comparator.default()
 ```
 ---      
-      
-
