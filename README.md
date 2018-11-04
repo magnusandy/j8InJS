@@ -23,6 +23,9 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 [Optional](https://github.com/magnusandy/java8script#optional)
 * [Methods](https://github.com/magnusandy/java8script#methods-2)
 
+[Map](https://github.com/magnusandy/java8script#map)
+* [Methods](https://github.com/magnusandy/java8script#methods-3)
+
 [Collectors](https://github.com/magnusandy/java8script#collectors)
 * [Methods](https://github.com/magnusandy/java8script#methods-3) (more to come!)
 
@@ -553,6 +556,97 @@ Return the contained value, if present, otherwise throw an error to be created b
  
 ```typescript
 orElseThrow(exceptionSupplier: Supplier<Error>): T;
+```
+---
+
+## Map
+Implementation of the java Map interface. 
+A Map is a object that maps keys to values, unlike regular JS objects, the keys of a Map can be any type of object or value (whereas JS objects can only have string on number keys). The implementation provided in this library is a `HashMap`. (See `Map.of`, or `Map.empty`)
+
+### Entry
+The `Entry<K, V>` object encapsulates a key value pair used within a `Map`. The interface contains 3 visible functions: 
+
+`getValue(): V`: which returns the value stored in the Entry 
+
+`getKey(): K`: returns the key stored in the entry
+
+`Entry.of(key: K, value: V): Entry<K, V>` creates a new entry with the given key and value
+
+### Methods
+```typescript
+clear(): void; 
+```
+---
+```typescript
+get(key: K): V | null; 
+```
+---
+```typescript
+getOrDefault(key: K, defaultVal: V): V; 
+```
+---
+```typescript
+getOptional(key: K): Optional<V>; 
+```
+---
+```typescript
+put(key: K, value: V): V | null; 
+```
+---
+```typescript
+putIfAbsent(key: K, value: V): V | null; 
+```
+---
+```typescript
+putAll(map: Map<K, V>): void; 
+```
+---
+```typescript
+containsKey(key: K): boolean; 
+```
+---
+```typescript
+containsValue(value: V, equalityTest?: BiPredicate<V, V>): boolean; 
+```
+---
+```typescript
+keySet(): K[]; 
+```
+---
+```typescript
+values(): V[]; 
+```
+---
+```typescript
+entrySet(): Entry<K, V>[];
+```
+---
+```typescript
+keyStream(): Stream<K>;
+```
+---
+```typescript
+valueStream(): Stream<V>; 
+```
+---
+```typescript
+entryStream(): Stream<Entry<K, V>>; 
+```
+---
+```typescript
+forEach(consumer: BiConsumer<K, V>): void; 
+```
+---
+```typescript
+isEmpty(): boolean;  
+```
+---
+```typescript
+remove(key: K): V | null; 
+```
+---
+```typescript
+merge(key: K, value: V, remappingFunction: BiFunction<V>): V | null; 
 ```
 ---
 
