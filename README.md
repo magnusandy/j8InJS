@@ -692,6 +692,15 @@ Comparator.maxBy(): Collector<I, _, Optional<I>>
 ```
 ---
 
+Returns a Collector that will return the max value as determined by the given comparator
+the max value is returned in an `Optional` an empty `Optional` if no value was found.
+
+`comparator` - a `Comparator` for comparing elements of type I
+```typescript
+Collectrs.maxBy<I>(comparator: Comparator<I>): Collector<I, _, Optional<I>>;
+```
+---
+
 Returns a Collector that will return the min value as determined by the given comparator
 the min value is returned in an `Optional` an empty `Optional` if no value was found.
 
@@ -709,15 +718,6 @@ Comparator.minBy(): Collector<I, _, Optional<I>>
 ```
 ---
 
-Returns a Collector that will return the max value as determined by the given comparator
-the max value is returned in an `Optional` an empty `Optional` if no value was found.
-
-`comparator` - a `Comparator` for comparing elements of type I
-```typescript
-Collectrs.maxBy<I>(comparator: Comparator<I>): Collector<I, _, Optional<I>>;
-```
----
-
 Adapts a Collector accepting elements of type II to one accepting elements of type I by applying a mapping function to each input element before accumulation.
 
 `mapper` - a function to be applied to the input elements
@@ -726,7 +726,56 @@ Adapts a Collector accepting elements of type II to one accepting elements of ty
 ```typescript
 Collectors.mapping<I, II, A, R>(mapper: Function<I, II>, downstream: Collector<II, A, R>): Collector<I, A, R> 
 ```
+---
 
+Returns a `Collector` which partitions the input elements according to a `Predicate`, and organizes them into a Map<Boolean, T[]>.
+
+`predicate` - a `Predicate` used for classifying input elements    
+```typescript
+Collectors.partitioningBy<T, A, D>(predicate: Predicate<T>): Collector<T, _, Map<boolean, T[]>>
+```
+---
+
+Returns a `Collector` which partitions the input elements according to a `Predicate`, reduces the values in each partition according to another `Collector`, and organizes them into a Map<Boolean, D> whose values are the result of the downstream reduction.
+
+`predicate` - a `Predicate` used for classifying input elements
+
+`downstream` - a `Collector` implementing the downstream reduction
+```typescript
+Collectors.partitioningBy<T, A, D>(predicate: Predicate<T>, downStream: Collector<T, A, D>): Collector<T, Map<boolean, T[]>, Map<boolean, D>>;
+```
+---
+
+Returns a `Collector` which performs a reduction of its input elements under a specified `BinaryOperator`. The result is described as an `Optional`.
+
+`reducer` - a BinaryOperator used to reduce the input elements
+```typescript
+Collectors.reducing<I>(reducer: BiFunction<I>): Collector<I, I[], Optional<I>>
+```
+---
+ 
+Returns a `Collector` which performs a reduction of its input elements under a specified `BinaryOperator` using the provided identity.
+
+`reducer` - a `BinaryOperator` used to reduce the input elements
+
+`identity` - the identity value for the reduction (also, the value that is returned when there are no input elements)
+```typescript
+Collectors.reducing<I>(reducer: BiFunction<I>, identity: I): Collector<I, I[], Optional<I>>
+```
+---
+
+Returns a `Collector` which performs a reduction of its input elements under a specified `BinaryOperator` using the provided identity.
+
+`identity` - the identity value for the reduction (also, the value that is returned when there are no input elements)
+
+`mapper` - a mapping function to apply to each input value
+
+`reducer` - a BinaryOperator used to reduce the mapped values
+```typescript
+reducing<I, U>(reducer: BiFunction<U>, identity: U, mapper: Function<I, U>): Collector<I, I[], Optional<U>>;
+` ``
+---
+      
 ## Functions Types and Default methods
 There are several core function types that are referenced throughout the documentation as well as used within the code itself, some of these functional types have useful static methods attached to them 
 
@@ -786,5 +835,3 @@ Returns a Comparator that compares the given values with the < and > operators, 
 Comparator.default()
 ```
 ---      
-      
-
