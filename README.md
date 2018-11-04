@@ -26,6 +26,9 @@ https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html.
 [Map](https://github.com/magnusandy/java8script#map)
 * [Methods](https://github.com/magnusandy/java8script#methods-3)
 
+[NumberSummaryStatistics](https://github.com/magnusandy/java8script#numbersummarystatistics)
+* [Methods](https://github.com/magnusandy/java8script#methods-4)
+
 [Collectors](https://github.com/magnusandy/java8script#collectors)
 * [Methods](https://github.com/magnusandy/java8script#methods-3) (more to come!)
 
@@ -574,6 +577,12 @@ The `Entry<K, V>` object encapsulates a key value pair used within a `Map`. The 
 
 ### Methods
 ```typescript
+Map.empty<K, V>(): Map<K, V>
+```
+```typescript
+Map.of<K, V>(k1?: K, v1?: V, k2?: K, v2?: V, k3?: K, v3?: V, k4?: K, v4?: V, k5?: K, v5?: V): Map<K, V>
+```
+```typescript
 clear(): void; 
 ```
 ---
@@ -647,6 +656,42 @@ remove(key: K): V | null;
 ---
 ```typescript
 merge(key: K, value: V, remappingFunction: BiFunction<V>): V | null; 
+```
+---
+
+## NumberSummaryStatistics
+A state object for collecting statistics such as count, min, max, sum, and average. about a list of numbers
+### Methods
+```typescript
+NumberSummaryStatistics.create(): NumberSummaryStatistics
+```
+---
+```typescript
+accept(n: number): void
+```
+---
+```typescript
+combine(other: NumberSummaryStatistics): void 
+```
+---
+```typescript
+getAverage(): number
+```
+---
+```typescript
+getMin(): number
+```
+---
+```typescript
+getMax(): number
+```
+---
+```typescript
+getCount(): number
+```
+---
+```typescript
+getSum(): number
 ```
 ---
 
