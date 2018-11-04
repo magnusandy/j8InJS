@@ -137,17 +137,17 @@ class Collectors {
      * @param downstream - a collector
      * @param finisher - a function to be applied to the final result of the downstream collector
      */
-    public static collectingAndThen<Input, Mutable, Intermediate, Output>(downStream: Collector<Input, Mutable, Intermediate>, finisher: Function<Intermediate, Output>): Collector<Input, Mutable, Output> {
-        const newFinisher = (input: Mutable) => finisher(downStream.finisher()(input))
+    public static collectingAndThen<I, M, A, O>(downStream: Collector<I, M, A>, finisher: Function<A, O>): Collector<I, M, O> {
+        const newFinisher = (input: M) => finisher(downStream.finisher()(input))
         return Collector.of(downStream.supplier(), downStream.accumulator(), downStream.combiner(), newFinisher)
     }
 
     /**
-     * Returns a Collector accepting elements of type T that counts the number of input elements. If no elements are present, the result is 0.
+     * Returns a Collector accepting elements of type I that counts the number of input elements. If no elements are present, the result is 0.
      */
-    public static counting<Input>(): Collector<Input, MutableNumber, number> {
+    public static counting<I>(): Collector<I, MutableNumber, number> {
         const supplier: Supplier<MutableNumber> = MutableNumber.empty;
-        const accumulator: BiConsumer<MutableNumber, Input> = (mutable, item) => mutable.add(1);
+        const accumulator: BiConsumer<MutableNumber, I> = (mutable, item) => mutable.add(1);
         const combiner: BiFunction<MutableNumber> = (mNum1, mNum2) => mNum1.addTogether(mNum2);
         const finisher: Function<MutableNumber, number> = (mutable: MutableNumber) => mutable.getInputCount();
 
@@ -156,9 +156,10 @@ class Collectors {
 
     /**
      * Returns a Collector implementing a "group by" operation on input elements of type T,
-     *  grouping elements according to a classification function, and returning the results in a Map.
+     * grouping elements according to a classification function, and returning the results in a Map.
      * The classification function maps elements to some key type K. The collector produces a 
-     * Map<K, T[]> whose keys are the values resulting from applying the classification function to the input elements, and whose corresponding values are Lists containing the input elements which map to the associated key under the classification function.
+     * Map<K, T[]> whose keys are the values resulting from applying the classification function to the input elements,
+     * and whose corresponding values are arrays containing the input elements which map to the associated key under the classification function.
      * @param classifier - the classifier function mapping input elements to keys
      */
     public static groupingBy<T, K>(classifier: Function<T, K>): Collector<T, Map<K, T[]>, Map<K, T[]>>;
@@ -352,7 +353,7 @@ class Collectors {
      * Returns a Collector which performs a reduction of its input elements under a specified BinaryOperator using the provided identity.
      * @param identity - the identity value for the reduction (also, the value that is returned when there are no input elements)
      * @param mapper - a mapping function to apply to each input value
-     * @param op - a BinaryOperator<U> used to reduce the mapped values
+     * @param reducer - a BinaryOperator<U> used to reduce the mapped values
      */
     public static reducing<I, U>(reducer: BiFunction<U>, identity: U, mapper: Function<I, U>): Collector<I, I[], Optional<U>>;
     public static reducing<I, U>(reducer: BiFunction<I | U>, identity?: I | U, mapper?: Function<I, I | U>): Collector<I, I[], Optional<I | U>> {

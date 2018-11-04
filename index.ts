@@ -4,6 +4,7 @@ import Stream, { StreamIterator } from './stream';
 import Errors from './errors';
 import { Comparator, Consumer, BiConsumer, BiFunction, BiPredicate, Function, Supplier, Predicate } from './functions';
 import { Map, Entry } from './map';
+import { NumberSummaryStatistics } from './collectors/mutableCollections'
 
 export {
     Collector,
@@ -27,4 +28,5 @@ export {
 
     Map,
     Entry,
+    NumberSummaryStatistics
 };

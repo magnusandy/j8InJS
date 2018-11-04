@@ -19,7 +19,10 @@ export class NumberSummaryStatistics {
         this.sum = 0;
     }
 
-    public static create() {
+    /**
+     * creates a new, empty NumberSummaryStatisitcs.
+     */
+    public static create(): NumberSummaryStatistics {
         return new NumberSummaryStatistics();
     }
 
