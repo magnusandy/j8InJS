@@ -333,7 +333,7 @@ class ListFlatMapProcessor<Input, Output> extends PureStatelessProcessor<Input, 
         } else if (this.inputs.length > 0) {
             const nextSource: Optional<Input> = this.takeNextInput();
             if (nextSource.isPresent()) {
-                this.outputList = this.Function(nextSource.get());
+                this.outputList = [...this.Function(nextSource.get())];
                 return this.processAndGetNext();
             }
         }

@@ -426,6 +426,28 @@ describe('Stream tests', () => {
     });
 
     describe('flatMapList', () => {
+        it('should not consume the source list', () => {
+            const grid = [
+                [1,2,3],
+                [4,5,6],
+                [7,8,9]
+            ];
+
+            const expected = [
+                [1,2,3],
+                [4,5,6],
+                [7,8,9]
+            ];
+
+            Stream.of(grid)
+                .flatMapList(Function.identity())
+                .collect(Collectors.toList());
+
+            expect(grid[0]).to.have.members(expected[0]);
+            expect(grid[1]).to.have.members(expected[1])
+            expect(grid[2]).to.have.members(expected[2])
+        });
+
         it('it should, flatten a stream of lists', () => {
             const l1 = [1, 2, 3];
             const l2 = [1, 2, 3];
